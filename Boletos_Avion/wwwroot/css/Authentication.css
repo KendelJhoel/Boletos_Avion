@@ -1,0 +1,81 @@
+﻿.tab-content {
+    background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco semitransparente */
+    border-radius: 12px; /* Bordes redondeados */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra suave */
+}
+
+
+/* Botones */
+.auth-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    .auth-button:hover {
+        background-color: #0056b3;
+    }
+
+/* Evita el desbordamiento de texto en el botón */
+.auth-button span {
+    white-space: nowrap;
+}
+
+
+/* C H E C K B O X */
+
+/* Ocultar suavemente el contenedor del checkbox */
+#termsContainer {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+    #termsContainer.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+/* Estilo del checkbox */
+#acceptTermsCheckbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+    /* Efecto cuando está seleccionado */
+    #acceptTermsCheckbox:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+        /* Icono de check (✓) */
+        #acceptTermsCheckbox:checked::after {
+            content: '✔';
+            color: white;
+            position: absolute;
+            font-size: 14px;
+            left: 3px;
+            top: -1px;
+        }
+
+    /* Hover */
+    #acceptTermsCheckbox:hover {
+        border-color: #0056b3;
+    }
+
+/* Mensaje de error */
+#termsError {
+    font-size: 0.9rem;
+    margin-top: 5px;
+}

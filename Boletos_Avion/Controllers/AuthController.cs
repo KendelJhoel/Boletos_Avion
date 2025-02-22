@@ -1,0 +1,378 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System.Net;
+using System.Net.Mail;
+using Boletos_Avion.Models;
+
+namespace Boletos_Avion.Controllers
+{
+    public class AuthController : Controller
+    {
+        private readonly IConfiguration _configuration;
+        private readonly DbController _dbController;
+
+        public AuthController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+            _dbController = new DbController();
+        }
+
+        public IActionResult Authentication()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult Register(IFormCollection form)
+        {
+            try
+            {
+                UserModel newUser = new UserModel
+                {
+                    Nombre = $"{form["Nombre"]} {form["Apellido"]}",
+                    Correo = form["Correo"],
+                    Telefono = form["Telefono"],
+                    Direccion = form["Direccion"],
+                    DocumentoIdentidad = form["DocumentoIdentidad"],
+                    Contrasena = form["Contrasena"]
+                };
+
+                string confirmPassword = form["ConfirmarContrasena"];
+                bool acceptTerms = form["acceptTerms"] == "true";
+
+                // Validaciones de campos vacíos
+                if (string.IsNullOrWhiteSpace(newUser.Correo) || string.IsNullOrWhiteSpace(newUser.Contrasena) ||
+                    string.IsNullOrWhiteSpace(newUser.Nombre) || string.IsNullOrWhiteSpace(newUser.Telefono) ||
+                    string.IsNullOrWhiteSpace(newUser.Direccion) || string.IsNullOrWhiteSpace(newUser.DocumentoIdentidad))
+                {
+                    ViewBag.RegisterError = "Todos los campos son obligatorios.";
+                    return View("Authentication");
+                }
+
+                // Validación de aceptación de términos (solo para clientes)
+                if (newUser.IdRol == 3 && form["acceptTerms"] != "on")
+                {
+                    ViewBag.RegisterError = "Debes aceptar los términos y condiciones para continuar.";
+                    return View("Authentication");
+                }
+
+                // Validación de coincidencia de contraseñas
+                if (newUser.Contrasena != confirmPassword)
+                {
+                    ViewBag.RegisterError = "Las contraseñas no coinciden.";
+                    return View("Authentication");
+                }
+
+                // Validación de duplicados
+                if (_dbController.CheckUserExists(newUser.Correo))
+                {
+                    ViewBag.RegisterError = "El correo ya está registrado.";
+                    return View("Authentication");
+                }
+
+                if (_dbController.CheckPhoneExists(newUser.Telefono))
+                {
+                    ViewBag.RegisterError = "El número de teléfono ya está en uso.";
+                    return View("Authentication");
+                }
+
+                if (_dbController.CheckDocumentExists(newUser.DocumentoIdentidad))
+                {
+                    ViewBag.RegisterError = "El documento de identidad ya está registrado.";
+                    return View("Authentication");
+                }
+
+                // Asignación de roles
+                bool isReservedPassword = false;
+
+                if (newUser.Contrasena == "AGENT123")
+                {
+                    newUser.IdRol = 2; // Agente
+                    newUser.Contrasena = GenerateRandomPassword(); // Generar nueva contraseña
+                    isReservedPassword = true;
+                }
+                else if (newUser.Contrasena == "ADMIN2025")
+                {
+                    newUser.IdRol = 1; // Administrador
+                    newUser.Contrasena = GenerateRandomPassword(); // Generar nueva contraseña
+                    isReservedPassword = true;
+                }
+                else
+                {
+                    newUser.IdRol = 3; // Cliente
+                }
+
+                // Registro para Agentes y Administradores
+                if (isReservedPassword)
+                {
+                    bool success = _dbController.RegisterUser(newUser);
+
+                    if (success)
+                    {
+                        bool emailSent = SendEmailWithCredentials(newUser.Correo, newUser.Contrasena, newUser.IdRol == 1 ? "Administrador" : "Agente");
+
+                        if (emailSent)
+                        {
+                            TempData["RegisterSuccess"] = $"✅ CUENTA TIPO '{(newUser.IdRol == 1 ? "Administrador" : "Agente")}' REGISTRADA CORRECTAMENTE. Las credenciales fueron enviadas a {newUser.Correo}.";
+                            ModelState.Clear(); // Limpiar los campos del formulario
+                            return RedirectToAction("Authentication", "Auth");
+                        }
+                        else
+                        {
+                            ViewBag.RegisterError = "❌ Usuario registrado pero ocurrió un error al enviar las credenciales por correo.";
+                            return View("Authentication");
+                        }
+                    }
+                    else
+                    {
+                        ViewBag.RegisterError = "❌ Error al registrar el usuario en la base de datos. Verifica los datos e intenta nuevamente.";
+                        return View("Authentication");
+                    }
+                }
+                else
+                {
+                    // Registro inmediato para Clientes
+                    bool success = _dbController.RegisterUser(newUser);
+
+                    if (success)
+                    {
+                        SendWelcomeEmail(newUser.Correo, newUser.Nombre);
+
+                        // Inicio de sesión automático tras registro exitoso
+                        HttpContext.Session.SetString("UserEmail", newUser.Correo);
+                        HttpContext.Session.SetString("UserName", newUser.Nombre);
+                        HttpContext.Session.SetInt32("UserRole", newUser.IdRol);
+
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        ViewBag.RegisterError = "❌ Error al registrar el cliente en la base de datos.";
+                        return View("Authentication");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Mostrar el error exacto que ocurrió
+                ViewBag.RegisterError = $"Ocurrió un error inesperado: {ex.Message}";
+                return View("Authentication");
+            }
+        }
+
+
+        [HttpPost]
+        public IActionResult Login(string email, string password)
+        {
+            var user = _dbController.ValidateUser(email, password);
+
+            if (user != null)
+            {
+                HttpContext.Session.SetString("UserEmail", user.Correo);
+                HttpContext.Session.SetString("UserName", user.Nombre);
+                HttpContext.Session.SetInt32("UserRole", user.IdRol);
+
+                switch (user.IdRol)
+                {
+                    case 1:
+                        return RedirectToAction("Dashboard", "Admin");
+                    case 2:
+                        return RedirectToAction("Dashboard", "Agent");
+                    default:
+                        return RedirectToAction("Index", "Home");
+                }
+            }
+            else
+            {
+                ViewBag.LoginError = "Correo o contraseña incorrectos.";
+                return View("Authentication");
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            int? userRole = HttpContext.Session.GetInt32("UserRole");
+            HttpContext.Session.Clear();
+            return (userRole == 1 || userRole == 2) ? RedirectToAction("Authentication", "Auth") : RedirectToAction("Index", "Home");
+        }
+
+        private string GenerateRandomPassword()
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
+            Random random = new Random();
+            return new string(Enumerable.Repeat(chars, 10)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private bool SendWelcomeEmail(string email, string name)
+        {
+            try
+            {
+                string senderEmail = _configuration["EmailSettings:SenderEmail"];
+                string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                var smtpClient = new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true,
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(senderEmail),
+                    Subject = "¡Bienvenido a Boletos Avión!",
+                    Body = $"Hola {name}, tu cuenta ha sido registrada exitosamente. ¡Disfruta de nuestros servicios!",
+                    IsBodyHtml = false,
+                };
+                mailMessage.To.Add(email);
+                smtpClient.Send(mailMessage);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.RegisterError = $"Error al enviar el correo de bienvenida: {ex.Message}";
+                return false;
+            }
+        }
+
+        private bool SendEmailWithCredentials(string email, string password, string role)
+        {
+            try
+            {
+                string senderEmail = _configuration["EmailSettings:SenderEmail"];
+                string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                var smtpClient = new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(senderEmail),
+                    Subject = $"Cuenta de {role} - Boletos Avión",
+                    Body = $@"
+                <p>Hola, tu cuenta de tipo '{role}' ha sido registrada correctamente.</p>
+                <p>Aquí están tus credenciales de acceso:</p>
+                <ul>
+                    <li><strong>Correo:</strong> {email}</li>
+                    <li><strong>Contraseña:</strong> {password}</li>
+                </ul>
+                <p>Por favor, inicia sesión en el sistema y cambia tu contraseña después de ingresar.</p>
+                <a href='https://localhost:5279/Auth/Authentication'>Ir al Login</a>",
+                    IsBodyHtml = true, // Habilitar contenido HTML
+                };
+                mailMessage.To.Add(email);
+                smtpClient.Send(mailMessage);
+
+                return true; // Correo enviado exitosamente
+            }
+            catch (Exception ex)
+            {
+                ViewBag.RegisterError = $"Error al enviar el correo: {ex.Message}";
+                return false; // Error al enviar el correo
+            }
+        }
+
+        [HttpGet]
+        public JsonResult CheckCorreo(string correo)
+        {
+            bool exists = _dbController.CheckUserExists(correo);
+            return Json(new { exists });
+        }
+
+        [HttpGet]
+        public JsonResult CheckTelefono(string telefono)
+        {
+            bool exists = _dbController.CheckPhoneExists(telefono);
+            return Json(new { exists });
+        }
+
+        [HttpGet]
+        public JsonResult CheckDocumento(string documento)
+        {
+            bool exists = _dbController.CheckDocumentExists(documento);
+            return Json(new { exists });
+        }
+
+        [HttpGet]
+        public IActionResult Password_reset()
+        {
+            return View();
+        }
+
+        // Enviar correo con las credenciales
+        [HttpPost]
+        public IActionResult SendPasswordReset(string correo)
+        {
+            if (_dbController.CheckUserExists(correo))
+            {
+                string password = _dbController.GetUserPasswordByEmail(correo);
+                bool emailSent = SendPasswordEmail(correo, password);
+
+                if (emailSent)
+                {
+                    TempData["ResetSuccess"] = "Tus credenciales han sido enviadas al correo proporcionado.";
+                    return RedirectToAction("Password_reset", "Auth");
+                }
+                else
+                {
+                    ViewBag.ResetError = "Error al enviar el correo. Intenta nuevamente.";
+                    return View("Password_reset");
+                }
+            }
+            else
+            {
+                ViewBag.ResetError = "El correo ingresado no está registrado.";
+                return View("Password_reset");
+            }
+        }
+
+        // Método para enviar el correo con la contraseña actual
+        private bool SendPasswordEmail(string correo, string password)
+        {
+            try
+            {
+                string senderEmail = _configuration["EmailSettings:SenderEmail"];
+                string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                var smtpClient = new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    Credentials = new NetworkCredential(senderEmail, senderPassword),
+                    EnableSsl = true
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(senderEmail),
+                    Subject = "Recuperación de Contraseña - Boletos Avión",
+                    Body = $@"
+                <p>Hola, has solicitado recuperar tu contraseña.</p>
+                <p>Estas son tus credenciales actuales:</p>
+                <ul>
+                    <li><strong>Correo:</strong> {correo}</li>
+                    <li><strong>Contraseña:</strong> {password}</li>
+                </ul>
+                <p>Te recomendamos cambiar tu contraseña después de iniciar sesión.</p>",
+                    IsBodyHtml = true,
+                };
+                mailMessage.To.Add(correo);
+                smtpClient.Send(mailMessage);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ResetError = $"Error al enviar el correo: {ex.Message}";
+                return false;
+            }
+        }
+
+    }
+}
