@@ -1,0 +1,48 @@
+﻿@model List<Boletos_Avion.Models.VueloViewModel>
+
+@{
+    ViewData["Title"] = "Resultados de Búsqueda";
+}
+
+<h2>Resultados de Búsqueda</h2>
+
+@if (ViewBag.Mensaje != null)
+{
+    <div class="alert alert-info">
+        @ViewBag.Mensaje
+    </div>
+}
+
+@if (Model != null && Model.Count > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código Vuelo</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Fecha Salida</th>
+                <th>Fecha Llegada</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vuelo in Model)
+            {
+                <tr>
+                    <td>@vuelo.CodigoVuelo</td>
+                    <td>@vuelo.CiudadOrigen (@vuelo.AeropuertoOrigen)</td>
+                    <td>@vuelo.CiudadDestino (@vuelo.AeropuertoDestino)</td>
+                    <td>@vuelo.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@vuelo.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@vuelo.PrecioBase</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (ViewBag.Mensaje == null)
+{
+    <!-- Opcional: Si no hay mensaje y la lista está vacía -->
+    <div class="alert alert-warning">No se encontraron vuelos.</div>
+}
