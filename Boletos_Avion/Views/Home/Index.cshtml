@@ -1,4 +1,4 @@
-﻿@model List<Boletos_Avion.Models.VueloViewModel>
+﻿@model List<Boletos_Avion.Models.VueloViewModel> 
 
 @{
     ViewData["Title"] = "Inicio - GESTION BOLETOS";
@@ -86,6 +86,110 @@
         }
 
     </div>
+
+
+    <!-- -----------------------------------------------------------------------------------------------   -->
+    <div class="container mt-5">
+
+        <h2 class="mb-4 text-center fw-bold">Buscar Vuelos</h2>
+
+        <form method="get" class="mb-4 p-3 border rounded shadow-sm bg-light">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="precioMin" class="form-label">Precio Mínimo</label>
+                    <input type="number" class="form-control" id="precioMin" name="precioMin" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label for="precioMax" class="form-label">Precio Máximo</label>
+                    <input type="number" class="form-control" id="precioMax" name="precioMax" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label for="aerolinea" class="form-label">Aerolínea</label>
+                    <select class="form-select" id="aerolinea" name="aerolinea">
+                        <option value="">Todas</option>
+                        @if (ViewBag.Aerolineas != null)
+                        {
+                            @foreach (var aerolinea in ViewBag.Aerolineas as List<string>)
+                            {
+                                <option value="@aerolinea">@aerolinea</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="">No hay aerolíneas disponibles</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="duracion" class="form-label">Duración Máxima</label>
+                    <select class="form-select" id="duracion" name="duracion">
+                        <option value="">Cualquiera</option>
+                        <option value="2">Menos de 2 horas</option>
+                        <option value="5">Menos de 5 horas</option>
+                        <option value="10">Menos de 10 horas</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="categoria" class="form-label">Categoría de Asiento</label>
+                    <select class="form-select" id="categoria" name="categoria">
+                        <option value="">Todas</option>
+                        <option value="Economy">Economy</option>
+                        <option value="Business">Business</option>
+                        <option value="First Class">First Class</option>
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Restablecer</a>
+            </div>
+        </form>
+
+        <div class="container mt-5">
+
+            <div class="table-responsive shadow-lg p-3 bg-white rounded">
+
+                <table class="table table-hover text-center">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th>Aerolínea</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Duración</th>
+                            <th>Precio</th>
+                            <th>Categoría</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null)
+                        {
+                            @foreach (var vuelo in Model)
+                            {
+                                <tr>
+                                    <td>@vuelo.Aerolinea</td>
+                                    <td>@vuelo.Origen</td>
+                                    <td>@vuelo.Destino</td>
+                                    <td>@vuelo.Duracion horas</td>
+                                    <td>$@vuelo.PrecioBase</td>
+                                    <td>@vuelo.Categoria</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <p class="alert alert-warning text-center">⚠️ No hay vuelos disponibles.</p>
+                        }
+
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+        
+
+    </div>
+   
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 
