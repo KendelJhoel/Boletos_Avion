@@ -160,7 +160,6 @@ namespace Boletos_Avion.Controllers
             }
         }
 
-
         [HttpPost]
         public IActionResult Login(string email, string password)
         {
@@ -168,6 +167,7 @@ namespace Boletos_Avion.Controllers
 
             if (user != null)
             {
+                HttpContext.Session.SetInt32("UserId", user.IdUsuario);
                 HttpContext.Session.SetString("UserEmail", user.Correo);
                 HttpContext.Session.SetString("UserName", user.Nombre);
                 HttpContext.Session.SetInt32("UserRole", user.IdRol);
@@ -188,6 +188,7 @@ namespace Boletos_Avion.Controllers
                 return View("Authentication");
             }
         }
+
 
         [HttpGet]
         public IActionResult Logout()
