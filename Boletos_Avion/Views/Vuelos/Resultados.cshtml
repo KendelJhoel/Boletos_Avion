@@ -1,48 +1,44 @@
 ﻿@model List<Boletos_Avion.Models.VueloViewModel>
 
-@{
-    ViewData["Title"] = "Resultados de Búsqueda";
-}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center fw-bold">Resultados de la búsqueda</h2>
 
-<h2>Resultados de Búsqueda</h2>
+    @if (Model.Count > 0)
+    {
+        <div class="table-responsive shadow-lg p-3 bg-white rounded">
+            <table class="table table-hover text-center">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th>Código Vuelo</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Fecha de Salida</th>
+                        <th>Fecha de Llegada</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vuelo in Model)
+                    {
+                        <tr>
+                            <td><strong>@vuelo.CodigoVuelo</strong></td>
+                            <td>@vuelo.CiudadOrigen (@vuelo.AeropuertoOrigen)</td>
+                            <td>@vuelo.CiudadDestino (@vuelo.AeropuertoDestino)</td>
+                            <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="alert alert-warning text-center fw-bold">⚠️ No hay vuelos disponibles para los criterios ingresados.</p>
+    }
 
-@if (ViewBag.Mensaje != null)
-{
-    <div class="alert alert-info">
-        @ViewBag.Mensaje
-    </div>
-}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</div>
 
-@if (Model != null && Model.Count > 0)
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Código Vuelo</th>
-                <th>Origen</th>
-                <th>Destino</th>
-                <th>Fecha Salida</th>
-                <th>Fecha Llegada</th>
-                <th>Precio</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var vuelo in Model)
-            {
-                <tr>
-                    <td>@vuelo.CodigoVuelo</td>
-                    <td>@vuelo.CiudadOrigen (@vuelo.AeropuertoOrigen)</td>
-                    <td>@vuelo.CiudadDestino (@vuelo.AeropuertoDestino)</td>
-                    <td>@vuelo.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@vuelo.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@vuelo.PrecioBase</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else if (ViewBag.Mensaje == null)
-{
-    <!-- Opcional: Si no hay mensaje y la lista está vacía -->
-    <div class="alert alert-warning">No se encontraron vuelos.</div>
-}
+

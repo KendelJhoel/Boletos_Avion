@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<Boletos_Avion.Models.VueloViewModel>
+
+@{
     ViewData["Title"] = "Inicio - GESTION BOLETOS";
 }
 
@@ -10,95 +12,82 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="mb-4">Encuentra tu próximo vuelo</h2>
 
-        <!-- FORMULARIO -->
-        <!-- Notar method="post" y asp-action="BuscarVuelos" asp-controller="Vuelos" -->
-        <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post">
-            <!-- Campos del formulario -->
-            <div class="row mt-3">
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center fw-bold">Encuentra tu próximo vuelo</h2>
+
+        <!-- Formulario -->
+        <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light">
+            <div class="row justify-content-center align-items-center text-center">
                 <div class="col-md-3">
-                    <label for="origen" class="form-label">Origen</label>
-                    <input type="text" class="form-control" name="origen" id="origen" placeholder="Ej. SAL" />
+                    <label for="origen" class="form-label fw-bold">Origen</label>
+                    <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen" placeholder="Ej. SAL" />
                 </div>
                 <div class="col-md-3">
-                    <label for="destino" class="form-label">Destino</label>
-                    <input type="text" class="form-control" name="destino" id="destino" placeholder="Ej. MEX" />
+                    <label for="destino" class="form-label fw-bold">Destino</label>
+                    <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino" placeholder="Ej. MEX" />
                 </div>
                 <div class="col-md-3">
-                    <label for="fechaIda" class="form-label">Fecha de Ida</label>
-                    <input type="date" class="form-control" name="fechaIda" id="fechaIda" />
-                </div>
-                <div class="col-md-3" id="fechaVueltaContainer">
-                    <label for="fechaVuelta" class="form-label">Fecha de Vuelta</label>
-                    <input type="date" class="form-control" name="fechaVuelta" id="fechaVuelta" />
+                    <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
+                    <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda" />
                 </div>
             </div>
 
-            <!-- Cambiado de <a> a <button type="submit"> -->
-            <button class="btn btn-primary mt-3" type="submit">Buscar</button>
+            <!-- Mensaje de error -->
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMensaje))
+            {
+                <p class="text-danger fw-bold mt-3 text-center">@ViewBag.ErrorMensaje</p>
+            }
+
+            <div class="d-flex justify-content-center mt-4">
+                <button class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow" type="submit">
+                    🔍 Buscar Vuelos
+                </button>
+            </div>
         </form>
 
-    </div>
-
-
-
-    <!-- Sección Vuelos Baratos hacia Europa (cards)... -->
-    <div class="container mt-5">
-        <h2>Vuelos Baratos hacia Europa</h2>
-        <div class="row">
-            <!-- Card 1 -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Europa 1">
-                    <div class="card-body">
-                        <h5 class="card-title">Destino 1</h5>
-                        <p class="card-text">Descripción breve...</p>
-                    </div>
+        <!-- Tabla de Resultados -->
+        @if (Model != null && Model.Count > 0)
+        {
+            <div class="container mt-5">
+                <h2 class="mb-4 text-center fw-bold">Resultados de la búsqueda</h2>
+                <div class="table-responsive shadow-lg p-3 bg-white rounded">
+                    <table class="table table-hover text-center">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>Código Vuelo</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Fecha de Salida</th>
+                                <th>Fecha de Llegada</th>
+                                <th>Precio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vuelo in Model)
+                            {
+                                <tr>
+                                    <td><strong>@vuelo.CodigoVuelo</strong></td>
+                                    <td>@vuelo.CiudadOrigen (@vuelo.AeropuertoOrigen)</td>
+                                    <td>@vuelo.CiudadDestino (@vuelo.AeropuertoDestino)</td>
+                                    <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <!-- Card 2 -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Europa 2">
-                    <div class="card-body">
-                        <h5 class="card-title">Destino 2</h5>
-                        <p class="card-text">Descripción breve...</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Card 3 -->
-            <div class="col-md-4">
-                <div class="card mb-4">
-                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Europa 3">
-                    <div class="card-body">
-                        <h5 class="card-title">Destino 3</h5>
-                        <p class="card-text">Descripción breve...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const idaVueltaRadio = document.getElementById('idaVuelta');
-        const soloIdaRadio = document.getElementById('soloIda');
-        const fechaVueltaContainer = document.getElementById('fechaVueltaContainer');
-
-        function toggleFechaVuelta() {
-            if (soloIdaRadio.checked) {
-                fechaVueltaContainer.style.display = 'none';
-            } else {
-                fechaVueltaContainer.style.display = 'block';
-            }
+        }
+        else if (Model != null && Model.Count == 0)
+        {
+            <p class="alert alert-warning text-center fw-bold mt-4">⚠️ No hay vuelos disponibles para los criterios ingresados.</p>
         }
 
-        idaVueltaRadio.addEventListener('change', toggleFechaVuelta);
-        soloIdaRadio.addEventListener('change', toggleFechaVuelta);
-        toggleFechaVuelta();
-    </script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
