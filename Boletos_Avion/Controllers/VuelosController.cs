@@ -8,7 +8,7 @@ namespace Boletos_Avion.Controllers
     public class VuelosController : Controller
     {
         //Cambiar cadena
-        private readonly string connectionString = "Data Source=DESKTOP-MP89LU5\\SQLEXPRESS;Initial Catalog=GestionBoletos;Integrated Security=True;TrustServerCertificate=True;";
+        private readonly string connectionString = "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;";
 
         public IActionResult Resultados()
         {
@@ -25,73 +25,28 @@ namespace Boletos_Avion.Controllers
         [HttpPost]
         public IActionResult BuscarVuelos(string origen, string destino, DateTime? fechaIda, DateTime? fechaVuelta, string tipoViaje)
         {
-            // Validación de campos requeridos
+
+            // Validación: no se permiten búsquedas sin origen, destino o fecha de ida.
             if (string.IsNullOrEmpty(origen) || string.IsNullOrEmpty(destino) || !fechaIda.HasValue)
             {
                 TempData["Error"] = "Por favor ingresa origen, destino y fecha de ida.";
                 return RedirectToAction("Index");
             }
 
-            // Validación de fechas
-            if (fechaIda.Value < DateTime.Today)
-            {
-                TempData["Error"] = "La fecha de ida debe ser futura.";
-                return RedirectToAction("Index");
-            }
-
-            if (tipoViaje == "idaYvuelta")
-            {
-                if (!fechaVuelta.HasValue)
-                {
-                    TempData["Error"] = "Por favor ingresa la fecha de vuelta.";
-                    return RedirectToAction("Index");
-                }
-
-                if (fechaVuelta.Value <= fechaIda.Value)
-                {
-                    TempData["Error"] = "La fecha de vuelta debe ser posterior a la fecha de ida.";
-                    return RedirectToAction("Index");
-                }
-            }
-
+            // Llamamos al método para obtener los vuelos desde la BD usando ADO.NET.
             var vuelos = ObtenerVuelosDeBD(origen, destino, fechaIda.Value);
 
+            // Si no se encontraron vuelos, mostramos un mensaje.
             if (vuelos == null || vuelos.Count == 0)
             {
-                ViewBag.Mensaje = "No se encontraron vuelos disponibles.";
+                ViewBag.Mensaje = "No se encontraron vuelos.";
                 return View("Resultados", new List<VueloViewModel>());
             }
 
+            // Aquí podrías agregar lógica para vuelos de regreso si es ida y vuelta.
+
             return View("Resultados", vuelos);
         }
-
-
-
-        //[HttpPost]
-        //public IActionResult BuscarVuelos(string origen, string destino, DateTime? fechaIda, DateTime? fechaVuelta, string tipoViaje)
-        //{
-            
-        //    // Validación: no se permiten búsquedas sin origen, destino o fecha de ida.
-        //    if (string.IsNullOrEmpty(origen) || string.IsNullOrEmpty(destino) || !fechaIda.HasValue)
-        //    {
-        //        TempData["Error"] = "Por favor ingresa origen, destino y fecha de ida.";
-        //        return RedirectToAction("Index");
-        //    }
-
-        //    // Llamamos al método para obtener los vuelos desde la BD usando ADO.NET.
-        //    var vuelos = ObtenerVuelosDeBD(origen, destino, fechaIda.Value);
-
-        //    // Si no se encontraron vuelos, mostramos un mensaje.
-        //    if (vuelos == null || vuelos.Count == 0)
-        //    {
-        //        ViewBag.Mensaje = "No se encontraron vuelos.";
-        //        return View("Resultados", new List<VueloViewModel>());
-        //    }
-
-        //    // Aquí podrías agregar lógica para vuelos de regreso si es ida y vuelta.
-
-        //    return View("Resultados", vuelos);
-        //}
 
         // Método para obtener vuelos usando ADO.NET
         private List<VueloViewModel> ObtenerVuelosDeBD(string origen, string destino, DateTime fechaIda)
