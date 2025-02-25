@@ -9,10 +9,9 @@ public class DbController
 
     public DbController()
     {
-        // Configuración de la cadena de conexión. Se ha dejado una opción activa y otras comentadas.
-        //connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
+        connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
         //connectionString = "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;";
-        connectionString = "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos46;User ID=sa;Password=15012004;TrustServerCertificate=True;";
+        //connectionString = "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos46;User ID=sa;Password=15012004;TrustServerCertificate=True;";
     }
 
     public SqlConnection GetConnection()
@@ -296,231 +295,168 @@ public class DbController
     // MÉTODOS ADICIONALES PARA GESTIÓN DE VUELOS
     //===========================================
 
-    // Obtener vuelos por continente
+
+    // 🔹 Obtener vuelos por continente (América, Asia, Europa, Oceanía)
     public List<Vuelo> GetVuelosByContinente(string continente)
     {
         List<Vuelo> vuelos = new List<Vuelo>();
 
         string query = @"
         SELECT 
-            v.idVuelo, 
-            v.idAeropuertoOrigen, 
-            origen.nombre AS nombreAeropuertoOrigen,
-            origenCiudad.nombre AS ciudadOrigen,
-            v.idAeropuertoDestino, 
-            destino.nombre AS nombreAeropuertoDestino,
-            destinoCiudad.nombre AS ciudadDestino,
-            v.fecha_salida, 
-            v.fecha_llegada, 
-            v.idAerolinea, 
-            v.precio_base, 
-            v.cantidad_asientos, 
-            v.asientos_disponibles, 
-            v.estado
+            v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, 
+            origen.nombre AS nombreAeropuertoOrigen, origenCiudad.nombre AS ciudadOrigen,
+            v.idAeropuertoDestino, destino.nombre AS nombreAeropuertoDestino, destinoCiudad.nombre AS ciudadDestino,
+            v.fecha_salida, v.fecha_llegada, v.idAerolinea, a.nombre AS nombreAerolinea,
+            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado
         FROM VUELOS v
         JOIN AEROPUERTOS origen ON v.idAeropuertoOrigen = origen.idAeropuerto
         JOIN CIUDADES origenCiudad ON origen.idCiudad = origenCiudad.idCiudad
         JOIN AEROPUERTOS destino ON v.idAeropuertoDestino = destino.idAeropuerto
         JOIN CIUDADES destinoCiudad ON destino.idCiudad = destinoCiudad.idCiudad
         JOIN PAISES p ON destinoCiudad.idPais = p.idPais
-        JOIN CONTINENTES co ON p.idContinente = co.idContinente
-        WHERE co.nombre = @continente";
+        JOIN CONTINENTES c ON p.idContinente = c.idContinente
+        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+        WHERE c.nombre = @Continente";
 
         using (SqlConnection connection = GetConnection())
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@continente", continente);
+                command.Parameters.AddWithValue("@Continente", continente);
                 connection.Open();
 
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        Vuelo vuelo = new Vuelo
-                        {
-                            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
-                            IdAeropuertoOrigen = reader["idAeropuertoOrigen"].ToString(),
-                            NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
-                            CiudadOrigen = reader["ciudadOrigen"].ToString(),
-                            IdAeropuertoDestino = reader["idAeropuertoDestino"].ToString(),
-                            NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
-                            CiudadDestino = reader["ciudadDestino"].ToString(),
-                            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
-                            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
-                            IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
-                            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
-                            CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
-                            AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
-                            Estado = reader["estado"].ToString()
-                        };
-                        vuelos.Add(vuelo);
+                        vuelos.Add(MapVuelo(reader));
                     }
                 }
             }
         }
-
         return vuelos;
     }
 
-    // Obtener vuelos con precio menor o igual a un valor máximo
+    // 🔹 Obtener vuelos económicos (precio base entre 200 y 450 USD)
     public List<Vuelo> GetVuelosByPriceRange(decimal minPrice, decimal maxPrice)
     {
         List<Vuelo> vuelos = new List<Vuelo>();
 
         string query = @"
         SELECT 
-            v.idVuelo, 
-            v.idAeropuertoOrigen, 
-            origen.nombre AS nombreAeropuertoOrigen,
-            origenCiudad.nombre AS ciudadOrigen,
-            v.idAeropuertoDestino, 
-            destino.nombre AS nombreAeropuertoDestino,
-            destinoCiudad.nombre AS ciudadDestino,
-            v.fecha_salida, 
-            v.fecha_llegada, 
-            v.idAerolinea, 
-            v.precio_base, 
-            v.cantidad_asientos, 
-            v.asientos_disponibles, 
-            v.estado
+            v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, 
+            origen.nombre AS nombreAeropuertoOrigen, origenCiudad.nombre AS ciudadOrigen,
+            v.idAeropuertoDestino, destino.nombre AS nombreAeropuertoDestino, destinoCiudad.nombre AS ciudadDestino,
+            v.fecha_salida, v.fecha_llegada, v.idAerolinea, a.nombre AS nombreAerolinea,
+            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado
         FROM VUELOS v
         JOIN AEROPUERTOS origen ON v.idAeropuertoOrigen = origen.idAeropuerto
         JOIN CIUDADES origenCiudad ON origen.idCiudad = origenCiudad.idCiudad
         JOIN AEROPUERTOS destino ON v.idAeropuertoDestino = destino.idAeropuerto
         JOIN CIUDADES destinoCiudad ON destino.idCiudad = destinoCiudad.idCiudad
-        WHERE v.precio_base BETWEEN @minPrice AND @maxPrice";
+        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+        WHERE v.precio_base BETWEEN @MinPrice AND @MaxPrice";
 
         using (SqlConnection connection = GetConnection())
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@minPrice", minPrice);
-                command.Parameters.AddWithValue("@maxPrice", maxPrice);
+                command.Parameters.AddWithValue("@MinPrice", minPrice);
+                command.Parameters.AddWithValue("@MaxPrice", maxPrice);
                 connection.Open();
 
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        Vuelo vuelo = new Vuelo
-                        {
-                            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
-                            // Origen
-                            IdAeropuertoOrigen = reader["idAeropuertoOrigen"].ToString(),
-                            NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
-                            CiudadOrigen = reader["ciudadOrigen"].ToString(),
-                            // Destino
-                            IdAeropuertoDestino = reader["idAeropuertoDestino"].ToString(),
-                            NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
-                            CiudadDestino = reader["ciudadDestino"].ToString(),
-                            // Otros datos
-                            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
-                            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
-                            IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
-                            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
-                            CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
-                            AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
-                            Estado = reader["estado"].ToString()
-                        };
-                        vuelos.Add(vuelo);
+                        vuelos.Add(MapVuelo(reader));
                     }
                 }
             }
         }
-
         return vuelos;
     }
 
-
-    // Obtener vuelos con duración en minutos menor o igual a un valor máximo
+    // 🔹 Obtener vuelos cortos (duración menor o igual a 5 horas)
     public List<Vuelo> GetVuelosByDuration(int maxMinutes)
     {
         List<Vuelo> vuelos = new List<Vuelo>();
 
         string query = @"
         SELECT 
-            v.idVuelo, 
-            v.idAeropuertoOrigen, 
-            origen.nombre AS nombreAeropuertoOrigen,
-            origenCiudad.nombre AS ciudadOrigen,
-            v.idAeropuertoDestino, 
-            destino.nombre AS nombreAeropuertoDestino,
-            destinoCiudad.nombre AS ciudadDestino,
-            v.fecha_salida, 
-            v.fecha_llegada, 
-            v.idAerolinea, 
-            v.precio_base, 
-            v.cantidad_asientos, 
-            v.asientos_disponibles, 
-            v.estado
+            v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, 
+            origen.nombre AS nombreAeropuertoOrigen, origenCiudad.nombre AS ciudadOrigen,
+            v.idAeropuertoDestino, destino.nombre AS nombreAeropuertoDestino, destinoCiudad.nombre AS ciudadDestino,
+            v.fecha_salida, v.fecha_llegada, v.idAerolinea, a.nombre AS nombreAerolinea,
+            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado,
+            DATEDIFF(MINUTE, v.fecha_salida, v.fecha_llegada) AS DuracionMinutos
         FROM VUELOS v
         JOIN AEROPUERTOS origen ON v.idAeropuertoOrigen = origen.idAeropuerto
         JOIN CIUDADES origenCiudad ON origen.idCiudad = origenCiudad.idCiudad
         JOIN AEROPUERTOS destino ON v.idAeropuertoDestino = destino.idAeropuerto
         JOIN CIUDADES destinoCiudad ON destino.idCiudad = destinoCiudad.idCiudad
-        WHERE DATEDIFF(MINUTE, v.fecha_salida, v.fecha_llegada) <= @maxMinutes";
+        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+        WHERE DATEDIFF(MINUTE, v.fecha_salida, v.fecha_llegada) <= @MaxMinutes";
 
         using (SqlConnection connection = GetConnection())
         {
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@maxMinutes", maxMinutes);
+                command.Parameters.AddWithValue("@MaxMinutes", maxMinutes);
                 connection.Open();
 
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        Vuelo vuelo = new Vuelo
-                        {
-                            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
-                            IdAeropuertoOrigen = reader["idAeropuertoOrigen"].ToString(),
-                            NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
-                            CiudadOrigen = reader["ciudadOrigen"].ToString(),
-                            IdAeropuertoDestino = reader["idAeropuertoDestino"].ToString(),
-                            NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
-                            CiudadDestino = reader["ciudadDestino"].ToString(),
-                            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
-                            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
-                            IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
-                            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
-                            CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
-                            AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
-                            Estado = reader["estado"].ToString()
-                        };
-                        vuelos.Add(vuelo);
+                        vuelos.Add(MapVuelo(reader));
                     }
                 }
             }
         }
-
         return vuelos;
     }
+
+    // 🔹 Método para mapear el resultado SQL al modelo `Vuelo`
+    private Vuelo MapVuelo(SqlDataReader reader)
+    {
+        return new Vuelo
+        {
+            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
+            CodigoVuelo = reader["codigo_vuelo"].ToString(),
+            IdAeropuertoOrigen = Convert.ToInt32(reader["idAeropuertoOrigen"]),
+            NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
+            CiudadOrigen = reader["ciudadOrigen"].ToString(),
+            IdAeropuertoDestino = Convert.ToInt32(reader["idAeropuertoDestino"]),
+            NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
+            CiudadDestino = reader["ciudadDestino"].ToString(),
+            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
+            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
+            IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
+            NombreAerolinea = reader["nombreAerolinea"].ToString(),
+            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
+            CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
+            AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
+            Estado = reader["estado"].ToString()
+        };
+    }
+
     public Vuelo GetVueloById(int id)
     {
         Vuelo vuelo = null;
         string query = @"
         SELECT 
-            v.idVuelo, 
-            v.idAeropuertoOrigen, 
-            origen.nombre AS nombreAeropuertoOrigen,
-            origenCiudad.nombre AS ciudadOrigen,
-            v.idAeropuertoDestino, 
-            destino.nombre AS nombreAeropuertoDestino,
-            destinoCiudad.nombre AS ciudadDestino,
-            v.fecha_salida, 
-            v.fecha_llegada, 
-            v.idAerolinea, 
-            v.precio_base, 
-            v.cantidad_asientos, 
-            v.asientos_disponibles, 
-            v.estado
+            v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, 
+            origen.nombre AS nombreAeropuertoOrigen, origenCiudad.nombre AS ciudadOrigen,
+            v.idAeropuertoDestino, destino.nombre AS nombreAeropuertoDestino, destinoCiudad.nombre AS ciudadDestino,
+            v.fecha_salida, v.fecha_llegada, v.idAerolinea, a.nombre AS nombreAerolinea,
+            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado
         FROM VUELOS v
         JOIN AEROPUERTOS origen ON v.idAeropuertoOrigen = origen.idAeropuerto
         JOIN CIUDADES origenCiudad ON origen.idCiudad = origenCiudad.idCiudad
         JOIN AEROPUERTOS destino ON v.idAeropuertoDestino = destino.idAeropuerto
         JOIN CIUDADES destinoCiudad ON destino.idCiudad = destinoCiudad.idCiudad
+        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
         WHERE v.idVuelo = @id";
 
         using (SqlConnection connection = GetConnection())
@@ -537,15 +473,17 @@ public class DbController
                         vuelo = new Vuelo
                         {
                             IdVuelo = Convert.ToInt32(reader["idVuelo"]),
-                            IdAeropuertoOrigen = reader["idAeropuertoOrigen"].ToString(),
+                            CodigoVuelo = reader["codigo_vuelo"].ToString(),
+                            IdAeropuertoOrigen = Convert.ToInt32(reader["idAeropuertoOrigen"]),
                             NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
                             CiudadOrigen = reader["ciudadOrigen"].ToString(),
-                            IdAeropuertoDestino = reader["idAeropuertoDestino"].ToString(),
+                            IdAeropuertoDestino = Convert.ToInt32(reader["idAeropuertoDestino"]),
                             NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
                             CiudadDestino = reader["ciudadDestino"].ToString(),
                             FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
                             FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
                             IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
+                            NombreAerolinea = reader["nombreAerolinea"].ToString(),
                             PrecioBase = Convert.ToDecimal(reader["precio_base"]),
                             CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
                             AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),

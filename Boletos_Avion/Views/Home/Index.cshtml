@@ -139,27 +139,27 @@
 
 <!-- Carrusel de Categorías -->
 <div class="container mt-5">
-    <h2 class="mb-4 text-center fw-bold">Categorias</h2>
+    <h2 class="mb-4 text-center fw-bold">Categorías</h2>
 
     <div id="carouselMultiItem" class="carousel slide carousel-multi-item mt-5" data-bs-ride="carousel">
         <div class="carousel-inner">
             <div class="carousel-item active">
                 <div class="row">
                     <div class="col-md-4">
-                        <a href="/categorias/Asia">
-                            <img src="~/images/carousel/asia.jpg" class="img-fluid" alt="Asia" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Asia" })">
+                            <img src="~/images/carousel/asia.jpeg" class="img-fluid" alt="Asia" />
                         </a>
                         <div class="text-center mt-2">Vuelos a Asia</div>
                     </div>
                     <div class="col-md-4">
-                        <a href="/categorias/America">
-                            <img src="~/images/carousel/asia2.jpeg" class="img-fluid" alt="America" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "America" })">
+                            <img src="~/images/carousel/america.jpg" class="img-fluid" alt="America" />
                         </a>
-                        <div class="text-center mt-2">Vuelos a America</div>
+                        <div class="text-center mt-2">Vuelos a América</div>
                     </div>
                     <div class="col-md-4">
-                        <a href="/categorias/Europa">
-                            <img src="~/images/carousel/asia3.jpeg" class="img-fluid" alt="Europa" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Europa" })">
+                            <img src="~/images/carousel/europa.jpg" class="img-fluid" alt="Europa" />
                         </a>
                         <div class="text-center mt-2">Vuelos a Europa</div>
                     </div>
@@ -168,20 +168,20 @@
             <div class="carousel-item">
                 <div class="row">
                     <div class="col-md-4">
-                        <a href="/categorias/Oceania">
-                            <img src="~/images/carousel/asia.jpg" class="img-fluid" alt="Oceania" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Oceania" })">
+                            <img src="~/images/carousel/oceania.jpg" class="img-fluid" alt="Oceania" />
                         </a>
-                        <div class="text-center mt-2">Vuelos a Oceania</div>
+                        <div class="text-center mt-2">Vuelos a Oceanía</div>
                     </div>
                     <div class="col-md-4">
-                        <a asp-controller="Categorias" asp-action="VuelosEconomicos">
-                            <img src="~/images/carousel/vuelosEconomicos.jpg" class="img-fluid" alt="Vuelos Economicos" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Vuelos Economicos" })">
+                            <img src="~/images/carousel/economico.jpeg" class="img-fluid" alt="Vuelos Económicos" />
                         </a>
                         <div class="text-center mt-2">Vuelos Económicos</div>
                     </div>
                     <div class="col-md-4">
-                        <a asp-controller="Categorias" asp-action="VuelosCortos">
-                            <img src="~/images/carousel/vuelosCortos.jpg" class="img-fluid" alt="Vuelos Cortos" />
+                        <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Vuelos Cortos" })">
+                            <img src="~/images/carousel/pocotiempo.jpg" class="img-fluid" alt="Vuelos Cortos" />
                         </a>
                         <div class="text-center mt-2">Vuelos Cortos</div>
                     </div>
@@ -198,4 +198,5 @@
         </button>
     </div>
 </div>
+
 
