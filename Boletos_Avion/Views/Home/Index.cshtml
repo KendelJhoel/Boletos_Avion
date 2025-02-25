@@ -5,6 +5,11 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/Index.css" />
+}
+
 <div class="container mt-5">
     <h2 class="mb-4 text-center fw-bold">Encuentra tu próximo vuelo</h2>
 
@@ -25,7 +30,6 @@
             </div>
         </div>
 
-        <!-- Mensaje de error -->
         @if (!string.IsNullOrEmpty(ViewBag.ErrorMensaje))
         {
             <p class="text-danger fw-bold mt-3 text-center">@ViewBag.ErrorMensaje</p>
@@ -38,7 +42,6 @@
         </div>
     </form>
 
-    <!-- Tabla de Resultados -->
     @if (Model != null && Model.Count > 0)
     {
         <div class="container mt-5">
@@ -78,8 +81,7 @@
     }
 </div>
 
-<!-- ----------------------------------------------------------------------------------------------- -->
-
+<!-- Segundo Formulario de Búsqueda Avanzada -->
 <div class="container mt-5">
     <h2 class="mb-4 text-center fw-bold">Buscar Vuelos</h2>
 
@@ -134,42 +136,70 @@
             <a href="@Url.Action("Index")" class="btn btn-secondary">Restablecer</a>
         </div>
     </form>
+</div>
 
-    <div class="container mt-5">
-        <div class="table-responsive shadow-lg p-3 bg-white rounded">
-            <table class="table table-hover text-center">
-                <thead class="bg-primary text-white">
-                    <tr>
-                        <th>Aerolínea</th>
-                        <th>Origen</th>
-                        <th>Destino</th>
-                        <th>Duración</th>
-                        <th>Precio</th>
-                        <th>Categoría</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null)
-                    {
-                        @foreach (var vuelo in Model)
-                        {
-                            <tr>
-                                <td>@vuelo.Aerolinea</td>
-                                <td>@vuelo.Origen</td>
-                                <td>@vuelo.Destino</td>
-                                <td>@vuelo.Duracion horas</td>
-                                <td>$@vuelo.PrecioBase</td>
-                                <td>@vuelo.Categoria</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <p class="alert alert-warning text-center">⚠️ No hay vuelos disponibles.</p>
-                    }
-                </tbody>
-            </table>
+<!-- Carrusel de Categorías -->
+<div class="container mt-5">
+    <h2 class="mb-4 text-center fw-bold">Categorias</h2>
+
+    <div id="carouselMultiItem" class="carousel slide carousel-multi-item mt-5" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="/categorias/Asia">
+                            <img src="~/images/carousel/asia.jpg" class="img-fluid" alt="Asia" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos a Asia</div>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/categorias/America">
+                            <img src="~/images/carousel/asia2.jpeg" class="img-fluid" alt="America" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos a America</div>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/categorias/Europa">
+                            <img src="~/images/carousel/asia3.jpeg" class="img-fluid" alt="Europa" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos a Europa</div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="/categorias/Oceania">
+                            <img src="~/images/carousel/asia.jpg" class="img-fluid" alt="Oceania" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos a Oceania</div>
+                    </div>
+                    <div class="col-md-4">
+                        <a asp-controller="Categorias" asp-action="VuelosEconomicos">
+                            <img src="~/images/carousel/vuelosEconomicos.jpg" class="img-fluid" alt="Vuelos Economicos" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos Económicos</div>
+                    </div>
+                    <div class="col-md-4">
+                        <a asp-controller="Categorias" asp-action="VuelosCortos">
+                            <img src="~/images/carousel/vuelosCortos.jpg" class="img-fluid" alt="Vuelos Cortos" />
+                        </a>
+                        <div class="text-center mt-2">Vuelos Cortos</div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselMultiItem" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselMultiItem" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
     </div>
 </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+}
