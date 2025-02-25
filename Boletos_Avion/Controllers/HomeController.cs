@@ -15,6 +15,12 @@ namespace Boletos_Avion.Controllers
 
         public IActionResult Index()
         {
+            // Verificar que el usuario esté autenticado
+            if (HttpContext.Session.GetString("UserEmail") != null)
+            {
+                ViewBag.UserName = HttpContext.Session.GetString("UserName");
+                ViewBag.UserRole = HttpContext.Session.GetInt32("UserRole");
+            }
             return View();
         }
 
