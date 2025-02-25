@@ -1,4 +1,8 @@
+-- Crear base de datos
 CREATE DATABASE GestionBoletos
+GO
+
+USE GestionBoletos
 GO
 
 -- Tabla de Roles
@@ -46,7 +50,7 @@ CREATE TABLE CIUDADES (
 
 -- Tabla de Aeropuertos
 CREATE TABLE AEROPUERTOS (
-    codigo CHAR(3) PRIMARY KEY,
+    idAeropuerto INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(100) NOT NULL,
     idCiudad INT NOT NULL,
     FOREIGN KEY (idCiudad) REFERENCES CIUDADES(idCiudad)
@@ -58,55 +62,42 @@ CREATE TABLE AEROLINEAS (
     nombre VARCHAR(100) NOT NULL
 );
 
+-- Tabla de Categorías de Asientos
+CREATE TABLE CATEGORIAS_ASIENTOS (
+    idCategoria INT PRIMARY KEY IDENTITY(1,1),
+    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('Business', 'Turista', 'Primera Clase'))
+);
+
 -- Tabla de Vuelos
 CREATE TABLE VUELOS (
     idVuelo INT PRIMARY KEY IDENTITY(1,1),
-    codigo_vuelo VARCHAR(20) NOT NULL UNIQUE,
-    idAeropuertoOrigen CHAR(3) NOT NULL,
-    idAeropuertoDestino CHAR(3) NOT NULL,
+    idAeropuertoOrigen INT NOT NULL,
+    idAeropuertoDestino INT NOT NULL,
     fecha_salida DATETIME2 NOT NULL,
     fecha_llegada DATETIME2 NOT NULL,
     idAerolinea INT NOT NULL,
     precio_base DECIMAL(10,2) NOT NULL,
-    capacidad INT NOT NULL,
+    cantidad_asientos INT NOT NULL,
+    asientos_disponibles INT DEFAULT 0,
     estado VARCHAR(20) NOT NULL CHECK (estado IN ('Disponible', 'Lleno', 'Cancelado')),
-    FOREIGN KEY (idAeropuertoOrigen) REFERENCES AEROPUERTOS(codigo),
-    FOREIGN KEY (idAeropuertoDestino) REFERENCES AEROPUERTOS(codigo),
+    FOREIGN KEY (idAeropuertoOrigen) REFERENCES AEROPUERTOS(idAeropuerto),
+    FOREIGN KEY (idAeropuertoDestino) REFERENCES AEROPUERTOS(idAeropuerto),
     FOREIGN KEY (idAerolinea) REFERENCES AEROLINEAS(idAerolinea)
 );
 
--- Tabla de Tramos
-CREATE TABLE TRAMOS (
-    idTramo INT PRIMARY KEY IDENTITY(1,1),
+-- Tabla de Asientos por Vuelo
+CREATE TABLE VUELOS_ASIENTOS (
+    idVueloAsiento INT PRIMARY KEY IDENTITY(1,1),
     idVuelo INT NOT NULL,
-    orden INT NOT NULL, -- Secuencia del tramo
-    codigoAeropuerto CHAR(3) NOT NULL, -- Aeropuerto de escala
-    hora_salida DATETIME2 NOT NULL,
-    hora_llegada DATETIME2 NOT NULL,
-    FOREIGN KEY (idVuelo) REFERENCES VUELOS(idVuelo),
-    FOREIGN KEY (codigoAeropuerto) REFERENCES AEROPUERTOS(codigo)
-);
-
--- Tabla de Categorías de Asientos
-CREATE TABLE CATEGORIAS_ASIENTOS (
-    idCategoria INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('Turista', 'Business', '1a Clase', 'Economica'))
-);
-
--- Tabla de Asientos
-CREATE TABLE ASIENTOS (
-    idAsiento INT PRIMARY KEY IDENTITY(1,1),
-    idVuelo INT NOT NULL,
+    numero VARCHAR(10) NOT NULL,
     idCategoria INT NOT NULL,
-    numero VARCHAR(10) NOT NULL, -- Ejemplo: "12A"
-    precio_extra DECIMAL(10,2) DEFAULT 0,
     estado VARCHAR(20) NOT NULL CHECK (estado IN ('Disponible', 'Reservado')),
     FOREIGN KEY (idVuelo) REFERENCES VUELOS(idVuelo),
     FOREIGN KEY (idCategoria) REFERENCES CATEGORIAS_ASIENTOS(idCategoria),
-    CONSTRAINT UQ_ASIENTOS UNIQUE (idVuelo, numero)
+    CONSTRAINT UQ_VUELOS_ASIENTOS UNIQUE (idVuelo, numero)
 );
 
--- Tabla de Boletos (Compra directa)
+-- Tabla de Boletos
 CREATE TABLE BOLETOS (
     idBoleto INT PRIMARY KEY IDENTITY(1,1),
     idUsuario INT NOT NULL,
@@ -116,15 +107,15 @@ CREATE TABLE BOLETOS (
     FOREIGN KEY (idUsuario) REFERENCES USUARIOS(idUsuario)
 );
 
--- Tabla de Boletos_Detalle (Asociación de boletos con vuelos y asientos)
+-- Tabla de Detalle de Boletos
 CREATE TABLE BOLETOS_DETALLE (
     idBoleto INT NOT NULL,
     idVuelo INT NOT NULL,
-    idAsiento INT,
+    idVueloAsiento INT,
     PRIMARY KEY (idBoleto, idVuelo),
     FOREIGN KEY (idBoleto) REFERENCES BOLETOS(idBoleto),
     FOREIGN KEY (idVuelo) REFERENCES VUELOS(idVuelo),
-    FOREIGN KEY (idAsiento) REFERENCES ASIENTOS(idAsiento)
+    FOREIGN KEY (idVueloAsiento) REFERENCES VUELOS_ASIENTOS(idVueloAsiento)
 );
 
 -- Tabla de Métodos de Pago
@@ -135,8 +126,9 @@ CREATE TABLE METODOS_PAGO (
 
 CREATE TABLE TIPOS_TARJETAS (
     idTipoTarjeta INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(50) NOT NULL -- Ejemplo: 'Visa', 'MasterCard', 'American Express'
+    nombre VARCHAR(50) NOT NULL UNIQUE  -- Ejemplos: 'Visa', 'MasterCard', 'American Express'
 );
+
 
 -- Tabla de Pagos
 CREATE TABLE PAGOS (
@@ -158,7 +150,7 @@ CREATE TABLE EQUIPAJES (
     FOREIGN KEY (idBoleto) REFERENCES BOLETOS(idBoleto)
 );
 
--- Tabla de Historial de Boletos (para registrar cambios y acciones sobre la compra)
+-- Tabla de Historial de Boletos
 CREATE TABLE HISTORIAL_BOLETOS (
     idHistorial INT PRIMARY KEY IDENTITY(1,1),
     idBoleto INT NOT NULL,
@@ -168,7 +160,7 @@ CREATE TABLE HISTORIAL_BOLETOS (
     FOREIGN KEY (idBoleto) REFERENCES BOLETOS(idBoleto)
 );
 
--- Tabla de Bitácora (Auditoría general de acciones en el sistema)
+-- Tabla de Bitácora (Auditoría general)
 CREATE TABLE BITACORA (
     idBitacora INT PRIMARY KEY IDENTITY(1,1),
     nombreTabla VARCHAR(50) NOT NULL,
