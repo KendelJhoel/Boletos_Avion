@@ -12,5 +12,13 @@
         public decimal PrecioBase { get; set; }
         public int Capacidad { get; set; }
         public string Estado { get; set; }
+        public int CantidadAsientos { get; set; }
+        public int AsientosDisponibles { get; set; }
+
+        public string NombreAeropuertoOrigen { get; set; }
+        public string CiudadOrigen { get; set; }
+        public string NombreAeropuertoDestino { get; set; }
+        public string CiudadDestino { get; set; }
+
     }
 }

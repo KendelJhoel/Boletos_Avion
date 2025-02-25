@@ -28,5 +28,8 @@
         public decimal Precio => PrecioBase * 1.13m; // Aplicando impuesto (ejemplo)
         public string Categoria { get; set; } // Nueva propiedad
 
+      
+
+
     }
 }
