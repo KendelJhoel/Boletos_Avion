@@ -154,5 +154,25 @@ namespace Boletos_Avion.Controllers
             return vuelos;
         }
 
+        public IActionResult Detalle(int id)
+        {
+            // Utiliza tu DbController (o el método que uses para acceder a la base de datos)
+            DbController dbController = new DbController();
+            // Aquí podrías tener un método GetVueloById en tu DbController
+            Vuelo vuelo = dbController.GetVueloById(id);
+
+            if (vuelo == null)
+            {
+                return NotFound();
+            }
+
+            return View(vuelo);
+        }
+
+
+
     }
+
+
+
 }

@@ -1,0 +1,25 @@
+﻿@model Boletos_Avion.Models.Vuelo
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Detalle del Vuelo";
+}
+
+<h1 class="mt-4 text-center">@ViewData["Title"]</h1>
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            Vuelo: @Model.IdVuelo
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Detalles del Vuelo</h5>
+            <p class="card-text"><strong>Aeropuerto Origen:</strong> @Model.NombreAeropuertoOrigen (@Model.CiudadOrigen)</p>
+            <p class="card-text"><strong>Aeropuerto Destino:</strong> @Model.NombreAeropuertoDestino (@Model.CiudadDestino)</p>
+            <p class="card-text"><strong>Fecha Salida:</strong> @Model.FechaSalida.ToString("yyyy-MM-dd HH:mm")</p>
+            <p class="card-text"><strong>Fecha Llegada:</strong> @Model.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</p>
+            <p class="card-text"><strong>Precio Base:</strong> @Model.PrecioBase.ToString("C")</p>
+            <p class="card-text"><strong>Asientos Disponibles:</strong> @Model.AsientosDisponibles</p>
+            <p class="card-text"><strong>Estado:</strong> @Model.Estado</p>
+        </div>
+    </div>
+</div>

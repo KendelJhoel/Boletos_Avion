@@ -1,7 +1,7 @@
 ﻿@model List<Boletos_Avion.Models.Vuelo>
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Vuelos de 5 Horas o Menos";
+    ViewData["Title"] = "Vuelos Económicos ($250 - $500)";
 }
 
 <!-- Estilos para resaltar la columna "Ciudad Destino" -->
@@ -17,7 +17,7 @@
 
 @if (Model == null || Model.Count == 0)
 {
-    <p class="text-center">No se encontraron vuelos que duren 5 horas o menos.</p>
+    <p class="text-center">No se encontraron vuelos en ese rango de precio.</p>
 }
 else
 {
