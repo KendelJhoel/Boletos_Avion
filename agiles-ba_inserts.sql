@@ -485,6 +485,17 @@ INSERT INTO AEROLINEAS (nombre) VALUES
 
 
 
+--#_ C A T E G O R I A S - V U E L O S _#
+INSERT INTO CATEGORIAS_VUELOS (nombre) VALUES
+('Nacional'),
+('Internacional'),
+('Directo'),
+('Con escalas'),
+('Chárter'),
+('Regular');
+
+
+
 
 -- #_ M E T O D O S - D E - P A G O _#
 INSERT INTO METODOS_PAGO (nombre) VALUES

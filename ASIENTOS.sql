@@ -1,12 +1,3 @@
-SELECT idVuelo, COUNT(*) AS TotalAsientos
-FROM VUELOS_ASIENTOS
-GROUP BY idVuelo;
-
-select * from VUELOS_ASIENTOS
-
-DELETE FROM VUELOS_ASIENTOS;
-DBCC CHECKIDENT ('VUELOS_ASIENTOS', RESEED, 0);
-
 CREATE OR ALTER PROCEDURE GenerarAsientosPorVuelo
 AS
 BEGIN
@@ -28,9 +19,9 @@ BEGIN
         DECLARE @idCategoria INT
         DECLARE @iAsiento INT = 1
 
-        -- Business (10% = 20 asientos)
+        -- Business (10% = 10 asientos)
         SET @idCategoria = 1
-        WHILE @iAsiento <= 20
+        WHILE @iAsiento <= 10
         BEGIN
             SET @Fila = CEILING(@iAsiento / 4.0)
             SET @Letra = CHAR(65 + ((@iAsiento - 1) % 4))  -- A, B, C, D
@@ -39,24 +30,24 @@ BEGIN
             SET @iAsiento += 1
         END
 
-        -- Turista (70% = 140 asientos)
+        -- Turista (70% = 70 asientos)
         SET @idCategoria = 2
         SET @iAsiento = 1
-        WHILE @iAsiento <= 140
+        WHILE @iAsiento <= 70
         BEGIN
-            SET @Fila = CEILING((@iAsiento + 20) / 4.0)
+            SET @Fila = CEILING((@iAsiento + 10) / 4.0)
             SET @Letra = CHAR(65 + ((@iAsiento - 1) % 4))  -- A, B, C, D
             INSERT INTO VUELOS_ASIENTOS (idVuelo, numero, idCategoria, estado)
             VALUES (@idVuelo, CONCAT(@Fila, @Letra), @idCategoria, 'Disponible')
             SET @iAsiento += 1
         END
 
-        -- Primera Clase (20% = 40 asientos)
+        -- Primera Clase (20% = 20 asientos)
         SET @idCategoria = 3
         SET @iAsiento = 1
-        WHILE @iAsiento <= 40
+        WHILE @iAsiento <= 20
         BEGIN
-            SET @Fila = CEILING((@iAsiento + 160) / 4.0)
+            SET @Fila = CEILING((@iAsiento + 80) / 4.0)
             SET @Letra = CHAR(65 + ((@iAsiento - 1) % 4))  -- A, B, C, D
             INSERT INTO VUELOS_ASIENTOS (idVuelo, numero, idCategoria, estado)
             VALUES (@idVuelo, CONCAT(@Fila, @Letra), @idCategoria, 'Disponible')
@@ -68,7 +59,10 @@ BEGIN
 
     CLOSE vuelo_cursor
     DEALLOCATE vuelo_cursor
-END
+END;
 
 -- EJECUTAR ESTO PARA GENERAR LOS ASIENTOS
 EXEC GenerarAsientosPorVuelo;
+
+-- VER TOTAL DE ASIENTOS
+SELECT COUNT(*) AS TotalAsientos FROM VUELOS_ASIENTOS;

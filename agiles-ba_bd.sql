@@ -1,4 +1,4 @@
--- Crear base de datos
+-- Crear base de datos 
 CREATE DATABASE GestionBoletos
 GO
 
@@ -62,6 +62,12 @@ CREATE TABLE AEROLINEAS (
     nombre VARCHAR(100) NOT NULL
 );
 
+-- Tabla de Categorías de Vuelo
+CREATE TABLE CATEGORIAS_VUELOS (
+    idCategoriaVuelo INT PRIMARY KEY IDENTITY(1,1),
+    nombre VARCHAR(50) NOT NULL UNIQUE
+);
+
 -- Tabla de Categorías de Asientos
 CREATE TABLE CATEGORIAS_ASIENTOS (
     idCategoria INT PRIMARY KEY IDENTITY(1,1),
@@ -71,18 +77,21 @@ CREATE TABLE CATEGORIAS_ASIENTOS (
 -- Tabla de Vuelos
 CREATE TABLE VUELOS (
     idVuelo INT PRIMARY KEY IDENTITY(1,1),
+    codigo_vuelo VARCHAR(20) NOT NULL UNIQUE,
     idAeropuertoOrigen INT NOT NULL,
     idAeropuertoDestino INT NOT NULL,
     fecha_salida DATETIME2 NOT NULL,
     fecha_llegada DATETIME2 NOT NULL,
     idAerolinea INT NOT NULL,
+    idCategoriaVuelo INT NULL,
     precio_base DECIMAL(10,2) NOT NULL,
     cantidad_asientos INT NOT NULL,
     asientos_disponibles INT DEFAULT 0,
     estado VARCHAR(20) NOT NULL CHECK (estado IN ('Disponible', 'Lleno', 'Cancelado')),
     FOREIGN KEY (idAeropuertoOrigen) REFERENCES AEROPUERTOS(idAeropuerto),
     FOREIGN KEY (idAeropuertoDestino) REFERENCES AEROPUERTOS(idAeropuerto),
-    FOREIGN KEY (idAerolinea) REFERENCES AEROLINEAS(idAerolinea)
+    FOREIGN KEY (idAerolinea) REFERENCES AEROLINEAS(idAerolinea),
+    FOREIGN KEY (idCategoriaVuelo) REFERENCES CATEGORIAS_VUELOS(idCategoriaVuelo)
 );
 
 -- Tabla de Asientos por Vuelo
@@ -128,7 +137,6 @@ CREATE TABLE TIPOS_TARJETAS (
     idTipoTarjeta INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(50) NOT NULL UNIQUE  -- Ejemplos: 'Visa', 'MasterCard', 'American Express'
 );
-
 
 -- Tabla de Pagos
 CREATE TABLE PAGOS (

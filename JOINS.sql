@@ -35,4 +35,19 @@ FROM CIUDADES	ciu
 INNER JOIN PAISES pai ON ciu.idPais = pai.idPais;
 -- ORDER BY ciu.nombre ASC;
 
+-- aeropuertos y sus ciudades
+SELECT 
+    A.idAeropuerto, 
+    A.nombre AS NombreAeropuerto, 
+    C.idCiudad, 
+    C.nombre AS NombreCiudad
+FROM AEROPUERTOS A
+INNER JOIN CIUDADES C ON A.idCiudad = C.idCiudad;
 
+SELECT COUNT(*) AS TotalAeropuertos FROM AEROPUERTOS;
+
+-- Eliminar todos los registros de la tabla
+DELETE FROM AEROPUERTOS;
+
+-- Reiniciar el contador de IDENTITY en SQL Server
+DBCC CHECKIDENT ('AEROPUERTOS', RESEED, 0);
