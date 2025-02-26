@@ -25,7 +25,19 @@ namespace Boletos_Avion.Controllers
         [HttpPost]
         public IActionResult BuscarVuelos(string origen, string destino, DateTime? fechaIda, decimal? precioMin, decimal? precioMax, string aerolinea, string categoria)
         {
+
+
             var vuelos = ObtenerVuelos(origen, destino, fechaIda, precioMin, precioMax, aerolinea, categoria);
+
+            // Guardar valores en ViewBag para que se mantengan después de la búsqueda
+            ViewBag.Origen = origen;
+            ViewBag.Destino = destino;
+            ViewBag.FechaIda = fechaIda?.ToString("yyyy-MM-dd"); // Formato compatible con input date
+            ViewBag.PrecioMin = precioMin;
+            ViewBag.PrecioMax = precioMax;
+            ViewBag.Aerolinea = aerolinea;
+            ViewBag.Categoria = categoria;
+
             return View("~/Views/Home/Index.cshtml", vuelos);
         }
 
@@ -118,6 +130,21 @@ namespace Boletos_Avion.Controllers
             return vuelos;
         }
 
+
+
+        //-----------
+        public IActionResult Detalle(int id)
+        {
+            DbController dbController = new DbController();
+            Vuelo vuelo = dbController.GetVueloById(id);
+
+            if (vuelo == null)
+            {
+                return NotFound();
+            }
+
+            return View(vuelo);
+        }
 
     }
 

@@ -14,29 +14,35 @@
 
     <!-- Formulario -->
     <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light">
+
         <div class="row justify-content-center align-items-center text-center">
             <div class="col-md-3">
                 <label for="origen" class="form-label fw-bold">Origen</label>
-                <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen" placeholder="Ej. San Salvador" />
+                <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen"
+                       placeholder="Ej. San Salvador" value="@ViewBag.Origen" />
             </div>
             <div class="col-md-3">
                 <label for="destino" class="form-label fw-bold">Destino</label>
-                <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino" placeholder="Ej. New York" />
+                <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino"
+                       placeholder="Ej. New York" value="@ViewBag.Destino" />
             </div>
             <div class="col-md-3">
                 <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
-                <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda" />
+                <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda"
+                       value="@ViewBag.FechaIda" />
             </div>
         </div>
 
         <div class="row justify-content-center align-items-center text-center mt-3">
             <div class="col-md-3">
                 <label for="precioMin" class="form-label fw-bold">Precio Mínimo</label>
-                <input type="number" class="form-control rounded-pill text-center" name="precioMin" id="precioMin" min="0" step="50" placeholder="Ej. 100" />
+                <input type="number" class="form-control rounded-pill text-center" name="precioMin" id="precioMin"
+                       min="0" step="50" placeholder="Ej. 100" value="@ViewBag.PrecioMin" />
             </div>
             <div class="col-md-3">
                 <label for="precioMax" class="form-label fw-bold">Precio Máximo</label>
-                <input type="number" class="form-control rounded-pill text-center" name="precioMax" id="precioMax" min="0" step="50" placeholder="Ej. 1000" />
+                <input type="number" class="form-control rounded-pill text-center" name="precioMax" id="precioMax"
+                       min="0" step="50" placeholder="Ej. 1000" value="@ViewBag.PrecioMax" />
             </div>
         </div>
 
@@ -45,31 +51,27 @@
                 <label for="aerolinea" class="form-label fw-bold">Aerolínea</label>
                 <select class="form-select rounded-pill text-center" name="aerolinea" id="aerolinea">
                     <option value="">Seleccione una aerolínea</option>
-                    <option value="American Airlines">American Airlines</option>
-                    <option value="LATAM Airlines">LATAM Airlines</option>
-                    <option value="Iberia">Iberia</option>
-                    <option value="Air France">Air France</option>
-                    <option value="Lufthansa">Lufthansa</option>
-                    <option value="British Airways">British Airways</option>
-                    <option value="Qantas">Qantas</option>
-                    <option value="Japan Airlines">Japan Airlines</option>
-                    <option value="Emirates">Emirates</option>
-                    <option value="Aeroméxico">Aeroméxico</option>
+                    @foreach (var aerolinea in new List<string> { "American Airlines", "LATAM Airlines", "Iberia", "Air France", "Lufthansa", "British Airways", "Qantas", "Japan Airlines", "Emirates", "Aeroméxico" })
+                    {
+                        var selected = (ViewBag.Aerolinea == aerolinea) ? "selected='selected'" : "";
+                        @Html.Raw($"<option value='{aerolinea}' {selected}>{aerolinea}</option>")
+                    }
                 </select>
             </div>
+
             <div class="col-md-3">
                 <label for="categoria" class="form-label fw-bold">Categoría</label>
                 <select class="form-select rounded-pill text-center" name="categoria" id="categoria">
                     <option value="">Seleccione una categoría</option>
-                    <option value="Chárter">Chárter</option>
-                    <option value="Con escalas">Con escalas</option>
-                    <option value="Directo">Directo</option>
-                    <option value="Internacional">Internacional</option>
-                    <option value="Nacional">Nacional</option>
-                    <option value="Regular">Regular</option>
+                    @foreach (var categoria in new List<string> { "Chárter", "Con escalas", "Directo", "Internacional", "Nacional", "Regular" })
+                    {
+                        var selected = (ViewBag.Categoria == categoria) ? "selected='selected'" : "";
+                        @Html.Raw($"<option value='{categoria}' {selected}>{categoria}</option>")
+                    }
                 </select>
             </div>
         </div>
+
 
         @if (!string.IsNullOrEmpty(ViewBag.ErrorMensaje))
         {
@@ -80,8 +82,23 @@
             <button class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow" type="submit">
                 🔍 Buscar Vuelos
             </button>
+            <button type="button" class="btn btn-secondary px-5 py-2 rounded-pill fw-bold shadow ms-3" id="limpiarFiltros">
+                ✖ Limpiar Filtros
+            </button>
         </div>
     </form>
+
+    <script>
+        document.getElementById("limpiarFiltros").addEventListener("click", function () {
+            document.getElementById("origen").value = "";
+            document.getElementById("destino").value = "";
+            document.getElementById("fechaIda").value = "";
+            document.getElementById("precioMin").value = "";
+            document.getElementById("precioMax").value = "";
+            document.getElementById("aerolinea").selectedIndex = 0;
+            document.getElementById("categoria").selectedIndex = 0;
+        });
+    </script>
 
     @if (Model != null && Model.Count > 0)
     {
@@ -126,6 +143,7 @@
     {
         <p class="alert alert-warning text-center fw-bold mt-4">⚠️ No hay vuelos disponibles para los criterios ingresados.</p>
     }
+
 </div>
 
 
