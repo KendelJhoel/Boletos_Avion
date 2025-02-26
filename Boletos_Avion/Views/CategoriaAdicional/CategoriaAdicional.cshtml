@@ -5,7 +5,7 @@
     string filtro = ViewData["Filtro"]?.ToString() ?? "Categoría Desconocida";
 }
 
-<!-- Establecemos la imagen de fondo para todo el body -->
+<!-- Imagen de fondo para todo el body -->
 <style>
     body {
         background: url('@Url.Content("~/images/back.jpg")') no-repeat center center fixed;
@@ -60,11 +60,14 @@
             }
             else
             {
-                <p class="text-center text-danger">No hay vuelos disponibles para esta categoría adicional.</p>
+                <div class="alert alert-warning text-center mt-4" role="alert">
+                    ⚠️ No hay vuelos disponibles para esta categoría adicional.
+                </div>
             }
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <style>
