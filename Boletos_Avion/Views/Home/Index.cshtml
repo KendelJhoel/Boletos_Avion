@@ -102,42 +102,40 @@
 
     @if (Model != null && Model.Count > 0)
     {
-        <div class="container mt-5">
-            <h2 class="mb-4 text-center fw-bold">Resultados de la búsqueda</h2>
-            <div class="table-responsive shadow-lg p-3 bg-white rounded">
-                <table class="table table-hover text-center">
-                    <thead class="bg-primary text-white">
-                        <tr>
-                            <th>Código Vuelo</th>
-                            <th>Ciudad Origen</th>
-                            <th>Ciudad Destino</th>
-                            <th>Aerolínea</th>
-                            <th>Categoría Vuelo</th>
-                            <th>Fecha de Salida</th>
-                            <th>Fecha de Llegada</th>
-                            <th>Precio Base</th>
-                            <th>Estado</th>
+        <div class="table-responsive shadow-lg p-3 bg-white rounded">
+            <table class="table table-hover text-center">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th>Código Vuelo</th>
+                        <th>Ciudad Origen</th>
+                        <th>Ciudad Destino</th>
+                        <th>Aerolínea</th>
+                        <th>Categoría Vuelo</th>
+                        <th>Fecha de Salida</th>
+                        <th>Fecha de Llegada</th>
+                        <th>Precio Base</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vuelo in Model)
+                    {
+                        <tr class="clickable-row" data-href="@Url.Action("Detalle", "Vuelos", new { id = vuelo.IdVuelo })">
+                            <td><strong>@vuelo.CodigoVuelo</strong></td>
+                            <td>@vuelo.CiudadOrigen</td>
+                            <td>@vuelo.CiudadDestino</td>
+                            <td>@vuelo.Aerolinea</td>
+                            <td>@vuelo.Categoria</td>
+                            <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
+                            <td>@vuelo.Estado</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var vuelo in Model)
-                        {
-                            <tr>
-                                <td><strong>@vuelo.CodigoVuelo</strong></td>
-                                <td>@vuelo.CiudadOrigen</td>
-                                <td>@vuelo.CiudadDestino</td>
-                                <td>@vuelo.Aerolinea</td>
-                                <td>@vuelo.Categoria</td>
-                                <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
-                                <td>@vuelo.Estado</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
+
     }
     else if (Model != null && Model.Count == 0)
     {
@@ -209,3 +207,18 @@
     </div>
 </div>
 
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            console.log("jQuery cargado correctamente.");
+            console.log("Filas detectadas:", $(".clickable-row").length);
+
+            $("tbody").on("click", ".clickable-row", function () {
+                var url = $(this).data("href");
+                if (url) {
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
+}

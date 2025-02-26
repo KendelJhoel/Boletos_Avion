@@ -39,5 +39,23 @@ namespace Boletos_Avion.Models
         // 🔹 Propiedades adicionales para mostrar nombres en las vistas
         public string NombreAerolinea { get; set; }
 
+
+        public string PaisOrigen { get; set; }
+        public string PaisDestino { get; set; }
+
+        public string CodigoPaisOrigen { get; set; }
+        public string CodigoPaisDestino { get; set; }
+
+        // Cantidad de asientos totales por categoría
+        public int AsientosBusiness { get; set; }
+        public int AsientosPrimeraClase { get; set; }
+        public int AsientosTurista { get; set; }
+
+        // Cantidad de asientos disponibles por categoría
+        public int AsientosBusinessDisponibles { get; set; }
+        public int AsientosPrimeraClaseDisponibles { get; set; }
+        public int AsientosTuristaDisponibles { get; set; }
+
+
     }
 }

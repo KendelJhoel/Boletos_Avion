@@ -36,3 +36,14 @@
 body {
     padding-bottom: 50px;
 }
+
+/* Asegurar que las filas sean clickeables con el cursor de "manita" */
+.clickable-row {
+    cursor: pointer !important;
+    transition: background-color 0.2s ease-in-out;
+}
+
+    /* Cambio de color al pasar el mouse sobre una fila */
+    .clickable-row:hover {
+        background-color: #f1f1f1 !important;
+    }

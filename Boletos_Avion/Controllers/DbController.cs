@@ -7,6 +7,41 @@ public class DbController
 {
     private readonly string connectionString;
 
+    private static readonly Dictionary<string, string> CodigoPaises = new Dictionary<string, string>{
+        // América
+        { "Argentina", "AR" },
+        { "Belice", "BZ" },
+        { "Brasil", "BR" },
+        { "Canadá", "CA" },
+        { "Chile", "CL" },
+        { "Colombia", "CO" },
+        { "Costa Rica", "CR" },
+        { "El Salvador", "SV" },
+        { "Estados Unidos", "US" },
+        { "Guatemala", "GT" },
+        { "Honduras", "HN" },
+        { "México", "MX" },
+        { "Panamá", "PA" },
+        { "Perú", "PE" },
+        { "Puerto Rico", "PR" },
+        { "República Dominicana", "DO" },
+
+        // Asia
+        { "Japón", "JP" },
+
+        // Europa
+        { "Alemania", "DE" },
+        { "España", "ES" },
+        { "Francia", "FR" },
+        { "Portugal", "PT" },
+        { "Reino Unido", "GB" },
+        { "Suecia", "SE" },
+
+        // Oceanía
+        { "Australia", "AU" },
+        { "Nueva Zelanda", "NZ" }
+    };
+
     public DbController()
     {
         connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
@@ -489,6 +524,97 @@ public class DbController
                             AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
                             Estado = reader["estado"].ToString()
                         };
+                    }
+                }
+            }
+        }
+
+        return vuelo;
+    }
+
+    public Vuelo GetVueloDetallesById(int id)
+    {
+        Vuelo vuelo = null;
+        string query = @"
+        SELECT 
+            v.idVuelo, v.codigo_vuelo, 
+            v.idAeropuertoOrigen, ao.nombre AS nombreAeropuertoOrigen, co.nombre AS ciudadOrigen, po.nombre AS paisOrigen,
+            v.idAeropuertoDestino, ad.nombre AS nombreAeropuertoDestino, cd.nombre AS ciudadDestino, pd.nombre AS paisDestino,
+            v.fecha_salida, v.fecha_llegada, 
+            v.idAerolinea, a.nombre AS nombreAerolinea,
+            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado,
+            
+            -- Cantidad total de asientos por tipo en el vuelo
+            COALESCE(SUM(CASE WHEN va.idCategoria = 1 THEN 1 ELSE 0 END), 0) AS totalBusiness,
+            COALESCE(SUM(CASE WHEN va.idCategoria = 2 THEN 1 ELSE 0 END), 0) AS totalTurista,
+            COALESCE(SUM(CASE WHEN va.idCategoria = 3 THEN 1 ELSE 0 END), 0) AS totalPrimeraClase,
+
+            -- Cantidad de asientos disponibles por tipo
+            COALESCE(SUM(CASE WHEN va.idCategoria = 1 AND va.estado = 'Disponible' THEN 1 ELSE 0 END), 0) AS disponiblesBusiness,
+            COALESCE(SUM(CASE WHEN va.idCategoria = 2 AND va.estado = 'Disponible' THEN 1 ELSE 0 END), 0) AS disponiblesTurista,
+            COALESCE(SUM(CASE WHEN va.idCategoria = 3 AND va.estado = 'Disponible' THEN 1 ELSE 0 END), 0) AS disponiblesPrimeraClase
+
+        FROM VUELOS v
+        JOIN AEROPUERTOS ao ON v.idAeropuertoOrigen = ao.idAeropuerto
+        JOIN CIUDADES co ON ao.idCiudad = co.idCiudad
+        JOIN PAISES po ON co.idPais = po.idPais
+        JOIN AEROPUERTOS ad ON v.idAeropuertoDestino = ad.idAeropuerto
+        JOIN CIUDADES cd ON ad.idCiudad = cd.idCiudad
+        JOIN PAISES pd ON cd.idPais = pd.idPais
+        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+        LEFT JOIN VUELOS_ASIENTOS va ON v.idVuelo = va.idVuelo -- Relación con asientos
+
+        WHERE v.idVuelo = @id
+        GROUP BY v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, ao.nombre, co.nombre, po.nombre,
+                 v.idAeropuertoDestino, ad.nombre, cd.nombre, pd.nombre, v.fecha_salida, v.fecha_llegada, 
+                 v.idAerolinea, a.nombre, v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado";
+
+        using (SqlConnection connection = GetConnection())
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@id", id);
+                connection.Open();
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        vuelo = new Vuelo
+                        {
+                            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
+                            CodigoVuelo = reader["codigo_vuelo"].ToString(),
+                            IdAeropuertoOrigen = Convert.ToInt32(reader["idAeropuertoOrigen"]),
+                            NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
+                            CiudadOrigen = reader["ciudadOrigen"].ToString(),
+                            PaisOrigen = reader["paisOrigen"].ToString(),
+                            IdAeropuertoDestino = Convert.ToInt32(reader["idAeropuertoDestino"]),
+                            NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
+                            CiudadDestino = reader["ciudadDestino"].ToString(),
+                            PaisDestino = reader["paisDestino"].ToString(),
+                            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
+                            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
+                            IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
+                            NombreAerolinea = reader["nombreAerolinea"].ToString(),
+                            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
+                            CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
+                            AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
+                            Estado = reader["estado"].ToString(),
+
+                            // Cantidad total de asientos por tipo
+                            AsientosBusiness = Convert.ToInt32(reader["totalBusiness"]),
+                            AsientosTurista = Convert.ToInt32(reader["totalTurista"]),
+                            AsientosPrimeraClase = Convert.ToInt32(reader["totalPrimeraClase"]),
+
+                            // Cantidad de asientos disponibles por tipo
+                            AsientosBusinessDisponibles = Convert.ToInt32(reader["disponiblesBusiness"]),
+                            AsientosTuristaDisponibles = Convert.ToInt32(reader["disponiblesTurista"]),
+                            AsientosPrimeraClaseDisponibles = Convert.ToInt32(reader["disponiblesPrimeraClase"])
+                        };
+
+                        // Agregar el código del país usando el diccionario
+                        vuelo.CodigoPaisOrigen = CodigoPaises.ContainsKey(vuelo.PaisOrigen) ? CodigoPaises[vuelo.PaisOrigen] : "UN";
+                        vuelo.CodigoPaisDestino = CodigoPaises.ContainsKey(vuelo.PaisDestino) ? CodigoPaises[vuelo.PaisDestino] : "UN";
                     }
                 }
             }

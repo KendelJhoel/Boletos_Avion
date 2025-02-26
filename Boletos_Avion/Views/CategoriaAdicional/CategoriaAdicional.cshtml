@@ -22,7 +22,6 @@
         <table id="tablaVuelos" class="table table-bordered text-center" style="width:100%">
             <thead>
                 <tr style="background-color: black; color: white;">
-                    <!-- 🔹 Fondo negro con texto blanco -->
                     <th class="sortable">Ciudad Origen (Aeropuerto)</th>
                     <th class="sortable">Ciudad Destino (Aeropuerto)</th>
                     <th class="sortable">Aerolínea</th>
@@ -55,9 +54,7 @@ else
 }
 
 @section Scripts {
-    <!-- 🔹 Estilos para mejorar la apariencia de la tabla -->
     <style>
-        /* 🔹 Forzar a que las flechitas de orden sean visibles en todas las columnas */
         table.dataTable thead th {
             position: relative;
             padding-right: 30px;
@@ -67,7 +64,7 @@ else
                 content: " ⬍"; /* 🔹 Flechitas de ordenamiento visibles siempre */
                 position: absolute;
                 right: 10px;
-                color: white; /* 🔹 Flechitas en blanco */
+                color: white;
             }
 
         /* 🔹 Hacer que las filas sean clickeables y cambien de color al pasar el mouse */
@@ -77,24 +74,23 @@ else
         }
 
             .clickable-row:hover {
-                background-color: #f8d7da; /* 🔹 Un color rojo pastel suave */
+                background-color: #f8d7da;
             }
     </style>
 
-    <!-- 🔹 Agregar DataTables con paginación y ordenamiento múltiple -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <script>
         $(document).ready(function () {
-            $('#tablaVuelos').DataTable({
+            var tabla = $('#tablaVuelos').DataTable({
                 "ordering": true,
                 "paging": true,
                 "pageLength": 25,
                 "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
                 "info": true,
                 "searching": false,
-                "orderMulti": true,  // ✅ Habilita ordenamiento múltiple con Shift + Click
+                "orderMulti": true,
                 "order": [],
                 "autoWidth": false,
                 "language": {
@@ -112,11 +108,55 @@ else
                 }
             });
 
-            // 🔹 Evento Click en la Fila para redirigir a Detalle
-            $('.clickable-row').on("click", function () {
+            // 🔹 Almacena el estado de cada columna (0 = Normal, 1 = Ascendente, 2 = Descendente)
+            var estadoColumnas = {};
+
+            $('#tablaVuelos thead th').on('click', function (event) {
+                var index = $(this).index();
+
+                if (!estadoColumnas[index]) {
+                    estadoColumnas[index] = 0; // Estado normal al inicio
+                }
+
+                // 🔹 Alternamos entre los 3 estados: Normal (0), Ascendente (1), Descendente (2)
+                estadoColumnas[index] = (estadoColumnas[index] + 1) % 3;
+
+                // 🔹 Obtener el orden actual de la tabla
+                var ordenActual = tabla.order();
+
+                // Si no se presiona Shift, limpiar todas las otras ordenaciones y solo usar la columna actual
+                if (!event.shiftKey) {
+                    estadoColumnas = { [index]: estadoColumnas[index] }; // Resetear solo la columna actual
+                    ordenActual = [];
+                }
+
+                // 🔹 Si el estado es Normal (0), eliminamos la columna del orden activo
+                if (estadoColumnas[index] === 0) {
+                    ordenActual = ordenActual.filter(o => o[0] !== index);
+                }
+                // 🔼 Si el estado es Ascendente (1), agregamos la columna en orden Ascendente
+                else if (estadoColumnas[index] === 1) {
+                    ordenActual = ordenActual.filter(o => o[0] !== index); // Quitar la anterior
+                    ordenActual.push([index, 'asc']);
+                }
+                // 🔽 Si el estado es Descendente (2), agregamos la columna en orden Descendente
+                else {
+                    ordenActual = ordenActual.filter(o => o[0] !== index); // Quitar la anterior
+                    ordenActual.push([index, 'desc']);
+                }
+
+                // 🔹 Aplicar los nuevos ordenamientos
+                tabla.order(ordenActual).draw();
+            });
+
+            // 🔹 Evento Click en la Fila para redirigir a Detalle sin interferir con el ordenamiento
+            $('#tablaVuelos tbody').on("click", "tr", function () {
                 var url = $(this).data("href");
-                window.location.href = url;
+                if (url) {
+                    window.location.href = url;
+                }
             });
         });
     </script>
+
 }
