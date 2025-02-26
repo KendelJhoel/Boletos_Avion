@@ -14,7 +14,7 @@ namespace Boletos_Avion.Controllers
             _dbController = new DbController();
         }
 
-        public IActionResult Index(string filtro, int page = 1, int pageSize = 10)
+        public IActionResult Index(string filtro)
         {
             if (string.IsNullOrEmpty(filtro))
             {
@@ -48,20 +48,8 @@ namespace Boletos_Avion.Controllers
                     return RedirectToAction("Index", "Home");
             }
 
-            // PAGINACIÓN
-            int totalItems = vuelosFiltrados.Count;
-            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            var vuelosPaginados = vuelosFiltrados
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            ViewData["CurrentPage"] = page;
-            ViewData["TotalPages"] = totalPages;
             ViewData["Filtro"] = filtro;
-
-            return View("CategoriaAdicional", vuelosPaginados);
+            return View("CategoriaAdicional", vuelosFiltrados);
         }
     }
 }
