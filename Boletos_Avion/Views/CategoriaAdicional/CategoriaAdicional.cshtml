@@ -5,76 +5,152 @@
     string filtro = ViewData["Filtro"]?.ToString() ?? "Categoría Desconocida";
 }
 
-<h2 class="text-center fw-bold mt-3">Vuelos filtrados por: @filtro</h2>
+<!-- Establecemos la imagen de fondo para todo el body -->
+<style>
+    body {
+        background: url('@Url.Content("~/images/back.jpg")') no-repeat center center fixed;
+        background-size: cover;
+    }
+</style>
 
-<!-- 🔹 Mensaje explicativo sobre el ordenamiento -->
-<p class="text-center mt-3">
-    <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
-    <br />
-    Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
-    <br />
-    También puede hacer clic en cualquier fila para ver los detalles del vuelo.
-</p>
+<div class="container my-4">
+    <!-- Título centrado sin fondo azul -->
+    <h2 class="text-center mb-4">Vuelos filtrados por: @filtro</h2>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <p class="text-center mb-4">
+                <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
+                <br />
+                Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
+                <br />
+                También puede hacer clic en cualquier fila para ver los detalles del vuelo.
+            </p>
 
-@if (Model.Any())
-{
-    <div class="table-responsive mt-4">
-        <table id="tablaVuelos" class="table table-bordered text-center" style="width:100%">
-            <thead>
-                <tr style="background-color: black; color: white;">
-                    <th class="sortable">Ciudad Origen (Aeropuerto)</th>
-                    <th class="sortable">Ciudad Destino (Aeropuerto)</th>
-                    <th class="sortable">Aerolínea</th>
-                    <th class="sortable">Salida</th>
-                    <th class="sortable">Llegada</th>
-                    <th class="sortable">Precio Base</th>
-                    <th class="sortable">Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var vuelo in Model)
-                {
-                    <tr class="clickable-row" data-href="@Url.Action("Detalle", "Vuelos", new { id = vuelo.IdVuelo })">
-                        <td>@vuelo.CiudadOrigen (@vuelo.NombreAeropuertoOrigen)</td>
-                        <td>@vuelo.CiudadDestino (@vuelo.NombreAeropuertoDestino)</td>
-                        <td>@vuelo.NombreAerolinea</td>
-                        <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>$@vuelo.PrecioBase.ToString("N2")</td>
-                        <td>@vuelo.Estado</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table id="tablaVuelos" class="table table-striped table-hover table-bordered mb-0">
+                        <thead>
+                            <tr class="custom-header">
+                                <th class="sortable">Ciudad Origen (Aeropuerto)</th>
+                                <th class="sortable">Ciudad Destino (Aeropuerto)</th>
+                                <th class="sortable">Aerolínea</th>
+                                <th class="sortable">Salida</th>
+                                <th class="sortable">Llegada</th>
+                                <th class="sortable">Precio Base</th>
+                                <th class="sortable">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vuelo in Model)
+                            {
+                                <tr class="clickable-row" data-href="@Url.Action("Detalle", "Vuelos", new { id = vuelo.IdVuelo })">
+                                    <td>@vuelo.CiudadOrigen (@vuelo.NombreAeropuertoOrigen)</td>
+                                    <td>@vuelo.CiudadDestino (@vuelo.NombreAeropuertoDestino)</td>
+                                    <td>@vuelo.NombreAerolinea</td>
+                                    <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>$@vuelo.PrecioBase.ToString("N2")</td>
+                                    <td>@vuelo.Estado</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-center text-danger">No hay vuelos disponibles para esta categoría adicional.</p>
+            }
+        </div>
     </div>
-}
-else
-{
-    <p class="text-center text-danger mt-4">No hay vuelos disponibles para esta categoría adicional.</p>
-}
+</div>
 
 @section Scripts {
     <style>
-        table.dataTable thead th {
-            position: relative;
-            padding-right: 30px;
-        }
-
-            table.dataTable thead th::after {
-                content: " ⬍"; /* 🔹 Flechitas de ordenamiento visibles siempre */
-                position: absolute;
-                right: 10px;
-                color: white;
-            }
-
-        /* 🔹 Hacer que las filas sean clickeables y cambien de color al pasar el mouse */
+        /* Efecto hover para filas clickeables con sombra, transición suave y resalte en negrita al hacer click */
         .clickable-row {
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, font-weight 0.2s ease;
         }
 
             .clickable-row:hover {
-                background-color: #f8d7da;
+                background-color: #cce5ff;
+                transform: scale(1.01);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .clickable-row:active {
+                font-weight: bold;
+            }
+
+        /* Estilos adicionales para embellecer la tabla */
+        #tablaVuelos {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+            #tablaVuelos th,
+            #tablaVuelos td {
+                vertical-align: middle;
+                padding: 0.75rem;
+            }
+            /* Línea sutil entre filas */
+            #tablaVuelos tbody tr {
+                border-bottom: 1px solid #dee2e6;
+            }
+
+        /* Encabezado de la tabla: fondo azul y letras negras */
+        .custom-header {
+            background-color: #0056b3;
+        }
+
+            .custom-header th {
+                position: relative;
+                color: black !important;
+                font-weight: 600;
+                border-bottom: 2px solid #0056b3;
+                padding-right: 40px;
+                transition: background-color 0.3s ease;
+            }
+
+                .custom-header th:hover {
+                    background-color: #004494;
+                }
+
+                .custom-header th::after {
+                    content: "⇅";
+                    position: absolute;
+                    right: 15px;
+                    color: black !important;
+                    font-size: 0.9rem;
+                }
+
+        /* Personalización de los botones de paginación de DataTables */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            background-color: #f8f9fa !important;
+            color: #0056b3 !important;
+            border: 1px solid transparent !important;
+            border-radius: 0.25rem !important;
+            padding: 0.5rem 1rem !important;
+            margin: 0 0.2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+            .dataTables_wrapper .dataTables_paginate .paginate_button:focus,
+            .dataTables_wrapper .dataTables_paginate .paginate_button:active {
+                background-color: #0056b3 !important;
+                color: #fff !important;
+                border: 1px solid #0056b3 !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background-color: #0056b3 !important;
+                color: #fff !important;
+                border: 1px solid #0056b3 !important;
             }
     </style>
 
@@ -108,48 +184,34 @@ else
                 }
             });
 
-            // 🔹 Almacena el estado de cada columna (0 = Normal, 1 = Ascendente, 2 = Descendente)
+            // Manejo del ordenamiento personalizado de columnas
             var estadoColumnas = {};
-
             $('#tablaVuelos thead th').on('click', function (event) {
                 var index = $(this).index();
-
                 if (!estadoColumnas[index]) {
-                    estadoColumnas[index] = 0; // Estado normal al inicio
+                    estadoColumnas[index] = 0;
                 }
-
-                // 🔹 Alternamos entre los 3 estados: Normal (0), Ascendente (1), Descendente (2)
                 estadoColumnas[index] = (estadoColumnas[index] + 1) % 3;
-
-                // 🔹 Obtener el orden actual de la tabla
                 var ordenActual = tabla.order();
-
-                // Si no se presiona Shift, limpiar todas las otras ordenaciones y solo usar la columna actual
                 if (!event.shiftKey) {
-                    estadoColumnas = { [index]: estadoColumnas[index] }; // Resetear solo la columna actual
+                    estadoColumnas = { [index]: estadoColumnas[index] };
                     ordenActual = [];
                 }
-
-                // 🔹 Si el estado es Normal (0), eliminamos la columna del orden activo
                 if (estadoColumnas[index] === 0) {
                     ordenActual = ordenActual.filter(o => o[0] !== index);
                 }
-                // 🔼 Si el estado es Ascendente (1), agregamos la columna en orden Ascendente
                 else if (estadoColumnas[index] === 1) {
-                    ordenActual = ordenActual.filter(o => o[0] !== index); // Quitar la anterior
+                    ordenActual = ordenActual.filter(o => o[0] !== index);
                     ordenActual.push([index, 'asc']);
                 }
-                // 🔽 Si el estado es Descendente (2), agregamos la columna en orden Descendente
                 else {
-                    ordenActual = ordenActual.filter(o => o[0] !== index); // Quitar la anterior
+                    ordenActual = ordenActual.filter(o => o[0] !== index);
                     ordenActual.push([index, 'desc']);
                 }
-
-                // 🔹 Aplicar los nuevos ordenamientos
                 tabla.order(ordenActual).draw();
             });
 
-            // 🔹 Evento Click en la Fila para redirigir a Detalle sin interferir con el ordenamiento
+            // Redirección al hacer clic en una fila
             $('#tablaVuelos tbody').on("click", "tr", function () {
                 var url = $(this).data("href");
                 if (url) {
@@ -158,5 +220,4 @@ else
             });
         });
     </script>
-
 }
