@@ -18,16 +18,18 @@
     <h2 class="text-center mb-4">Vuelos filtrados por: @filtro</h2>
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <p class="text-center mb-4">
-                <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
-                <br />
-                Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
-                <br />
-                También puede hacer clic en cualquier fila para ver los detalles del vuelo.
-            </p>
-
+            
             @if (Model.Any())
             {
+                <p class="text-center mb-4">
+                    <br />
+                    <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
+                    <br />
+                    Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
+                    <br />
+                    También puede hacer clic en cualquier fila para ver los detalles del vuelo.
+                </p>
+
                 <div class="table-responsive">
                     <table id="tablaVuelos" class="table table-striped table-hover table-bordered mb-0">
                         <thead>
