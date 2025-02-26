@@ -5,65 +5,118 @@
     string filtro = ViewData["Filtro"]?.ToString() ?? "Categoría Desconocida";
 }
 
-<h2 class="text-center fw-bold">Vuelos filtrados por: @filtro</h2>
+<h2 class="text-center fw-bold mt-3">Vuelos filtrados por: @filtro</h2>
+
+<!-- 🔹 Mensaje explicativo sobre el ordenamiento -->
+<p class="text-center mt-3">
+    <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
+    <br />
+    Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
+    <br />
+    También puede hacer clic en cualquier fila para ver los detalles del vuelo.
+</p>
 
 @if (Model.Any())
 {
-    <table class="table table-bordered text-center mt-4">
-        <thead>
-            <tr style="background-color: red; color: white;">
-                <th>Ciudad Origen</th>
-                <th>Ciudad Destino</th>
-                <th>Aerolínea</th>
-                <th>Fecha Salida</th>
-                <th>Fecha Llegada</th>
-                <th>Precio Base</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var vuelo in Model)
-            {
-                <tr>
-                    <td>@vuelo.CiudadOrigen (@vuelo.NombreAeropuertoOrigen)</td>
-                    <td>@vuelo.CiudadDestino (@vuelo.NombreAeropuertoDestino)</td>
-                    <td>@vuelo.NombreAerolinea</td>
-                    <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>$@vuelo.PrecioBase</td>
-                    <td>@vuelo.Estado</td>
+    <div class="table-responsive mt-4">
+        <table id="tablaVuelos" class="table table-bordered text-center" style="width:100%">
+            <thead>
+                <tr style="background-color: black; color: white;">
+                    <!-- 🔹 Fondo negro con texto blanco -->
+                    <th class="sortable">Ciudad Origen (Aeropuerto)</th>
+                    <th class="sortable">Ciudad Destino (Aeropuerto)</th>
+                    <th class="sortable">Aerolínea</th>
+                    <th class="sortable">Salida</th>
+                    <th class="sortable">Llegada</th>
+                    <th class="sortable">Precio Base</th>
+                    <th class="sortable">Estado</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-
-    <!-- Paginación -->
-    <nav aria-label="Paginación de vuelos">
-        <ul class="pagination justify-content-center">
-            @if ((int)ViewData["CurrentPage"] > 1)
-            {
-                <li class="page-item">
-                    <a class="page-link" href="@Url.Action("Index", "CategoriaAdicional", new { filtro = filtro, page = (int)ViewData["CurrentPage"] - 1 })">Anterior</a>
-                </li>
-            }
-
-            @for (int i = 1; i <= (int)ViewData["TotalPages"]; i++)
-            {
-                <li class="page-item @(i == (int)ViewData["CurrentPage"] ? "active" : "")">
-                    <a class="page-link" href="@Url.Action("Index", "CategoriaAdicional", new { filtro = filtro, page = i })">@i</a>
-                </li>
-            }
-
-            @if ((int)ViewData["CurrentPage"] < (int)ViewData["TotalPages"])
-            {
-                <li class="page-item">
-                    <a class="page-link" href="@Url.Action("Index", "CategoriaAdicional", new { filtro = filtro, page = (int)ViewData["CurrentPage"] + 1 })">Siguiente</a>
-                </li>
-            }
-        </ul>
-    </nav>
+            </thead>
+            <tbody>
+                @foreach (var vuelo in Model)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Detalle", "Vuelos", new { id = vuelo.IdVuelo })">
+                        <td>@vuelo.CiudadOrigen (@vuelo.NombreAeropuertoOrigen)</td>
+                        <td>@vuelo.CiudadDestino (@vuelo.NombreAeropuertoDestino)</td>
+                        <td>@vuelo.NombreAerolinea</td>
+                        <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>$@vuelo.PrecioBase.ToString("N2")</td>
+                        <td>@vuelo.Estado</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 else
 {
     <p class="text-center text-danger mt-4">No hay vuelos disponibles para esta categoría adicional.</p>
+}
+
+@section Scripts {
+    <!-- 🔹 Estilos para mejorar la apariencia de la tabla -->
+    <style>
+        /* 🔹 Forzar a que las flechitas de orden sean visibles en todas las columnas */
+        table.dataTable thead th {
+            position: relative;
+            padding-right: 30px;
+        }
+
+            table.dataTable thead th::after {
+                content: " ⬍"; /* 🔹 Flechitas de ordenamiento visibles siempre */
+                position: absolute;
+                right: 10px;
+                color: white; /* 🔹 Flechitas en blanco */
+            }
+
+        /* 🔹 Hacer que las filas sean clickeables y cambien de color al pasar el mouse */
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+            .clickable-row:hover {
+                background-color: #f8d7da; /* 🔹 Un color rojo pastel suave */
+            }
+    </style>
+
+    <!-- 🔹 Agregar DataTables con paginación y ordenamiento múltiple -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#tablaVuelos').DataTable({
+                "ordering": true,
+                "paging": true,
+                "pageLength": 25,
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+                "info": true,
+                "searching": false,
+                "orderMulti": true,  // ✅ Habilita ordenamiento múltiple con Shift + Click
+                "order": [],
+                "autoWidth": false,
+                "language": {
+                    "lengthMenu": "Mostrar _MENU_ vuelos por página",
+                    "zeroRecords": "No se encontraron vuelos",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ vuelos",
+                    "infoEmpty": "No hay vuelos disponibles",
+                    "infoFiltered": "(filtrado de _MAX_ vuelos en total)",
+                    "paginate": {
+                        "first": "Primero",
+                        "last": "Último",
+                        "next": "Siguiente",
+                        "previous": "Anterior"
+                    }
+                }
+            });
+
+            // 🔹 Evento Click en la Fila para redirigir a Detalle
+            $('.clickable-row').on("click", function () {
+                var url = $(this).data("href");
+                window.location.href = url;
+            });
+        });
+    </script>
 }
