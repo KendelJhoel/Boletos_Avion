@@ -7,13 +7,15 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/Index.css" />
+
 }
+
 
 <div class="container mt-5">
     <h2 class="mb-4 text-center fw-bold">Encuentra tu próximo vuelo</h2>
 
     <!-- Formulario -->
-    <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light">
+    <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light filtros-busqueda">
 
         <div class="row justify-content-center align-items-center text-center">
             <div class="col-md-3">
@@ -35,20 +37,20 @@
 
         <div class="row justify-content-center align-items-center text-center mt-3">
             <div class="col-md-3">
-                <label for="precioMin" class="form-label fw-bold">Precio Mínimo</label>
+                <label for="precioMin" class="form-label fw-bold"></label>
                 <input type="number" class="form-control rounded-pill text-center" name="precioMin" id="precioMin"
-                       min="0" step="50" placeholder="Ej. 100" value="@ViewBag.PrecioMin" />
+                       min="0" step="50" placeholder="Precio Mínimo" value="@ViewBag.PrecioMin" />
             </div>
             <div class="col-md-3">
-                <label for="precioMax" class="form-label fw-bold">Precio Máximo</label>
+                <label for="precioMax" class="form-label fw-bold"></label>
                 <input type="number" class="form-control rounded-pill text-center" name="precioMax" id="precioMax"
-                       min="0" step="50" placeholder="Ej. 1000" value="@ViewBag.PrecioMax" />
+                       min="0" step="50" placeholder="Precio Máximo" value="@ViewBag.PrecioMax" />
             </div>
         </div>
 
         <div class="row justify-content-center align-items-center text-center mt-3">
             <div class="col-md-3">
-                <label for="aerolinea" class="form-label fw-bold">Aerolínea</label>
+                <label for="aerolinea" class="form-label fw-bold"></label>
                 <select class="form-select rounded-pill text-center" name="aerolinea" id="aerolinea">
                     <option value="">Seleccione una aerolínea</option>
                     @foreach (var aerolinea in new List<string> { "American Airlines", "LATAM Airlines", "Iberia", "Air France", "Lufthansa", "British Airways", "Qantas", "Japan Airlines", "Emirates", "Aeroméxico" })
@@ -60,7 +62,7 @@
             </div>
 
             <div class="col-md-3">
-                <label for="categoria" class="form-label fw-bold">Categoría</label>
+                <label for="categoria" class="form-label fw-bold"></label>
                 <select class="form-select rounded-pill text-center" name="categoria" id="categoria">
                     <option value="">Seleccione una categoría</option>
                     @foreach (var categoria in new List<string> { "Chárter", "Con escalas", "Directo", "Internacional", "Nacional", "Regular" })
@@ -79,13 +81,14 @@
         }
 
         <div class="d-flex justify-content-center mt-4">
-            <button class="btn btn-primary px-5 py-2 rounded-pill fw-bold shadow" type="submit">
+            <button class="btn btn-warning btn-sm px-4 py-1 rounded-pill fw-bold shadow" type="submit">
                 🔍 Buscar Vuelos
             </button>
-            <button type="button" class="btn btn-secondary px-5 py-2 rounded-pill fw-bold shadow ms-3" id="limpiarFiltros">
+            <button type="button" class="btn btn-danger btn-sm px-4 py-1 rounded-pill fw-bold shadow ms-3 opacity-75" id="limpiarFiltros">
                 ✖ Limpiar Filtros
             </button>
         </div>
+
     </form>
 
     <script>
@@ -104,7 +107,7 @@
     {
         <div class="table-responsive shadow-lg p-3 bg-white rounded">
             <table class="table table-hover text-center">
-                <thead class="bg-primary text-white">
+                <thead class="bg-dark text-white">
                     <tr>
                         <th>Código Vuelo</th>
                         <th>Ciudad Origen</th>
@@ -222,3 +225,62 @@
         });
     </script>
 }
+
+
+<div class="container my-5">
+    <h2 class="text-center mb-4">Más información de interés</h2>
+
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        <!-- Tarjeta 1 -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <img src="~/images/asientos.jpg" class="card-img-top" alt="Imagen 1">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Experiencia en Cabina</h5>
+                    <p class="card-text">
+                        ¡Prepárate para despegar! Conoce los servicios que te ofrecemos a bordo.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Tarjeta 2 -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <img src="~/images/maletas.jpg" class="card-img-top" alt="Imagen 2">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Equipaje</h5>
+                    <p class="card-text">
+                        Infórmate sobre las condiciones para organizar tu maleta de la mejor manera.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Tarjeta 3 -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <img src="~/images/asientos.jpg" class="card-img-top" alt="Imagen 3">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Seguridad y Fraude</h5>
+                    <p class="card-text">
+                        Protege tu viaje adquiriendo tus boletos y servicios en nuestros canales oficiales.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- Tarjeta 4 -->
+        <div class="col">
+            <div class="card h-100 shadow">
+                <img src="~/images/maletas.jpg" class="card-img-top" alt="Imagen 4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Acceso Prioritario</h5>
+                    <p class="card-text">
+                        Disfruta de viajes más ágiles y cómodos con los beneficios de nuestra alianza.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluye JavaScript de Bootstrap (opcional, para algunos componentes) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

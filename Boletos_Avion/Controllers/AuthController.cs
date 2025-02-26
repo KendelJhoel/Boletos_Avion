@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Net.Mail;
 using Boletos_Avion.Models;
+using System.Linq;
 
 namespace Boletos_Avion.Controllers
 {
@@ -22,8 +23,6 @@ namespace Boletos_Avion.Controllers
             return View();
         }
 
-        [HttpPost]
-        [HttpPost]
         [HttpPost]
         public IActionResult Register(IFormCollection form)
         {
@@ -76,6 +75,14 @@ namespace Boletos_Avion.Controllers
                 else
                 {
                     newUser.IdRol = 3; // Cliente
+                }
+
+                // Validación de la contraseña para clientes
+                if (newUser.IdRol == 3 && !ValidatePassword(newUser.Contrasena))
+                {
+                    ViewBag.RegisterError = "La contraseña no cumple con los requerimientos de seguridad.";
+                    SetRegistrationValues(form);
+                    return View("Authentication");
                 }
 
                 // Validación de aceptación de términos (solo para clientes)
@@ -149,7 +156,6 @@ namespace Boletos_Avion.Controllers
                         SetRegistrationValues(form);
                         return View("Authentication");
                     }
-
                 }
             }
             catch (Exception ex)
@@ -158,6 +164,22 @@ namespace Boletos_Avion.Controllers
                 SetRegistrationValues(form);
                 return View("Authentication");
             }
+        }
+
+        // Función para validar los requerimientos de la contraseña
+        private bool ValidatePassword(string password)
+        {
+            if (password.Length < 8)
+                return false;
+            if (!password.Any(char.IsUpper))
+                return false;
+            if (!password.Any(char.IsLower))
+                return false;
+            if (!password.Any(char.IsDigit))
+                return false;
+            if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+                return false;
+            return true;
         }
 
         private void SetRegistrationValues(IFormCollection form)
@@ -172,7 +194,6 @@ namespace Boletos_Avion.Controllers
             ViewBag.DocumentoIdentidad = form["DocumentoIdentidad"];
             ViewBag.Direccion = form["Direccion"];
         }
-
 
         [HttpPost]
         public IActionResult Login(string email, string password)
@@ -202,7 +223,6 @@ namespace Boletos_Avion.Controllers
                 return View("Authentication");
             }
         }
-
 
         [HttpGet]
         public IActionResult Logout()
@@ -280,17 +300,17 @@ namespace Boletos_Avion.Controllers
                 </ul>
                 <p>Por favor, inicia sesión en el sistema y cambia tu contraseña después de ingresar.</p>
                 <a href='https://localhost:5279/Auth/Authentication'>Ir al Login</a>",
-                    IsBodyHtml = true, // Habilitar contenido HTML
+                    IsBodyHtml = true,
                 };
                 mailMessage.To.Add(email);
                 smtpClient.Send(mailMessage);
 
-                return true; // Correo enviado exitosamente
+                return true;
             }
             catch (Exception ex)
             {
                 ViewBag.RegisterError = $"Error al enviar el correo: {ex.Message}";
-                return false; // Error al enviar el correo
+                return false;
             }
         }
 
@@ -321,7 +341,6 @@ namespace Boletos_Avion.Controllers
             return View();
         }
 
-        // Enviar correo con las credenciales
         [HttpPost]
         public IActionResult SendPasswordReset(string correo)
         {
@@ -348,7 +367,6 @@ namespace Boletos_Avion.Controllers
             }
         }
 
-        // Método para enviar el correo con la contraseña actual
         private bool SendPasswordEmail(string correo, string password)
         {
             try
@@ -388,6 +406,5 @@ namespace Boletos_Avion.Controllers
                 return false;
             }
         }
-
     }
 }

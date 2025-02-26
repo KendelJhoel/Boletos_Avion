@@ -47,3 +47,15 @@ body {
     .clickable-row:hover {
         background-color: #f1f1f1 !important;
     }
+
+
+
+.filtros-busqueda {
+    background-image: url('/images/fondoReset.jpg'); /* Ruta de la imagen */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 20px;
+    border-radius: 10px;
+}
+
