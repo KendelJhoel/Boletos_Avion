@@ -17,15 +17,57 @@
         <div class="row justify-content-center align-items-center text-center">
             <div class="col-md-3">
                 <label for="origen" class="form-label fw-bold">Origen</label>
-                <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen" placeholder="Ej. SAL" />
+                <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen" placeholder="Ej. San Salvador" />
             </div>
             <div class="col-md-3">
                 <label for="destino" class="form-label fw-bold">Destino</label>
-                <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino" placeholder="Ej. MEX" />
+                <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino" placeholder="Ej. New York" />
             </div>
             <div class="col-md-3">
                 <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
                 <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda" />
+            </div>
+        </div>
+
+        <div class="row justify-content-center align-items-center text-center mt-3">
+            <div class="col-md-3">
+                <label for="precioMin" class="form-label fw-bold">Precio Mínimo</label>
+                <input type="number" class="form-control rounded-pill text-center" name="precioMin" id="precioMin" min="0" step="50" placeholder="Ej. 100" />
+            </div>
+            <div class="col-md-3">
+                <label for="precioMax" class="form-label fw-bold">Precio Máximo</label>
+                <input type="number" class="form-control rounded-pill text-center" name="precioMax" id="precioMax" min="0" step="50" placeholder="Ej. 1000" />
+            </div>
+        </div>
+
+        <div class="row justify-content-center align-items-center text-center mt-3">
+            <div class="col-md-3">
+                <label for="aerolinea" class="form-label fw-bold">Aerolínea</label>
+                <select class="form-select rounded-pill text-center" name="aerolinea" id="aerolinea">
+                    <option value="">Seleccione una aerolínea</option>
+                    <option value="American Airlines">American Airlines</option>
+                    <option value="LATAM Airlines">LATAM Airlines</option>
+                    <option value="Iberia">Iberia</option>
+                    <option value="Air France">Air France</option>
+                    <option value="Lufthansa">Lufthansa</option>
+                    <option value="British Airways">British Airways</option>
+                    <option value="Qantas">Qantas</option>
+                    <option value="Japan Airlines">Japan Airlines</option>
+                    <option value="Emirates">Emirates</option>
+                    <option value="Aeroméxico">Aeroméxico</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="categoria" class="form-label fw-bold">Categoría</label>
+                <select class="form-select rounded-pill text-center" name="categoria" id="categoria">
+                    <option value="">Seleccione una categoría</option>
+                    <option value="Chárter">Chárter</option>
+                    <option value="Con escalas">Con escalas</option>
+                    <option value="Directo">Directo</option>
+                    <option value="Internacional">Internacional</option>
+                    <option value="Nacional">Nacional</option>
+                    <option value="Regular">Regular</option>
+                </select>
             </div>
         </div>
 
@@ -50,11 +92,14 @@
                     <thead class="bg-primary text-white">
                         <tr>
                             <th>Código Vuelo</th>
-                            <th>Origen</th>
-                            <th>Destino</th>
+                            <th>Ciudad Origen</th>
+                            <th>Ciudad Destino</th>
+                            <th>Aerolínea</th>
+                            <th>Categoría Vuelo</th>
                             <th>Fecha de Salida</th>
                             <th>Fecha de Llegada</th>
-                            <th>Precio</th>
+                            <th>Precio Base</th>
+                            <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,11 +107,14 @@
                         {
                             <tr>
                                 <td><strong>@vuelo.CodigoVuelo</strong></td>
-                                <td>@vuelo.CiudadOrigen (@vuelo.AeropuertoOrigen)</td>
-                                <td>@vuelo.CiudadDestino (@vuelo.AeropuertoDestino)</td>
+                                <td>@vuelo.CiudadOrigen</td>
+                                <td>@vuelo.CiudadDestino</td>
+                                <td>@vuelo.Aerolinea</td>
+                                <td>@vuelo.Categoria</td>
                                 <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
                                 <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
                                 <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
+                                <td>@vuelo.Estado</td>
                             </tr>
                         }
                     </tbody>
@@ -80,66 +128,10 @@
     }
 </div>
 
-<!-- Segundo Formulario de Búsqueda Avanzada -->
-<div class="container mt-5">
-    <h2 class="mb-4 text-center fw-bold">Buscar Vuelos</h2>
 
-    <form method="get" class="mb-4 p-3 border rounded shadow-sm bg-light">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label for="precioMin" class="form-label">Precio Mínimo</label>
-                <input type="number" class="form-control" id="precioMin" name="precioMin" min="0">
-            </div>
-            <div class="col-md-3">
-                <label for="precioMax" class="form-label">Precio Máximo</label>
-                <input type="number" class="form-control" id="precioMax" name="precioMax" min="0">
-            </div>
-            <div class="col-md-3">
-                <label for="aerolinea" class="form-label">Aerolínea</label>
-                <select class="form-select" id="aerolinea" name="aerolinea">
-                    <option value="">Todas</option>
-                    @if (ViewBag.Aerolineas != null)
-                    {
-                        @foreach (var aerolinea in ViewBag.Aerolineas as List<string>)
-                        {
-                            <option value="@aerolinea">@aerolinea</option>
-                        }
-                    }
-                    else
-                    {
-                        <option value="">No hay aerolíneas disponibles</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="duracion" class="form-label">Duración Máxima</label>
-                <select class="form-select" id="duracion" name="duracion">
-                    <option value="">Cualquiera</option>
-                    <option value="2">Menos de 2 horas</option>
-                    <option value="5">Menos de 5 horas</option>
-                    <option value="10">Menos de 10 horas</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="categoria" class="form-label">Categoría de Asiento</label>
-                <select class="form-select" id="categoria" name="categoria">
-                    <option value="">Todas</option>
-                    <option value="Economy">Economy</option>
-                    <option value="Business">Business</option>
-                    <option value="First Class">First Class</option>
-                </select>
-            </div>
-        </div>
-        <div class="d-flex justify-content-between mt-3">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-            <a href="@Url.Action("Index")" class="btn btn-secondary">Restablecer</a>
-        </div>
-    </form>
-</div>
-
-<!-- Carrusel de Categorías -->
+<!-- Carrusel de Categorías -->
 <div class="container mt-5">
-    <h2 class="mb-4 text-center fw-bold">Categorías</h2>
+    <h2 class="mb-4 text-center fw-bold">Categorías</h2>
 
     <div id="carouselMultiItem" class="carousel slide carousel-multi-item mt-5" data-bs-ride="carousel">
         <div class="carousel-inner">
@@ -155,7 +147,7 @@
                         <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "America" })">
                             <img src="~/images/carousel/america.jpg" class="img-fluid" alt="America" />
                         </a>
-                        <div class="text-center mt-2">Vuelos a América</div>
+                        <div class="text-center mt-2">Vuelos a América</div>
                     </div>
                     <div class="col-md-4">
                         <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Europa" })">
@@ -171,13 +163,13 @@
                         <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Oceania" })">
                             <img src="~/images/carousel/oceania.jpg" class="img-fluid" alt="Oceania" />
                         </a>
-                        <div class="text-center mt-2">Vuelos a Oceanía</div>
+                        <div class="text-center mt-2">Vuelos a Oceanía</div>
                     </div>
                     <div class="col-md-4">
                         <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Vuelos Economicos" })">
-                            <img src="~/images/carousel/economico.jpeg" class="img-fluid" alt="Vuelos Económicos" />
+                            <img src="~/images/carousel/economico.jpeg" class="img-fluid" alt="Vuelos Económicos" />
                         </a>
-                        <div class="text-center mt-2">Vuelos Económicos</div>
+                        <div class="text-center mt-2">Vuelos Económicos</div>
                     </div>
                     <div class="col-md-4">
                         <a href="@Url.Action("Index", "CategoriaAdicional", new { filtro = "Vuelos Cortos" })">
@@ -198,5 +190,4 @@
         </button>
     </div>
 </div>
-
 
