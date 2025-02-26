@@ -11,6 +11,15 @@
 
     <br />
 
+    <!-- Mensaje de éxito tras guardar cambios -->
+    @if (TempData["UpdateSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["UpdateSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
     <div class="profile-header">
         <h1 id="userNameDisplay">@Model.Nombre</h1>
         <p id="userEmailDisplay">@ViewContext.HttpContext.Session.GetString("UserEmail")</p>
@@ -92,6 +101,7 @@
             var isEditing = false;
             var hasChanges = false;
 
+            // Capturamos los datos originales para comparar cambios
             function captureOriginalData() {
                 $('#editProfileForm').find('input[type="text"], input[type="password"]').each(function () {
                     originalData[$(this).attr('name')] = $(this).val();
@@ -132,6 +142,7 @@
             });
 
             $('#modalConfirmBtn').click(function () {
+                // Se descartan los cambios y se restaura el valor original
                 for (var key in originalData) {
                     $('[name="' + key + '"]').val(originalData[key]);
                 }
@@ -167,8 +178,23 @@
                 }
             });
 
+            // Al iniciar, ocultamos el botón de guardar y deshabilitamos la visibilidad de la contraseña
             $('#saveChangesBtn').hide();
             $('#togglePasswordVisibility').prop('disabled', true);
+
+            // Desactivar la confirmación al salir cuando se envía el formulario
+            $("#editProfileForm").on("submit", function () {
+                isEditing = false;
+            });
+
+            // Confirmación al salir de la página si hay cambios sin guardar.
+            window.addEventListener('beforeunload', function (e) {
+                if (isEditing && hasChanges) {
+                    e.preventDefault();
+                    e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+                    return 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+                }
+            });
         });
     </script>
 }
