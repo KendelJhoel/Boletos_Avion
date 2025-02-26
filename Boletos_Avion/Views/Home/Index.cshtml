@@ -24,9 +24,10 @@
                        placeholder="Ej. San Salvador" value="@ViewBag.Origen" />
             </div>
             <div class="col-md-3">
-                <label for="destino" class="form-label fw-bold">Destino</label>
+                <label for="destino" class="form-label fw-bold">Destino <span class="text-danger">*</span></label>
                 <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino"
-                       placeholder="Ej. New York" value="@ViewBag.Destino" />
+                       placeholder="Ej. New York" value="@ViewBag.Destino" required />
+                <small id="errorDestino" class="text-danger fw-bold" style="display:none;">⚠ Por favor, para hacer mejores búsquedas agrega un destino.</small>
             </div>
             <div class="col-md-3">
                 <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
@@ -142,7 +143,7 @@
     }
     else if (Model != null && Model.Count == 0)
     {
-        <p class="alert alert-warning text-center fw-bold mt-4">⚠️ No hay vuelos disponibles para los criterios ingresados.</p>
+        <p class="alert alert-warning text-center fw-bold mt-4">⚠️ No hay resultados disponibles para los criterios ingresados.</p>
     }
 
 </div>
@@ -281,3 +282,61 @@
         </div>
     </div>
 </div>
+
+<form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light filtros-busqueda" onsubmit="return validarFormulario()">
+
+    <div class="row justify-content-center align-items-center text-center">
+        <div class="col-md-3">
+            <label for="origen" class="form-label fw-bold">Origen</label>
+            <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen"
+                   placeholder="Ej. San Salvador" value="@ViewBag.Origen" />
+        </div>
+        <div class="col-md-3">
+            <label for="destino" class="form-label fw-bold">Destino <span class="text-danger">*</span></label>
+            <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino"
+                   placeholder="Ej. New York" value="@ViewBag.Destino" required />
+            <small id="errorDestino" class="text-danger fw-bold" style="display:none;">⚠ Por favor, para hacer mejores búsquedas agrega un destino.</small>
+        </div>
+        <div class="col-md-3">
+            <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
+            <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda"
+                   value="@ViewBag.FechaIda" />
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center mt-4">
+        <button class="btn btn-warning btn-sm px-4 py-1 rounded-pill fw-bold shadow" type="submit">
+            🔍 Buscar Vuelos
+        </button>
+        <button type="button" class="btn btn-danger btn-sm px-4 py-1 rounded-pill fw-bold shadow ms-3 opacity-75" id="limpiarFiltros">
+            ✖ Limpiar Filtros
+        </button>
+    </div>
+
+</form>
+
+<script>
+    function validarFormulario() {
+        var destino = document.getElementById("destino").value.trim();
+        var errorMensaje = document.getElementById("errorDestino");
+
+        if (destino === "") {
+            errorMensaje.style.display = "block"; // Muestra el mensaje de error
+            return false; // Evita el envío del formulario
+        }
+
+        errorMensaje.style.display = "none"; // Oculta el mensaje de error si todo está bien
+        return true; // Permite el envío del formulario
+    }
+
+    document.getElementById("limpiarFiltros").addEventListener("click", function () {
+        document.getElementById("origen").value = "";
+        document.getElementById("destino").value = "";
+        document.getElementById("fechaIda").value = "";
+        document.getElementById("precioMin").value = "";
+        document.getElementById("precioMax").value = "";
+        document.getElementById("aerolinea").selectedIndex = 0;
+        document.getElementById("categoria").selectedIndex = 0;
+        document.getElementById("errorDestino").style.display = "none"; // Oculta el mensaje al limpiar
+    });
+</script>
