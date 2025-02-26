@@ -1,6 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Autenticación";
     Layout = null;
+    // Si hay error de registro, se activa la pestaña "register"; de lo contrario, se activa "login"
+    var activeTab = (ViewBag.RegistrationError != null && ViewBag.RegistrationError == true) || (ViewBag.RegisterError != null) ? "register" : "login";
 }
 
 <!DOCTYPE html>
@@ -29,16 +31,16 @@
                 }
                 <ul class="nav nav-tabs" id="authTab">
                     <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#login">Iniciar Sesión</button>
+                        <button class="nav-link @(activeTab == "login" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#login">Iniciar Sesión</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#register">Registrarse</button>
+                        <button class="nav-link @(activeTab == "register" ? "active" : "")" data-bs-toggle="tab" data-bs-target="#register">Registrarse</button>
                     </li>
                 </ul>
 
                 <div class="tab-content">
                     <!-- Formulario de Iniciar Sesión -->
-                    <div class="tab-pane fade show active p-3" id="login">
+                    <div class="tab-pane fade @(activeTab == "login" ? "show active" : "") p-3" id="login">
                         <form method="post" asp-controller="Auth" asp-action="Login">
                             <div class="mb-3">
                                 <label class="form-label">Correo</label>
@@ -52,44 +54,42 @@
                             <div class="text-center mt-2">
                                 <a href="/Auth/Password_reset">¿Olvidaste tu contraseña?</a>
                             </div>
-
                             <br />
                             <div class="text-center mt-3">
                                 <a href="/Home/Index" class="btn btn-secondary w-100">Volver al Inicio sin sesión</a>
                             </div>
-
                         </form>
                     </div>
 
                     <!-- Formulario de Registro -->
-                    <div class="tab-pane fade p-3" id="register">
+                    <div class="tab-pane fade @(activeTab == "register" ? "show active" : "") p-3" id="register">
                         <form method="post" asp-controller="Auth" asp-action="Register" id="registerForm">
                             <div class="mb-3">
                                 <label class="form-label">Nombre</label>
-                                <input type="text" class="form-control" name="Nombre" required minlength="3" maxlength="50" />
+                                <input type="text" class="form-control" name="Nombre" required minlength="3" maxlength="50" value="@ViewBag.Nombre" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Apellido</label>
-                                <input type="text" class="form-control" name="Apellido" required minlength="3" maxlength="50" />
+                                <input type="text" class="form-control" name="Apellido" required minlength="3" maxlength="50" value="@ViewBag.Apellido" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Correo</label>
-                                <input type="email" class="form-control" name="Correo" id="correoInput" required />
+                                <input type="email" class="form-control" name="Correo" id="correoInput" required value="@ViewBag.Correo" />
                                 <small class="text-danger" id="correoError"></small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" name="Telefono" maxlength="9" required oninput="formatTelefono(this)" />
+                                <input type="text" class="form-control" name="Telefono" maxlength="9" required oninput="formatTelefono(this)" value="@ViewBag.Telefono" />
                                 <small class="text-danger" id="telefonoError"></small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Documento de Identidad (DUI)</label>
-                                <input type="text" class="form-control" name="DocumentoIdentidad" maxlength="10" required oninput="formatDUI(this)" />
+                                <input type="text" class="form-control" name="DocumentoIdentidad" maxlength="10" required oninput="formatDUI(this)" value="@ViewBag.DocumentoIdentidad" />
                                 <small class="text-danger" id="documentoError"></small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Dirección</label>
-                                <input type="text" class="form-control" name="Direccion" required maxlength="200" />
+                                <input type="text" class="form-control" name="Direccion" required maxlength="200" value="@ViewBag.Direccion" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Contraseña</label>
@@ -113,7 +113,7 @@
 
                             <!-- Checkbox de términos y condiciones -->
                             <div class="mb-3 form-check" id="termsContainer">
-                                <input type="checkbox" class="form-check-input" id="acceptTermsCheckbox" name="acceptTerms" checked="false" />
+                                <input type="checkbox" class="form-check-input" id="acceptTermsCheckbox" name="acceptTerms" />
                                 <label class="form-check-label" for="acceptTermsCheckbox">
                                     Acepto los <a href="#" onclick="showTermsModal()">Términos y Condiciones</a>
                                 </label>
@@ -172,19 +172,5 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/authentication-validation.js"></script>
-
-    @if (TempData["RegisterSuccess"] != null)
-    {
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                document.getElementById('registerForm').reset();
-                var userType = '@TempData["RegisterSuccess"]';
-                if (userType.includes("Administrador") || userType.includes("Agente")) {
-                    var modal = new bootstrap.Modal(document.getElementById('reservedAccountModal'));
-                    modal.show();
-                }
-            });
-        </script>
-    }
 </body>
 </html>

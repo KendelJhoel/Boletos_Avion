@@ -23,6 +23,8 @@ namespace Boletos_Avion.Controllers
         }
 
         [HttpPost]
+        [HttpPost]
+        [HttpPost]
         public IActionResult Register(IFormCollection form)
         {
             try
@@ -38,21 +40,14 @@ namespace Boletos_Avion.Controllers
                 };
 
                 string confirmPassword = form["ConfirmarContrasena"];
-                bool acceptTerms = form["acceptTerms"] == "true";
 
-                // Validaciones de campos vacíos
+                // Validación de campos vacíos
                 if (string.IsNullOrWhiteSpace(newUser.Correo) || string.IsNullOrWhiteSpace(newUser.Contrasena) ||
                     string.IsNullOrWhiteSpace(newUser.Nombre) || string.IsNullOrWhiteSpace(newUser.Telefono) ||
                     string.IsNullOrWhiteSpace(newUser.Direccion) || string.IsNullOrWhiteSpace(newUser.DocumentoIdentidad))
                 {
                     ViewBag.RegisterError = "Todos los campos son obligatorios.";
-                    return View("Authentication");
-                }
-
-                // Validación de aceptación de términos (solo para clientes)
-                if (newUser.IdRol == 3 && form["acceptTerms"] != "on")
-                {
-                    ViewBag.RegisterError = "Debes aceptar los términos y condiciones para continuar.";
+                    SetRegistrationValues(form);
                     return View("Authentication");
                 }
 
@@ -60,41 +55,22 @@ namespace Boletos_Avion.Controllers
                 if (newUser.Contrasena != confirmPassword)
                 {
                     ViewBag.RegisterError = "Las contraseñas no coinciden.";
+                    SetRegistrationValues(form);
                     return View("Authentication");
                 }
 
-                // Validación de duplicados
-                if (_dbController.CheckUserExists(newUser.Correo))
-                {
-                    ViewBag.RegisterError = "El correo ya está registrado.";
-                    return View("Authentication");
-                }
-
-                if (_dbController.CheckPhoneExists(newUser.Telefono))
-                {
-                    ViewBag.RegisterError = "El número de teléfono ya está en uso.";
-                    return View("Authentication");
-                }
-
-                if (_dbController.CheckDocumentExists(newUser.DocumentoIdentidad))
-                {
-                    ViewBag.RegisterError = "El documento de identidad ya está registrado.";
-                    return View("Authentication");
-                }
-
-                // Asignación de roles
+                // Asignación de roles según la contraseña ingresada
                 bool isReservedPassword = false;
-
                 if (newUser.Contrasena == "AGENT123")
                 {
                     newUser.IdRol = 2; // Agente
-                    newUser.Contrasena = GenerateRandomPassword(); // Generar nueva contraseña
+                    newUser.Contrasena = GenerateRandomPassword();
                     isReservedPassword = true;
                 }
                 else if (newUser.Contrasena == "ADMIN2025")
                 {
                     newUser.IdRol = 1; // Administrador
-                    newUser.Contrasena = GenerateRandomPassword(); // Generar nueva contraseña
+                    newUser.Contrasena = GenerateRandomPassword();
                     isReservedPassword = true;
                 }
                 else
@@ -102,15 +78,41 @@ namespace Boletos_Avion.Controllers
                     newUser.IdRol = 3; // Cliente
                 }
 
+                // Validación de aceptación de términos (solo para clientes)
+                if (newUser.IdRol == 3 && form["acceptTerms"] != "on")
+                {
+                    ViewBag.RegisterError = "Debes aceptar los términos y condiciones para continuar.";
+                    SetRegistrationValues(form);
+                    return View("Authentication");
+                }
+
+                // Validación de duplicados
+                if (_dbController.CheckUserExists(newUser.Correo))
+                {
+                    ViewBag.RegisterError = "El correo ya está registrado.";
+                    SetRegistrationValues(form);
+                    return View("Authentication");
+                }
+                if (_dbController.CheckPhoneExists(newUser.Telefono))
+                {
+                    ViewBag.RegisterError = "El número de teléfono ya está en uso.";
+                    SetRegistrationValues(form);
+                    return View("Authentication");
+                }
+                if (_dbController.CheckDocumentExists(newUser.DocumentoIdentidad))
+                {
+                    ViewBag.RegisterError = "El documento de identidad ya está registrado.";
+                    SetRegistrationValues(form);
+                    return View("Authentication");
+                }
+
                 // Registro para Agentes y Administradores
                 if (isReservedPassword)
                 {
                     bool success = _dbController.RegisterUser(newUser);
-
                     if (success)
                     {
                         bool emailSent = SendEmailWithCredentials(newUser.Correo, newUser.Contrasena, newUser.IdRol == 1 ? "Administrador" : "Agente");
-
                         if (emailSent)
                         {
                             TempData["RegisterSuccess"] = $"✅ CUENTA TIPO '{(newUser.IdRol == 1 ? "Administrador" : "Agente")}' REGISTRADA CORRECTAMENTE. Las credenciales fueron enviadas a {newUser.Correo}.";
@@ -120,12 +122,14 @@ namespace Boletos_Avion.Controllers
                         else
                         {
                             ViewBag.RegisterError = "❌ Usuario registrado pero ocurrió un error al enviar las credenciales por correo.";
+                            SetRegistrationValues(form);
                             return View("Authentication");
                         }
                     }
                     else
                     {
                         ViewBag.RegisterError = "❌ Error al registrar el usuario en la base de datos. Verifica los datos e intenta nuevamente.";
+                        SetRegistrationValues(form);
                         return View("Authentication");
                     }
                 }
@@ -133,32 +137,42 @@ namespace Boletos_Avion.Controllers
                 {
                     // Registro inmediato para Clientes
                     bool success = _dbController.RegisterUser(newUser);
-
                     if (success)
                     {
                         SendWelcomeEmail(newUser.Correo, newUser.Nombre);
-
-                        // Inicio de sesión automático tras registro exitoso
-                        HttpContext.Session.SetString("UserEmail", newUser.Correo);
-                        HttpContext.Session.SetString("UserName", newUser.Nombre);
-                        HttpContext.Session.SetInt32("UserRole", newUser.IdRol);
-
-                        return RedirectToAction("Index", "Home");
+                        TempData["RegisterSuccess"] = "Registro exitoso. Por favor, inicia sesión.";
+                        return RedirectToAction("Authentication", "Auth");
                     }
                     else
                     {
                         ViewBag.RegisterError = "❌ Error al registrar el cliente en la base de datos.";
+                        SetRegistrationValues(form);
                         return View("Authentication");
                     }
+
                 }
             }
             catch (Exception ex)
             {
-                // Mostrar el error exacto que ocurrió
                 ViewBag.RegisterError = $"Ocurrió un error inesperado: {ex.Message}";
+                SetRegistrationValues(form);
                 return View("Authentication");
             }
         }
+
+        private void SetRegistrationValues(IFormCollection form)
+        {
+            // Indicamos a la vista que se debe activar la pestaña de registro
+            ViewBag.ActiveTab = "register";
+            // Preservamos los valores ingresados
+            ViewBag.Nombre = form["Nombre"];
+            ViewBag.Apellido = form["Apellido"];
+            ViewBag.Correo = form["Correo"];
+            ViewBag.Telefono = form["Telefono"];
+            ViewBag.DocumentoIdentidad = form["DocumentoIdentidad"];
+            ViewBag.Direccion = form["Direccion"];
+        }
+
 
         [HttpPost]
         public IActionResult Login(string email, string password)
