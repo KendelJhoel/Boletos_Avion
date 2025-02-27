@@ -22,7 +22,14 @@
 
     <div class="profile-header">
         <h1 id="userNameDisplay">@Model.Nombre</h1>
-        <p id="userEmailDisplay">@ViewContext.HttpContext.Session.GetString("UserEmail")</p>
+       
+        <div>
+            <p id="userEmailDisplay" class="d-inline">@ViewContext.HttpContext.Session.GetString("UserEmail")</p>
+            <a href="@Url.Action("ChangeEmail", "Account")" id="editEmailBtn" class="ms-2">
+                <i class="fa fa-edit"></i>
+            </a>
+        </div>
+
         <button id="toggleEditBtn" class="btn btn-link text-white">
             <i id="editIcon" class="fa fa-pencil"></i>
         </button>
@@ -65,6 +72,18 @@
                                 <i class="fa fa-eye" id="eyeIcon"></i>
                             </button>
                         </div>
+
+                        <div class="progress mt-2" id="passwordStrength" style="display: none;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <ul class="list-unstyled mt-2" id="passwordRequirements" style="display: none;">
+                            <li id="length" class="text-danger">Mínimo 8 caracteres</li>
+                            <li id="uppercase" class="text-danger">Al menos 1 letra mayúscula</li>
+                            <li id="lowercase" class="text-danger">Al menos 1 letra minúscula</li>
+                            <li id="number" class="text-danger">Al menos 1 número</li>
+                            <li id="specialChar" class="text-danger">Al menos 1 carácter especial</li>
+                        </ul>
+
                     </td>
                 </tr>
             </table>
@@ -94,12 +113,33 @@
     </div>
 </div>
 
+<!-- Modal para confirmar con contraseña actual -->
+<div class="modal fade" id="confirmPasswordModal" tabindex="-1" aria-labelledby="confirmPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmPasswordModalLabel">Confirmar cambios</h5>
+            </div>
+            <div class="modal-body">
+                <p>Para guardar los cambios, ingrese su contraseña actual:</p>
+                <input type="password" class="form-control" id="confirmPasswordInput" />
+                <small id="confirmPasswordError" class="text-danger"></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="confirmSaveChanges">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
             var originalData = {};
             var isEditing = false;
             var hasChanges = false;
+            var originalPassword = $('#passwordField').val(); // Guardar la contraseña original
 
             // Capturamos los datos originales para comparar cambios
             function captureOriginalData() {
@@ -142,7 +182,6 @@
             });
 
             $('#modalConfirmBtn').click(function () {
-                // Se descartan los cambios y se restaura el valor original
                 for (var key in originalData) {
                     $('[name="' + key + '"]').val(originalData[key]);
                 }
@@ -178,16 +217,103 @@
                 }
             });
 
-            // Al iniciar, ocultamos el botón de guardar y deshabilitamos la visibilidad de la contraseña
+            // **Nuevo: Modal para confirmar cambios con contraseña actual**
+            $('#saveChangesBtn').click(function (e) {
+                e.preventDefault();
+                if (hasChanges) {
+                    $('#confirmPasswordModal').modal('show');
+                }
+            });
+
+            $('#confirmSaveChanges').click(function () {
+                var confirmPassword = $('#confirmPasswordInput').val().trim();
+                var confirmPasswordError = $('#confirmPasswordError');
+
+                if (confirmPassword === '') {
+                    confirmPasswordError.text('Debe ingresar su contraseña actual para confirmar los cambios.');
+                } else {
+                    confirmPasswordError.text('');
+                    $('#confirmPasswordModal').modal('hide');
+                    $('#editProfileForm').submit();
+                }
+            });
+
+            // Teléfono: Formateo automático
+            $('input[name="Telefono"]').on('input', function () {
+                let value = $(this).val().replace(/[^0-9]/g, '');
+                if (value.length > 4) {
+                    $(this).val(value.slice(0, 4) + '-' + value.slice(4, 8));
+                } else {
+                    $(this).val(value);
+                }
+            });
+
+            // Documento de Identidad: Formateo automático
+            $('input[name="DocumentoIdentidad"]').on('input', function () {
+                let value = $(this).val().replace(/[^0-9]/g, '');
+                if (value.length > 8) {
+                    $(this).val(value.slice(0, 8) + '-' + value.slice(8, 9));
+                } else {
+                    $(this).val(value);
+                }
+            });
+
+            // Contraseña: Validación y barra de fuerza
+            $('#passwordField').on('input', function () {
+                let password = $(this).val().trim();
+                let strength = 0;
+                const passwordStrength = $('#passwordStrength');
+                const requirementsList = $('#passwordRequirements');
+
+                if (password !== originalPassword) {
+                    passwordStrength.show();
+                    requirementsList.show();
+                } else {
+                    passwordStrength.hide();
+                    requirementsList.hide();
+                }
+
+                const conditions = [
+                    { regex: /.{8,}/, elementId: 'length' },
+                    { regex: /[A-Z]/, elementId: 'uppercase' },
+                    { regex: /[a-z]/, elementId: 'lowercase' },
+                    { regex: /[0-9]/, elementId: 'number' },
+                    { regex: /[^a-zA-Z0-9]/, elementId: 'specialChar' }
+                ];
+
+                let fulfilledConditions = 0;
+
+                conditions.forEach(condition => {
+                    if (condition.regex.test(password)) {
+                        $('#' + condition.elementId).removeClass('text-danger').addClass('text-success');
+                        fulfilledConditions++;
+                    } else {
+                        $('#' + condition.elementId).removeClass('text-success').addClass('text-danger');
+                    }
+                });
+
+                strength = (fulfilledConditions / conditions.length) * 100;
+                passwordStrength.css('width', `${strength}%`);
+
+                if (fulfilledConditions === conditions.length) {
+                    passwordStrength.removeClass('bg-danger bg-warning').addClass('bg-success');
+                } else {
+                    passwordStrength.removeClass('bg-success').addClass('bg-warning');
+                }
+            });
+
+            $('#modalConfirmBtn').click(function () {
+                $('#passwordField').val(originalPassword);
+                $('#passwordStrength, #passwordRequirements').hide();
+            });
+
             $('#saveChangesBtn').hide();
             $('#togglePasswordVisibility').prop('disabled', true);
 
-            // Desactivar la confirmación al salir cuando se envía el formulario
             $("#editProfileForm").on("submit", function () {
                 isEditing = false;
             });
 
-            // Confirmación al salir de la página si hay cambios sin guardar.
             window.addEventListener('beforeunload', function (e) {
                 if (isEditing && hasChanges) {
                     e.preventDefault();

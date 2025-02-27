@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Boletos_Avion.Models;
+using System.Net.Mail;
+using System.Net;
 
 namespace Boletos_Avion.Controllers
 {
@@ -90,5 +92,15 @@ namespace Boletos_Avion.Controllers
                 return View(model);
             }
         }
+
+        // nuevas funciones --------------------------------------------------
+
+        public IActionResult ChangeEmail()
+        {
+            return View();
+        }
+
+
+
     }
 }
