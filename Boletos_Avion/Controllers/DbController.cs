@@ -623,5 +623,52 @@ public class DbController
         return vuelo;
     }
 
+    // nuevas ------------------
+    public string GetUserPasswordById(int userId)
+    {
+        string password = null;
+        string query = "SELECT contrasena FROM USUARIOS WHERE idUsuario = @UserId";
+
+        using (SqlConnection connection = GetConnection())
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@UserId", userId);
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        password = reader["contrasena"].ToString();
+                    }
+                }
+            }
+        }
+        return password;
+    }
+
+    public bool UpdateUserEmail(int userId, string newEmail)
+    {
+        string query = "UPDATE USUARIOS SET correo = @Correo WHERE idUsuario = @UserId";
+
+        using (SqlConnection connection = GetConnection())
+        {
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Correo", newEmail);
+                command.Parameters.AddWithValue("@UserId", userId);
+
+                connection.Open();
+                int rowsAffected = command.ExecuteNonQuery();
+
+                // Depuración
+                Console.WriteLine($"Filas afectadas: {rowsAffected} para el usuario {userId}");
+
+                return rowsAffected > 0; // Retorna true si se actualizó correctamente
+            }
+        }
+    }
+
+
 
 }

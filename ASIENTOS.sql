@@ -3,7 +3,6 @@ AS
 BEGIN
     DECLARE @idVuelo INT
 
-    -- Cursor para recorrer todos los vuelos sin asientos registrados
     DECLARE vuelo_cursor CURSOR FOR
     SELECT idVuelo FROM VUELOS
     WHERE idVuelo NOT IN (SELECT DISTINCT idVuelo FROM VUELOS_ASIENTOS);
@@ -61,8 +60,8 @@ BEGIN
     DEALLOCATE vuelo_cursor
 END;
 
--- EJECUTAR ESTO PARA GENERAR LOS ASIENTOS
+-- play para llenar asientos en vls nuevos
 EXEC GenerarAsientosPorVuelo;
 
--- VER TOTAL DE ASIENTOS
+-- tt asientos
 SELECT COUNT(*) AS TotalAsientos FROM VUELOS_ASIENTOS;

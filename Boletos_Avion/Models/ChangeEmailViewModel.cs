@@ -7,8 +7,5 @@ namespace Boletos_Avion.Models
         [Required(ErrorMessage = "El nuevo correo es obligatorio.")]
         [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
         public string NewEmail { get; set; }
-
-        [Required(ErrorMessage = "Debe ingresar el código de verificación.")]
-        public string VerificationCode { get; set; }
     }
 }

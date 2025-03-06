@@ -20,32 +20,56 @@
         </div>
     }
 
-    <div class="text-center my-4">
+    <!-- Vista en tiempo real del correo actual y nuevo -->
+    <div class="email-display-box text-center my-4">
+        <span id="currentEmail" class="fw-bold text-muted">@ViewContext.HttpContext.Session.GetString("UserEmail")</span>
+        <i class="fa fa-arrow-right mx-3 text-primary"></i>
         <span id="newEmailDisplay" class="fw-bold text-primary">______</span>
-        <i class="fa fa-arrow-right mx-3"></i>
-        <span class="fw-bold">@ViewContext.HttpContext.Session.GetString("UserEmail")</span>
     </div>
 
     <form asp-action="ChangeEmail" method="post">
+        <!-- Input para nuevo correo -->
         <div class="mb-3">
-            <label for="newEmail" class="form-label">Ingresa el nuevo correo</label>
+            <label for="newEmail" class="form-label">Nuevo Correo Electrónico</label>
             <input type="email" class="form-control" name="NewEmail" id="newEmail" required />
-            <small class="text-danger" id="emailError"></small> <!-- Mensaje de error -->
+            <small class="text-danger" id="emailError"></small>
         </div>
 
+        <!-- Input para código de verificación -->
         <div class="mb-3">
-            <label for="verificationCode" class="form-label">Ingresa el código enviado a tu correo actual</label>
-            <input type="text" class="form-control" name="VerificationCode" id="verificationCode" required />
+            <label for="verificationCode" class="form-label">Código de Verificación</label>
+            <input type="text" class="form-control" name="VerificationCode" id="verificationCode" required maxlength="6" />
             <small class="text-danger" id="codeError"></small>
         </div>
 
         <div class="text-center">
-            <button type="submit" id="saveChangesBtn" class="btn btn-primary" disabled>Guardar Cambios</button>
-            <a href="@Url.Action("EditProfile", "Account")" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" id="saveChangesBtn" class="btn btn-primary" disabled>Confirmar Cambio</button>
+            <a href="@Url.Action("Profile", "Account")" class="btn btn-secondary" id="cancelChangeEmailBtn">Cancelar</a>
         </div>
     </form>
-
 </div>
+
+<!-- Modal para confirmar con contraseña -->
+<div class="modal fade" id="passwordConfirmModal" tabindex="-1" aria-labelledby="passwordConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordConfirmLabel">Confirmar Cambio de Correo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Para cambiar tu correo, ingresa tu contraseña actual:</p>
+                <input type="password" class="form-control" id="modalPasswordInput" placeholder="Contraseña" />
+                <small id="modalPasswordError" class="text-danger"></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmPasswordBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 @section Scripts {
     <script src="~/js/changeEmail-validation.js" asp-append-version="true"></script>

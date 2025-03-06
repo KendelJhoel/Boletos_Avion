@@ -15,8 +15,11 @@
 </head>
 
 <body>
-    @if (!(ViewContext.HttpContext.Request.Path.Value.Contains("Auth/Authentication")
-    || ViewContext.HttpContext.Request.Path.Value.Contains("Auth/Password_reset")))
+    @if (!(
+    ViewContext.HttpContext.Request.Path.Value.Contains("Auth/Authentication") ||
+    ViewContext.HttpContext.Request.Path.Value.Contains("Auth/Password_reset") ||
+    ViewContext.HttpContext.Request.Path.Value.Contains("Account/ChangeEmail")
+    ))
     {
         <header>
             <!-- Navbar -->

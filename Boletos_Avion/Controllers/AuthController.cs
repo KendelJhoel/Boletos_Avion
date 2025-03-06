@@ -406,5 +406,23 @@ namespace Boletos_Avion.Controllers
                 return false;
             }
         }
+
+        // nuevas
+
+        [HttpGet]
+        public JsonResult CheckPassword(string password)
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return Json(new { valid = false });
+            }
+
+            // Obtener la contraseña de la base de datos
+            string storedPassword = _dbController.GetUserPasswordById(userId.Value);
+            bool isValid = storedPassword == password;
+
+            return Json(new { valid = isValid });
+        }
     }
 }

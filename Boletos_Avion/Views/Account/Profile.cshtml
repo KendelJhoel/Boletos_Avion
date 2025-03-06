@@ -25,7 +25,7 @@
        
         <div>
             <p id="userEmailDisplay" class="d-inline">@ViewContext.HttpContext.Session.GetString("UserEmail")</p>
-            <a href="@Url.Action("ChangeEmail", "Account")" id="editEmailBtn" class="ms-2">
+            <a href="#" id="editEmailBtn" class="ms-2" data-bs-toggle="modal" data-bs-target="#confirmEmailChangeModal">
                 <i class="fa fa-edit"></i>
             </a>
         </div>
@@ -53,12 +53,16 @@
                 </tr>
                 <tr>
                     <th>Dirección</th>
+                    <small id="telefonoError" class="text-danger" style="display: none;"></small>
+                    <br />
                     <td>
                         @Html.TextBoxFor(model => model.Direccion, new { @class = "form-control", @readonly = "readonly" })
                     </td>
                 </tr>
                 <tr>
                     <th>Documento de Identidad</th>
+                    <small id="duiError" class="text-danger" style="display: none;"></small>
+                    <br />
                     <td>
                         @Html.TextBoxFor(model => model.DocumentoIdentidad, new { @class = "form-control", @readonly = "readonly" })
                     </td>
@@ -91,6 +95,25 @@
                 <button type="submit" id="saveChangesBtn" class="btn btn-success" disabled>Guardar cambios</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal para confirmar cambio de correo -->
+<div class="modal fade" id="confirmEmailChangeModal" tabindex="-1" aria-labelledby="confirmEmailChangeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmEmailChangeLabel">Confirmar cambio de correo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas cambiar tu correo electrónico?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="confirmEmailChangeBtn" class="btn btn-primary">Sí, cambiar</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -134,193 +157,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            var originalData = {};
-            var isEditing = false;
-            var hasChanges = false;
-            var originalPassword = $('#passwordField').val(); // Guardar la contraseña original
-
-            // Capturamos los datos originales para comparar cambios
-            function captureOriginalData() {
-                $('#editProfileForm').find('input[type="text"], input[type="password"]').each(function () {
-                    originalData[$(this).attr('name')] = $(this).val();
-                });
-            }
-            captureOriginalData();
-
-            function checkForChanges() {
-                hasChanges = false;
-                $('#editProfileForm').find('input[type="text"], input[type="password"]').each(function () {
-                    if ($(this).val() !== originalData[$(this).attr('name')]) {
-                        hasChanges = true;
-                        return false;
-                    }
-                });
-                $('#saveChangesBtn').prop('disabled', !hasChanges);
-            }
-
-            $('#editProfileForm').find('input').on('input', function () {
-                checkForChanges();
-            });
-
-            $('#toggleEditBtn').click(function (e) {
-                e.preventDefault();
-                if (!isEditing) {
-                    isEditing = true;
-                    $('#editProfileForm').find('input').removeAttr('readonly');
-                    $('#editIcon').removeClass('fa-pencil').addClass('fa-lock');
-                    $('#saveChangesBtn').show();
-                    $('#togglePasswordVisibility').prop('disabled', false);
-                } else {
-                    if (hasChanges) {
-                        $('#discardChangesModal').modal('show');
-                    } else {
-                        toggleToReadOnly();
-                    }
-                }
-            });
-
-            $('#modalConfirmBtn').click(function () {
-                for (var key in originalData) {
-                    $('[name="' + key + '"]').val(originalData[key]);
-                }
-                checkForChanges();
-                $('#discardChangesModal').modal('hide');
-                toggleToReadOnly();
-            });
-
-            $('#modalCancelBtn').click(function () {
-                $('#discardChangesModal').modal('hide');
-            });
-
-            function toggleToReadOnly() {
-                isEditing = false;
-                $('#editProfileForm').find('input').prop('readonly', true);
-                $('#editIcon').removeClass('fa-lock').addClass('fa-pencil');
-                $('#saveChangesBtn').prop('disabled', true).hide();
-                $('#togglePasswordVisibility').prop('disabled', true);
-                $('#passwordField').attr('type', 'password');
-                $('#eyeIcon').removeClass('fa-eye-slash').addClass('fa-eye');
-            }
-
-            $('#togglePasswordVisibility').click(function () {
-                let passwordField = $('#passwordField');
-                let icon = $('#eyeIcon');
-
-                if (passwordField.attr('type') === 'password') {
-                    passwordField.attr('type', 'text');
-                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
-                } else {
-                    passwordField.attr('type', 'password');
-                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
-                }
-            });
-
-            // **Nuevo: Modal para confirmar cambios con contraseña actual**
-            $('#saveChangesBtn').click(function (e) {
-                e.preventDefault();
-                if (hasChanges) {
-                    $('#confirmPasswordModal').modal('show');
-                }
-            });
-
-            $('#confirmSaveChanges').click(function () {
-                var confirmPassword = $('#confirmPasswordInput').val().trim();
-                var confirmPasswordError = $('#confirmPasswordError');
-
-                if (confirmPassword === '') {
-                    confirmPasswordError.text('Debe ingresar su contraseña actual para confirmar los cambios.');
-                } else {
-                    confirmPasswordError.text('');
-                    $('#confirmPasswordModal').modal('hide');
-                    $('#editProfileForm').submit();
-                }
-            });
-
-            // Teléfono: Formateo automático
-            $('input[name="Telefono"]').on('input', function () {
-                let value = $(this).val().replace(/[^0-9]/g, '');
-                if (value.length > 4) {
-                    $(this).val(value.slice(0, 4) + '-' + value.slice(4, 8));
-                } else {
-                    $(this).val(value);
-                }
-            });
-
-            // Documento de Identidad: Formateo automático
-            $('input[name="DocumentoIdentidad"]').on('input', function () {
-                let value = $(this).val().replace(/[^0-9]/g, '');
-                if (value.length > 8) {
-                    $(this).val(value.slice(0, 8) + '-' + value.slice(8, 9));
-                } else {
-                    $(this).val(value);
-                }
-            });
-
-            // Contraseña: Validación y barra de fuerza
-            $('#passwordField').on('input', function () {
-                let password = $(this).val().trim();
-                let strength = 0;
-                const passwordStrength = $('#passwordStrength');
-                const requirementsList = $('#passwordRequirements');
-
-                if (password !== originalPassword) {
-                    passwordStrength.show();
-                    requirementsList.show();
-                } else {
-                    passwordStrength.hide();
-                    requirementsList.hide();
-                }
-
-                const conditions = [
-                    { regex: /.{8,}/, elementId: 'length' },
-                    { regex: /[A-Z]/, elementId: 'uppercase' },
-                    { regex: /[a-z]/, elementId: 'lowercase' },
-                    { regex: /[0-9]/, elementId: 'number' },
-                    { regex: /[^a-zA-Z0-9]/, elementId: 'specialChar' }
-                ];
-
-                let fulfilledConditions = 0;
-
-                conditions.forEach(condition => {
-                    if (condition.regex.test(password)) {
-                        $('#' + condition.elementId).removeClass('text-danger').addClass('text-success');
-                        fulfilledConditions++;
-                    } else {
-                        $('#' + condition.elementId).removeClass('text-success').addClass('text-danger');
-                    }
-                });
-
-                strength = (fulfilledConditions / conditions.length) * 100;
-                passwordStrength.css('width', `${strength}%`);
-
-                if (fulfilledConditions === conditions.length) {
-                    passwordStrength.removeClass('bg-danger bg-warning').addClass('bg-success');
-                } else {
-                    passwordStrength.removeClass('bg-success').addClass('bg-warning');
-                }
-            });
-
-            $('#modalConfirmBtn').click(function () {
-                $('#passwordField').val(originalPassword);
-                $('#passwordStrength, #passwordRequirements').hide();
-            });
-
-            $('#saveChangesBtn').hide();
-            $('#togglePasswordVisibility').prop('disabled', true);
-
-            $("#editProfileForm").on("submit", function () {
-                isEditing = false;
-            });
-
-            window.addEventListener('beforeunload', function (e) {
-                if (isEditing && hasChanges) {
-                    e.preventDefault();
-                    e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
-                    return 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
-                }
-            });
-        });
-    </script>
+    <script src="~/js/profile-validation.js" asp-append-version="true"></script>
 }
