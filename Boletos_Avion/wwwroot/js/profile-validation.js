@@ -2,9 +2,9 @@
     var originalData = {};
     var isEditing = false;
     var hasChanges = false;
-    var originalPassword = $('#passwordField').val(); // Guardar la contraseña original
+    var originalPassword = $('#passwordField').val(); // pa guardar la contra actual u original
 
-    // Capturamos los datos originales para comparar cambios
+    // aqui capturo los datos originales para comparar cambios
     function captureOriginalData() {
         $('#editProfileForm').find('input[type="text"], input[type="password"]').each(function () {
             originalData[$(this).attr('name')] = $(this).val();

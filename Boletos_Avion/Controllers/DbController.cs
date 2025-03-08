@@ -623,6 +623,102 @@ public class DbController
         return vuelo;
     }
 
+    public List<Vuelo> GetVuelos(string origen, string destino, DateTime? fechaIda, decimal? precioMin, decimal? precioMax, string aerolinea, string categoria)
+    {
+        List<Vuelo> vuelos = new List<Vuelo>();
+        using (SqlConnection conn = GetConnection())
+        {
+            List<string> condiciones = new List<string>();
+            SqlCommand cmd = new SqlCommand();
+
+            if (!string.IsNullOrWhiteSpace(origen))
+            {
+                condiciones.Add("co.nombre = @Origen");
+                cmd.Parameters.AddWithValue("@Origen", origen);
+            }
+            if (!string.IsNullOrWhiteSpace(destino))
+            {
+                condiciones.Add("cd.nombre = @Destino");
+                cmd.Parameters.AddWithValue("@Destino", destino);
+            }
+            if (fechaIda.HasValue)
+            {
+                condiciones.Add("CONVERT(DATE, v.fecha_salida) = @FechaIda");
+                cmd.Parameters.AddWithValue("@FechaIda", fechaIda.Value.Date);
+            }
+            if (precioMin.HasValue)
+            {
+                condiciones.Add("v.precio_base >= @PrecioMin");
+                cmd.Parameters.AddWithValue("@PrecioMin", precioMin.Value);
+            }
+            if (precioMax.HasValue)
+            {
+                condiciones.Add("v.precio_base <= @PrecioMax");
+                cmd.Parameters.AddWithValue("@PrecioMax", precioMax.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(aerolinea))
+            {
+                condiciones.Add("a.nombre = @Aerolinea");
+                cmd.Parameters.AddWithValue("@Aerolinea", aerolinea);
+            }
+            if (!string.IsNullOrWhiteSpace(categoria))
+            {
+                condiciones.Add("cv.nombre = @Categoria");
+                cmd.Parameters.AddWithValue("@Categoria", categoria);
+            }
+
+            string whereClause = condiciones.Count > 0 ? "WHERE " + string.Join(" AND ", condiciones) : "";
+
+            string query = $@"
+        SELECT v.idVuelo, v.codigo_vuelo, 
+            ao.idAeropuerto AS IdAeropuertoOrigen, co.nombre AS CiudadOrigen, 
+            ad.idAeropuerto AS IdAeropuertoDestino, cd.nombre AS CiudadDestino, 
+            v.fecha_salida, v.fecha_llegada, v.precio_base, 
+            a.nombre AS NombreAerolinea, 
+            cv.nombre AS Categoria, v.estado,
+            -- Obtener cantidad de asientos disponibles
+            (SELECT COUNT(*) FROM VUELOS_ASIENTOS va WHERE va.idVuelo = v.idVuelo AND va.estado = 'Disponible') AS AsientosDisponibles
+        FROM VUELOS v
+        INNER JOIN AEROPUERTOS ao ON v.idAeropuertoOrigen = ao.idAeropuerto
+        INNER JOIN CIUDADES co ON ao.idCiudad = co.idCiudad
+        INNER JOIN AEROPUERTOS ad ON v.idAeropuertoDestino = ad.idAeropuerto
+        INNER JOIN CIUDADES cd ON ad.idCiudad = cd.idCiudad
+        INNER JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+        LEFT JOIN CATEGORIAS_VUELOS cv ON v.idCategoriaVuelo = cv.idCategoriaVuelo
+        {whereClause};";
+
+            cmd.CommandText = query;
+            cmd.Connection = conn;
+            conn.Open();
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    vuelos.Add(new Vuelo
+                    {
+                        IdVuelo = Convert.ToInt32(reader["idVuelo"]),
+                        CodigoVuelo = reader["codigo_vuelo"].ToString(),
+                        IdAeropuertoOrigen = Convert.ToInt32(reader["IdAeropuertoOrigen"]),
+                        CiudadOrigen = reader["CiudadOrigen"].ToString(),
+                        IdAeropuertoDestino = Convert.ToInt32(reader["IdAeropuertoDestino"]),
+                        CiudadDestino = reader["CiudadDestino"].ToString(),
+                        FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
+                        FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
+                        PrecioBase = Convert.ToDecimal(reader["precio_base"]),
+                        Categoria = reader["Categoria"].ToString(),
+                        Estado = reader["estado"].ToString(),
+                        AsientosDisponibles = Convert.ToInt32(reader["AsientosDisponibles"]),
+                        Aerolinea = new Aerolinea
+                        {
+                            Nombre = reader["NombreAerolinea"].ToString()
+                        }
+                    });
+                }
+            }
+        }
+        return vuelos;
+    }
+
     // nuevas ------------------
     public string GetUserPasswordById(int userId)
     {

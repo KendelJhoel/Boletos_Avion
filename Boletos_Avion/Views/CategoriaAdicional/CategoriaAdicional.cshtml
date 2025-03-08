@@ -41,6 +41,7 @@
                                 <th class="sortable">Llegada</th>
                                 <th class="sortable">Precio Base</th>
                                 <th class="sortable">Estado</th>
+                                <th class="sortable">Asientos Disponibles</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +55,7 @@
                                     <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
                                     <td>$@vuelo.PrecioBase.ToString("N2")</td>
                                     <td>@vuelo.Estado</td>
+                                    <td>@vuelo.AsientosDisponibles</td>
                                 </tr>
                             }
                         </tbody>

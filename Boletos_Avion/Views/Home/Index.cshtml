@@ -1,4 +1,4 @@
-﻿@model List<Boletos_Avion.Models.VueloViewModel>
+﻿@model List<Boletos_Avion.Models.Vuelo>
 
 @{
     ViewData["Title"] = "Inicio - GESTION BOLETOS";
@@ -119,6 +119,7 @@
                         <th>Fecha de Llegada</th>
                         <th>Precio Base</th>
                         <th>Estado</th>
+                        <th>Asientos Disponibles</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -128,12 +129,13 @@
                             <td><strong>@vuelo.CodigoVuelo</strong></td>
                             <td>@vuelo.CiudadOrigen</td>
                             <td>@vuelo.CiudadDestino</td>
-                            <td>@vuelo.Aerolinea</td>
+                            <td>@vuelo.Aerolinea.Nombre</td>
                             <td>@vuelo.Categoria</td>
                             <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
                             <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
                             <td>@vuelo.Estado</td>
+                            <td>@vuelo.AsientosDisponibles</td>
                         </tr>
                     }
                 </tbody>

@@ -6,6 +6,7 @@ namespace Boletos_Avion.Models
     {
         public int IdVuelo { get; set; }
         public string CodigoVuelo { get; set; }
+        public string Categoria { get; set; } // Nueva propiedad
 
         // Relaciones con Aeropuertos
         public int IdAeropuertoOrigen { get; set; }
@@ -56,6 +57,11 @@ namespace Boletos_Avion.Models
         public int AsientosPrimeraClaseDisponibles { get; set; }
         public int AsientosTuristaDisponibles { get; set; }
 
+        // Propiedades calculadas extraidos del antiguo VueloViewModel.cs
+        public string Origen => $"{CiudadOrigen} - {NombreAeropuertoOrigen}";
+        public string Destino => $"{CiudadDestino} - {NombreAeropuertoDestino}";
+        public string Duracion => (FechaLlegada - FechaSalida).ToString(@"hh\:mm");
+        public decimal Precio => PrecioBase * 1.13m; // Aplicando impuesto
 
     }
 }
