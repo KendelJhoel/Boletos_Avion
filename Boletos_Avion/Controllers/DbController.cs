@@ -1,7 +1,5 @@
 ﻿using Boletos_Avion.Models;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 
 public class DbController
 {
