@@ -55,7 +55,8 @@ INSERT INTO USUARIOS (nombre, correo, telefono, direccion, documento_identidad, 
 VALUES
 ('a_ken', 'Kendel.Arevalo@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN001', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador')),
 ('a_mig', 'Miguel.Leiva@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN002', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador')),
-('a_jon', 'Jonathan.Barrientos@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN003', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador'));
+('a_jon', 'Jonathan.Barrientos@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN003', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador')),
+('a_raf', 'rafael.sandoval@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN004', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador'));
 
 
 
