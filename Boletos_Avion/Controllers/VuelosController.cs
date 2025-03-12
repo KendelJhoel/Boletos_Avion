@@ -3,11 +3,13 @@ using Boletos_Avion.Models;
 using Boletos_Avion.Controllers;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using Boletos_Avion.Services;
 
 namespace Boletos_Avion.Controllers
 {
     public class VuelosController : Controller
     {
+        private readonly VuelosService _vuelosService;
 
         //private readonly string connectionString = "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;";
         private readonly string connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
@@ -15,9 +17,10 @@ namespace Boletos_Avion.Controllers
 
         private readonly DbController _dbController;
 
-        public VuelosController()
+        public VuelosController( VuelosService vuelosService)
         {
             _dbController = new DbController();
+            _vuelosService = vuelosService;
         }
 
         public IActionResult Resultados()
@@ -33,7 +36,7 @@ namespace Boletos_Avion.Controllers
         [HttpPost]
         public IActionResult BuscarVuelos(string origen, string destino, DateTime? fechaIda, decimal? precioMin, decimal? precioMax, string aerolinea, string categoria)
         {
-            var vuelos = _dbController.GetVuelos(origen, destino, fechaIda, precioMin, precioMax, aerolinea, categoria);
+            var vuelos = _vuelosService.GetVuelos(origen, destino, fechaIda, precioMin, precioMax, aerolinea, categoria);
 
             // Guardar valores en ViewBag para que se mantengan después de la búsqueda
             ViewBag.Origen = origen;
