@@ -1,3 +1,5 @@
+using Boletos_Avion.Controllers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Habilitar sesiones
@@ -14,6 +16,8 @@ builder.Services.AddControllersWithViews();
 // Aqui poner todos los services
 builder.Services.AddScoped<DbController>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AccountController>();
+
 
 
 var app = builder.Build();

@@ -4,19 +4,21 @@ using Boletos_Avion.Models;
 using System.Net.Mail;
 using System.Net;
 using Microsoft.Extensions.Configuration;
+using Boletos_Avion.Services;
 
 namespace Boletos_Avion.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly DbController _dbController;
+        private readonly AccountService _accountService;
         private readonly AuthService _authService;
+
 
         public AccountController(IConfiguration configuration, AuthService authService)
         {
             _configuration = configuration;
-            _dbController = new DbController();
+            _accountService = new AccountService();
             _authService = authService;
         }
 
@@ -33,7 +35,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Recuperar el usuario desde la base de datos por su ID
-            UserModel user = _dbController.GetUserById(userId.Value);
+            UserModel user = _accountService.GetUserById(userId.Value);
             if (user == null)
             {
                 return RedirectToAction("Authentication", "Auth");
@@ -68,7 +70,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Obtener el usuario actual de la BD
-            UserModel user = _dbController.GetUserById(userId.Value);
+            UserModel user = _accountService.GetUserById(userId.Value);
             if (user == null)
             {
                 return RedirectToAction("Authentication", "Auth");
@@ -82,7 +84,7 @@ namespace Boletos_Avion.Controllers
             user.Contrasena = model.Contrasena; // Se sobreescribe la contraseña
 
             // Guardar cambios en la BD
-            bool updateSuccess = _dbController.UpdateUser(user);
+            bool updateSuccess = _accountService.UpdateUser(user);
             if (updateSuccess)
             {
                 // Actualizar la sesión para reflejar el nuevo nombre en el navbar
@@ -137,7 +139,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Actualizar el correo en la BD
-            bool updated = _dbController.UpdateUserEmail(userId.Value, model.Nombre);
+            bool updated = _accountService.UpdateUserEmail(userId.Value, model.Nombre);
 
             if (updated)
             {

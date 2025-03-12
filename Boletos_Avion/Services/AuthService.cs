@@ -5,6 +5,8 @@ public class AuthService : DbController
 {
     public AuthService() : base() { } // ✅ Llama al constructor de DbController
 
+
+    // Obtener un usuario por su ID (incluye contraseña)
     public UserModel ValidateUser(string email, string password)
     {
         UserModel user = null;
