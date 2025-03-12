@@ -58,7 +58,7 @@ VALUES
 ('a_jon', 'Jonathan.Barrientos@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN003', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador')),
 ('a_raf', 'rafael.sandoval@catolica.edu.sv', '1234-5678', 'Dirección default', 'ADMIN004', 'admin123', (SELECT idRol FROM ROLES WHERE nombre = 'Administrador'));
 
-
+select * from usuarios
 
 
 -- #_ CIUDADES (5 más importantes de cada país agregado a la bd _#

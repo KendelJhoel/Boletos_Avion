@@ -4,6 +4,66 @@ using Microsoft.Data.SqlClient;
 public class DbController
 {
     private readonly string connectionString;
+    private SqlConnection connection;
+
+    public DbController()
+    {
+        List<string> connectionOptions = new List<string>
+            {
+                "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;",
+                "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;",
+                "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos46;User ID=sa;Password=15012004;TrustServerCertificate=True;"
+            };
+
+        connectionString = GetAvailableConnection(connectionOptions);
+        connection = new SqlConnection(connectionString); // 🔹 Inicializa la conexión UNA SOLA VEZ
+    }
+
+    private string GetAvailableConnection(List<string> connectionOptions)
+    {
+        foreach (var conn in connectionOptions)
+        {
+            try
+            {
+                using (var testConnection = new SqlConnection(conn))
+                {
+                    testConnection.Open();
+                    Console.WriteLine($"✅ Conectado exitosamente usando: {conn}");
+                    return conn; // Retorna la primera conexión exitosa
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Fallo en la conexión: {ex.Message}");
+            }
+        }
+        throw new Exception("❌ No se pudo conectar con ninguna base de datos.");
+    }
+
+    public SqlConnection GetConnection()
+    {
+        if (connection == null || connection.State == System.Data.ConnectionState.Closed)
+        {
+            connection = new SqlConnection(connectionString); // 🔹 Si está cerrada, la reabre.
+        }
+        return connection;
+    }
+
+    public string TestConnection()
+    {
+        try
+        {
+            using (SqlConnection testConnection = GetConnection())
+            {
+                testConnection.Open();
+                return "✅ Conectado a la base de datos: " + testConnection.Database;
+            }
+        }
+        catch (Exception ex)
+        {
+            return "❌ No se ha podido conectar a la base de datos: " + ex.Message;
+        }
+    }
 
     private static readonly Dictionary<string, string> CodigoPaises = new Dictionary<string, string>{
         // América
@@ -39,208 +99,6 @@ public class DbController
         { "Australia", "AU" },
         { "Nueva Zelanda", "NZ" }
     };
-
-    public DbController()
-    {
-        connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
-        //connectionString = "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;";
-        //connectionString = "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos46;User ID=sa;Password=15012004;TrustServerCertificate=True;";
-        //
-    }
-
-    public SqlConnection GetConnection()
-    {
-        return new SqlConnection(connectionString);
-    }
-
-    // Método para probar la conexión a la base de datos
-    public string TestConnection()
-    {
-        try
-        {
-            using (SqlConnection connection = GetConnection())
-            {
-                connection.Open();
-                return "Conectado a la base de datos: " + connection.Database;
-            }
-        }
-        catch (Exception ex)
-        {
-            return "No se ha podido conectar a la base de datos: " + ex.Message;
-        }
-    }
-
-    // Validar usuario en la base de datos
-    public UserModel ValidateUser(string email, string password)
-    {
-        UserModel user = null;
-
-        using (SqlConnection connection = GetConnection())
-        {
-            connection.Open();
-            string query = "SELECT idUsuario, nombre, correo, contrasena, idRol FROM USUARIOS WHERE correo = @Email AND contrasena = @Password";
-
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Email", email);
-                command.Parameters.AddWithValue("@Password", password); // 🔥 Sin hashing
-
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        user = new UserModel
-                        {
-                            IdUsuario = Convert.ToInt32(reader["idUsuario"]),
-                            Nombre = reader["nombre"].ToString(),
-                            Correo = reader["correo"].ToString(),
-                            Contrasena = reader["contrasena"].ToString(),
-                            IdRol = Convert.ToInt32(reader["idRol"])
-                        };
-                    }
-                }
-            }
-        }
-        return user;
-    }
-
-    // Registrar usuario en la base de datos
-    public bool RegisterUser(UserModel user)
-    {
-        string query = @"INSERT INTO USUARIOS (nombre, correo, telefono, direccion, documento_identidad, contrasena, idRol, fecha_registro) 
-                     VALUES (@Nombre, @Correo, @Telefono, @Direccion, @Documento, @Contrasena, @IdRol, GETDATE())";
-
-        using (SqlConnection connection = new SqlConnection(connectionString))
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Nombre", user.Nombre);
-                command.Parameters.AddWithValue("@Correo", user.Correo);
-                command.Parameters.AddWithValue("@Telefono", user.Telefono ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@Direccion", user.Direccion ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@Documento", user.DocumentoIdentidad);
-                command.Parameters.AddWithValue("@Contrasena", user.Contrasena);
-                command.Parameters.AddWithValue("@IdRol", user.IdRol);
-
-                try
-                {
-                    connection.Open();
-                    int result = command.ExecuteNonQuery();
-                    return result > 0;
-                }
-                catch (SqlException ex)
-                {
-                    // Log de error en consola y retorno de falso para manejo en el controlador
-                    Console.WriteLine($"Error SQL: {ex.Message}");
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error general: {ex.Message}");
-                    return false;
-                }
-            }
-        }
-    }
-
-    // Verificar si un usuario ya existe en la base de datos por su correo
-    public bool CheckUserExists(string email)
-    {
-        bool exists = false;
-        string query = "SELECT COUNT(*) FROM USUARIOS WHERE correo = @Correo";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Correo", email);
-                connection.Open();
-                int count = (int)command.ExecuteScalar();
-                exists = count > 0;
-            }
-        }
-        return exists;
-    }
-
-    // Verificar si un número de teléfono ya está registrado
-    public bool CheckPhoneExists(string phone)
-    {
-        bool exists = false;
-        string query = "SELECT COUNT(*) FROM USUARIOS WHERE telefono = @Telefono";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Telefono", phone);
-                connection.Open();
-                int count = (int)command.ExecuteScalar();
-                exists = count > 0;
-            }
-        }
-        return exists;
-    }
-
-    // Verificar si un documento de identidad ya está registrado
-    public bool CheckDocumentExists(string document)
-    {
-        bool exists = false;
-        string query = "SELECT COUNT(*) FROM USUARIOS WHERE documento_identidad = @Documento";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Documento", document);
-                connection.Open();
-                int count = (int)command.ExecuteScalar();
-                exists = count > 0;
-            }
-        }
-        return exists;
-    }
-
-    // Método para eliminar un usuario
-    public bool DeleteUser(int idUsuario)
-    {
-        string query = "DELETE FROM USUARIOS WHERE idUsuario = @IdUsuario";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@IdUsuario", idUsuario);
-
-                connection.Open();
-                int result = command.ExecuteNonQuery();
-                return result > 0;
-            }
-        }
-    }
-
-    // Obtener la contraseña actual por correo
-    public string GetUserPasswordByEmail(string correo)
-    {
-        string password = null;
-        string query = "SELECT contrasena FROM USUARIOS WHERE correo = @Correo";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Correo", correo);
-                connection.Open();
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        password = reader["contrasena"].ToString();
-                    }
-                }
-            }
-        }
-        return password;
-    }
 
     // Obtener un usuario por su ID (incluye contraseña)
     public UserModel GetUserById(int idUsuario)
@@ -719,28 +577,7 @@ public class DbController
     }
 
     // nuevas ------------------
-    public string GetUserPasswordById(int userId)
-    {
-        string password = null;
-        string query = "SELECT contrasena FROM USUARIOS WHERE idUsuario = @UserId";
-
-        using (SqlConnection connection = GetConnection())
-        {
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@UserId", userId);
-                connection.Open();
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        password = reader["contrasena"].ToString();
-                    }
-                }
-            }
-        }
-        return password;
-    }
+    
 
     public bool UpdateUserEmail(int userId, string newEmail)
     {
@@ -763,7 +600,4 @@ public class DbController
             }
         }
     }
-
-
-
 }

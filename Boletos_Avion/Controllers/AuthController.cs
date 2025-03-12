@@ -10,12 +10,12 @@ namespace Boletos_Avion.Controllers
     public class AuthController : Controller
     {
         private readonly IConfiguration _configuration;
-        private readonly DbController _dbController;
+        private readonly AuthService _authService;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, AuthService authService)
         {
             _configuration = configuration;
-            _dbController = new DbController();
+            _authService = authService;
         }
 
         public IActionResult Authentication()
@@ -94,19 +94,19 @@ namespace Boletos_Avion.Controllers
                 }
 
                 // Validación de duplicados
-                if (_dbController.CheckUserExists(newUser.Correo))
+                if (_authService.CheckUserExists(newUser.Correo))
                 {
                     ViewBag.RegisterError = "El correo ya está registrado.";
                     SetRegistrationValues(form);
                     return View("Authentication");
                 }
-                if (_dbController.CheckPhoneExists(newUser.Telefono))
+                if (_authService.CheckPhoneExists(newUser.Telefono))
                 {
                     ViewBag.RegisterError = "El número de teléfono ya está en uso.";
                     SetRegistrationValues(form);
                     return View("Authentication");
                 }
-                if (_dbController.CheckDocumentExists(newUser.DocumentoIdentidad))
+                if (_authService.CheckDocumentExists(newUser.DocumentoIdentidad))
                 {
                     ViewBag.RegisterError = "El documento de identidad ya está registrado.";
                     SetRegistrationValues(form);
@@ -116,7 +116,7 @@ namespace Boletos_Avion.Controllers
                 // Registro para Agentes y Administradores
                 if (isReservedPassword)
                 {
-                    bool success = _dbController.RegisterUser(newUser);
+                    bool success = _authService.RegisterUser(newUser);
                     if (success)
                     {
                         bool emailSent = SendEmailWithCredentials(newUser.Correo, newUser.Contrasena, newUser.IdRol == 1 ? "Administrador" : "Agente");
@@ -143,7 +143,7 @@ namespace Boletos_Avion.Controllers
                 else
                 {
                     // Registro inmediato para Clientes
-                    bool success = _dbController.RegisterUser(newUser);
+                    bool success = _authService.RegisterUser(newUser);
                     if (success)
                     {
                         SendWelcomeEmail(newUser.Correo, newUser.Nombre);
@@ -198,7 +198,7 @@ namespace Boletos_Avion.Controllers
         [HttpPost]
         public IActionResult Login(string email, string password)
         {
-            var user = _dbController.ValidateUser(email, password);
+            var user = _authService.ValidateUser(email, password);
 
             if (user != null)
             {
@@ -244,8 +244,12 @@ namespace Boletos_Avion.Controllers
         {
             try
             {
+                Console.WriteLine($"✉ Intentando enviar correo de bienvenida a: {email}");
+
                 string senderEmail = _configuration["EmailSettings:SenderEmail"];
                 string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                Console.WriteLine($"📧 Usando credenciales: {senderEmail}");
 
                 var smtpClient = new SmtpClient("smtp.gmail.com")
                 {
@@ -264,11 +268,12 @@ namespace Boletos_Avion.Controllers
                 mailMessage.To.Add(email);
                 smtpClient.Send(mailMessage);
 
+                Console.WriteLine($"✅ Correo enviado correctamente a: {email}");
                 return true;
             }
             catch (Exception ex)
             {
-                ViewBag.RegisterError = $"Error al enviar el correo de bienvenida: {ex.Message}";
+                Console.WriteLine($"❌ Error al enviar correo de bienvenida: {ex.Message}");
                 return false;
             }
         }
@@ -277,14 +282,18 @@ namespace Boletos_Avion.Controllers
         {
             try
             {
+                Console.WriteLine($"✉ Intentando enviar credenciales a: {email}");
+
                 string senderEmail = _configuration["EmailSettings:SenderEmail"];
                 string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                Console.WriteLine($"📧 Usando credenciales: {senderEmail}");
 
                 var smtpClient = new SmtpClient("smtp.gmail.com")
                 {
                     Port = 587,
                     Credentials = new NetworkCredential(senderEmail, senderPassword),
-                    EnableSsl = true
+                    EnableSsl = true,
                 };
 
                 var mailMessage = new MailMessage
@@ -305,11 +314,12 @@ namespace Boletos_Avion.Controllers
                 mailMessage.To.Add(email);
                 smtpClient.Send(mailMessage);
 
+                Console.WriteLine($"✅ Correo de credenciales enviado correctamente a: {email}");
                 return true;
             }
             catch (Exception ex)
             {
-                ViewBag.RegisterError = $"Error al enviar el correo: {ex.Message}";
+                Console.WriteLine($"❌ Error al enviar correo de credenciales: {ex.Message}");
                 return false;
             }
         }
@@ -317,21 +327,21 @@ namespace Boletos_Avion.Controllers
         [HttpGet]
         public JsonResult CheckCorreo(string correo)
         {
-            bool exists = _dbController.CheckUserExists(correo);
+            bool exists = _authService.CheckUserExists(correo);
             return Json(new { exists });
         }
 
         [HttpGet]
         public JsonResult CheckTelefono(string telefono)
         {
-            bool exists = _dbController.CheckPhoneExists(telefono);
+            bool exists = _authService.CheckPhoneExists(telefono);
             return Json(new { exists });
         }
 
         [HttpGet]
         public JsonResult CheckDocumento(string documento)
         {
-            bool exists = _dbController.CheckDocumentExists(documento);
+            bool exists = _authService.CheckDocumentExists(documento);
             return Json(new { exists });
         }
 
@@ -344,25 +354,43 @@ namespace Boletos_Avion.Controllers
         [HttpPost]
         public IActionResult SendPasswordReset(string correo)
         {
-            if (_dbController.CheckUserExists(correo))
+            try
             {
-                string password = _dbController.GetUserPasswordByEmail(correo);
-                bool emailSent = SendPasswordEmail(correo, password);
+                Console.WriteLine($"🔍 Verificando existencia del usuario con correo: {correo}");
 
-                if (emailSent)
+                if (_authService.CheckUserExists(correo))
                 {
-                    TempData["ResetSuccess"] = "Tus credenciales han sido enviadas al correo proporcionado.";
-                    return RedirectToAction("Password_reset", "Auth");
+                    Console.WriteLine($"✅ Usuario encontrado, obteniendo contraseña...");
+
+                    string password = _authService.GetUserPasswordByEmail(correo);
+                    Console.WriteLine($"🔐 Contraseña obtenida: {password}");
+
+                    bool emailSent = SendPasswordEmail(correo, password);
+
+                    if (emailSent)
+                    {
+                        Console.WriteLine($"✅ Correo de recuperación enviado correctamente a: {correo}");
+                        TempData["ResetSuccess"] = "Tus credenciales han sido enviadas al correo proporcionado.";
+                        return RedirectToAction("Password_reset", "Auth");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"❌ Error al enviar el correo a: {correo}");
+                        ViewBag.ResetError = "Error al enviar el correo. Intenta nuevamente.";
+                        return View("Password_reset");
+                    }
                 }
                 else
                 {
-                    ViewBag.ResetError = "Error al enviar el correo. Intenta nuevamente.";
+                    Console.WriteLine($"❌ El correo ingresado no está registrado: {correo}");
+                    ViewBag.ResetError = "El correo ingresado no está registrado.";
                     return View("Password_reset");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                ViewBag.ResetError = "El correo ingresado no está registrado.";
+                Console.WriteLine($"❌ Error en SendPasswordReset: {ex.Message}");
+                ViewBag.ResetError = $"Error inesperado: {ex.Message}";
                 return View("Password_reset");
             }
         }
@@ -371,14 +399,18 @@ namespace Boletos_Avion.Controllers
         {
             try
             {
+                Console.WriteLine($"✉ Intentando enviar correo de recuperación a: {correo}");
+
                 string senderEmail = _configuration["EmailSettings:SenderEmail"];
                 string senderPassword = _configuration["EmailSettings:SenderPassword"];
+
+                Console.WriteLine($"📧 Usando credenciales: {senderEmail}");
 
                 var smtpClient = new SmtpClient("smtp.gmail.com")
                 {
                     Port = 587,
                     Credentials = new NetworkCredential(senderEmail, senderPassword),
-                    EnableSsl = true
+                    EnableSsl = true,
                 };
 
                 var mailMessage = new MailMessage
@@ -398,11 +430,12 @@ namespace Boletos_Avion.Controllers
                 mailMessage.To.Add(correo);
                 smtpClient.Send(mailMessage);
 
+                Console.WriteLine($"✅ Correo de recuperación enviado correctamente a: {correo}");
                 return true;
             }
             catch (Exception ex)
             {
-                ViewBag.ResetError = $"Error al enviar el correo: {ex.Message}";
+                Console.WriteLine($"❌ Error al enviar correo de recuperación: {ex.Message}");
                 return false;
             }
         }
@@ -419,7 +452,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Obtener la contraseña de la base de datos
-            string storedPassword = _dbController.GetUserPasswordById(userId.Value);
+            string storedPassword = _authService.GetUserPasswordById(userId.Value);
             bool isValid = storedPassword == password;
 
             return Json(new { valid = isValid });

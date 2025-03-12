@@ -11,11 +11,13 @@ namespace Boletos_Avion.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly DbController _dbController;
+        private readonly AuthService _authService;
 
-        public AccountController(IConfiguration configuration)
+        public AccountController(IConfiguration configuration, AuthService authService)
         {
             _configuration = configuration;
             _dbController = new DbController();
+            _authService = authService;
         }
 
         // GET: Account/EditProfile
@@ -121,7 +123,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Obtener la contraseña real de la BD
-            string storedPassword = _dbController.GetUserPasswordById(userId.Value);
+            string storedPassword = _authService.GetUserPasswordById(userId.Value);
 
             if (storedPassword != model.Contrasena)
             {
@@ -210,7 +212,7 @@ namespace Boletos_Avion.Controllers
             }
 
             // Obtener la contraseña de la base de datos
-            string storedPassword = _dbController.GetUserPasswordById(userId.Value);
+            string storedPassword = _authService.GetUserPasswordById(userId.Value);
             bool isValid = storedPassword == password; // 🔥 Compara sin hashing (ajusta si usas hashing)
 
             return Json(new { valid = isValid });

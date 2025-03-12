@@ -11,6 +11,11 @@ builder.Services.AddSession(options =>
 // Agregar servicios MVC
 builder.Services.AddControllersWithViews();
 
+// Aqui poner todos los services
+builder.Services.AddScoped<DbController>();
+builder.Services.AddScoped<AuthService>();
+
+
 var app = builder.Build();
 
 // Configuración del pipeline de la aplicación
