@@ -285,37 +285,7 @@
     </div>
 </div>
 
-<form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light filtros-busqueda" onsubmit="return validarFormulario()">
 
-    <div class="row justify-content-center align-items-center text-center">
-        <div class="col-md-3">
-            <label for="origen" class="form-label fw-bold">Origen</label>
-            <input type="text" class="form-control rounded-pill text-center" name="origen" id="origen"
-                   placeholder="Ej. San Salvador" value="@ViewBag.Origen" />
-        </div>
-        <div class="col-md-3">
-            <label for="destino" class="form-label fw-bold">Destino <span class="text-danger">*</span></label>
-            <input type="text" class="form-control rounded-pill text-center" name="destino" id="destino"
-                   placeholder="Ej. New York" value="@ViewBag.Destino" required />
-            <small id="errorDestino" class="text-danger fw-bold" style="display:none;">⚠ Por favor, para hacer mejores búsquedas agrega un destino.</small>
-        </div>
-        <div class="col-md-3">
-            <label for="fechaIda" class="form-label fw-bold">Fecha de Ida</label>
-            <input type="date" class="form-control rounded-pill text-center" name="fechaIda" id="fechaIda"
-                   value="@ViewBag.FechaIda" />
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-center mt-4">
-        <button class="btn btn-warning btn-sm px-4 py-1 rounded-pill fw-bold shadow" type="submit">
-            🔍 Buscar Vuelos
-        </button>
-        <button type="button" class="btn btn-danger btn-sm px-4 py-1 rounded-pill fw-bold shadow ms-3 opacity-75" id="limpiarFiltros">
-            ✖ Limpiar Filtros
-        </button>
-    </div>
-
-</form>
 
 <script>
     function validarFormulario() {

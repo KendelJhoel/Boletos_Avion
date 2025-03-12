@@ -9,17 +9,12 @@ namespace Boletos_Avion.Controllers
 {
     public class VuelosController : Controller
     {
+     
         private readonly VuelosService _vuelosService;
-
-        //private readonly string connectionString = "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;";
-        private readonly string connectionString = "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;";
-        //private readonly string connectionString = "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos46;User ID=sa;Password=15012004;TrustServerCertificate=True;";
-
-        private readonly DbController _dbController;
 
         public VuelosController( VuelosService vuelosService)
         {
-            _dbController = new DbController();
+            
             _vuelosService = vuelosService;
         }
 
@@ -53,8 +48,8 @@ namespace Boletos_Avion.Controllers
         //-----------
         public IActionResult Detalle(int id)
         {
-            DbController dbController = new DbController();
-            Vuelo vuelo = dbController.GetVueloDetallesById(id);
+            
+            Vuelo vuelo = _vuelosService.GetVueloDetallesById(id);
 
             if (vuelo == null)
             {

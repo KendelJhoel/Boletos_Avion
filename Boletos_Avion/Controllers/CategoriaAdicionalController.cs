@@ -7,11 +7,12 @@ namespace Boletos_Avion.Controllers
 {
     public class CategoriaAdicionalController : Controller
     {
-        private readonly DbController _dbController;
+        private readonly VuelosService _vueloService;
 
         public CategoriaAdicionalController()
         {
-            _dbController = new DbController();
+            _vueloService = new VuelosService();
+            
         }
 
         public IActionResult Index(string filtro)
@@ -27,22 +28,22 @@ namespace Boletos_Avion.Controllers
             switch (filtro.ToLower())
             {
                 case "america":
-                    vuelosFiltrados = _dbController.GetVuelosByContinente("America") ?? new List<Vuelo>();
+                    vuelosFiltrados = _vueloService.GetVuelosByContinente("America") ?? new List<Vuelo>();
                     break;
                 case "asia":
-                    vuelosFiltrados = _dbController.GetVuelosByContinente("Asia") ?? new List<Vuelo>();
+                    vuelosFiltrados = _vueloService.GetVuelosByContinente("Asia") ?? new List<Vuelo>();
                     break;
                 case "europa":
-                    vuelosFiltrados = _dbController.GetVuelosByContinente("Europa") ?? new List<Vuelo>();
+                    vuelosFiltrados = _vueloService.GetVuelosByContinente("Europa") ?? new List<Vuelo>();
                     break;
                 case "oceania":
-                    vuelosFiltrados = _dbController.GetVuelosByContinente("Oceanía") ?? new List<Vuelo>();
+                    vuelosFiltrados = _vueloService.GetVuelosByContinente("Oceanía") ?? new List<Vuelo>();
                     break;
                 case "vuelos cortos":
-                    vuelosFiltrados = _dbController.GetVuelosByDuration(300) ?? new List<Vuelo>(); // 300 minutos = 5 horas
+                    vuelosFiltrados = _vueloService.GetVuelosByDuration(300) ?? new List<Vuelo>(); // 300 minutos = 5 horas
                     break;
                 case "vuelos economicos":
-                    vuelosFiltrados = _dbController.GetVuelosByPriceRange(200m, 450m) ?? new List<Vuelo>();
+                    vuelosFiltrados = _vueloService.GetVuelosByPriceRange(200m, 450m) ?? new List<Vuelo>();
                     break;
                 default:
                     return RedirectToAction("Index", "Home");

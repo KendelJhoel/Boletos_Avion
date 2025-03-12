@@ -17,6 +17,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<DbController>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AccountController>();
+builder.Services.AddScoped<VuelosService>();
 
 
 
