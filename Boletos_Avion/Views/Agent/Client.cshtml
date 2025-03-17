@@ -1,0 +1,34 @@
+﻿@model List<Boletos_Avion.Models.UserModel>
+
+@{
+    ViewData["Title"] = "Lista de Clientes";
+}
+
+<h2>Lista de Clientes</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Documento de Identidad</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var client in Model)
+        {
+            <tr>
+                <td>@client.Nombre</td>
+                <td>@client.Correo</td>
+                <td>@client.Telefono</td>
+                <td>@client.Direccion</td>
+                <td>@client.DocumentoIdentidad</td>
+                <td>
+                    <a asp-controller="Agent" asp-action="EditClient" asp-route-id="@client.IdUsuario" class="btn btn-primary">Editar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
