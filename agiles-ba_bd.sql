@@ -31,7 +31,7 @@ CREATE TABLE CONTINENTES (
     nombre VARCHAR(50) NOT NULL
 );
 
--- Tabla de Países
+-- Tabla de Paï¿½ses
 CREATE TABLE PAISES (
     idPais INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(100) NOT NULL,
@@ -56,22 +56,24 @@ CREATE TABLE AEROPUERTOS (
     FOREIGN KEY (idCiudad) REFERENCES CIUDADES(idCiudad)
 );
 
--- Tabla de Aerolíneas
+-- Tabla de Aerolï¿½neas
 CREATE TABLE AEROLINEAS (
     idAerolinea INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(100) NOT NULL
 );
 
--- Tabla de Categorías de Vuelo
+-- Tabla de Categorï¿½as de Vuelo
 CREATE TABLE CATEGORIAS_VUELOS (
     idCategoriaVuelo INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
--- Tabla de Categorías de Asientos
+
+-- ðŸ”¹ Crear la tabla de CategorÃ­as de Asientos con precio
 CREATE TABLE CATEGORIAS_ASIENTOS (
     idCategoria INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('Business', 'Turista', 'Primera Clase'))
+    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('Business', 'Turista', 'Primera Clase')),
+    precio DECIMAL(10,2) NOT NULL DEFAULT 0.00
 );
 
 -- Tabla de Vuelos
@@ -106,6 +108,7 @@ CREATE TABLE VUELOS_ASIENTOS (
     CONSTRAINT UQ_VUELOS_ASIENTOS UNIQUE (idVuelo, numero)
 );
 
+
 -- Tabla de Boletos
 CREATE TABLE BOLETOS (
     idBoleto INT PRIMARY KEY IDENTITY(1,1),
@@ -127,7 +130,7 @@ CREATE TABLE BOLETOS_DETALLE (
     FOREIGN KEY (idVueloAsiento) REFERENCES VUELOS_ASIENTOS(idVueloAsiento)
 );
 
--- Tabla de Métodos de Pago
+-- Tabla de Mï¿½todos de Pago
 CREATE TABLE METODOS_PAGO (
     idMetodoPago INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('Tarjeta', 'Efectivo'))
@@ -162,13 +165,13 @@ CREATE TABLE EQUIPAJES (
 CREATE TABLE HISTORIAL_BOLETOS (
     idHistorial INT PRIMARY KEY IDENTITY(1,1),
     idBoleto INT NOT NULL,
-    accion VARCHAR(20) NOT NULL CHECK (accion IN ('Modificación', 'Cancelación')),
+    accion VARCHAR(20) NOT NULL CHECK (accion IN ('Modificaciï¿½n', 'Cancelaciï¿½n')),
     fecha DATETIME2 DEFAULT GETDATE(),
     descripcion TEXT,
     FOREIGN KEY (idBoleto) REFERENCES BOLETOS(idBoleto)
 );
 
--- Tabla de Bitácora (Auditoría general)
+-- Tabla de Bitï¿½cora (Auditorï¿½a general)
 CREATE TABLE BITACORA (
     idBitacora INT PRIMARY KEY IDENTITY(1,1),
     nombreTabla VARCHAR(50) NOT NULL,
@@ -177,4 +180,26 @@ CREATE TABLE BITACORA (
     idUsuario INT NULL,
     fecha DATETIME2 DEFAULT GETDATE(),
     descripcion NVARCHAR(MAX)
+);
+
+-- ðŸ”¹ Crear la tabla de Reservas con el campo total
+CREATE TABLE RESERVAS (
+    idReserva INT PRIMARY KEY IDENTITY(1,1),
+    numeroReserva VARCHAR(50) UNIQUE NOT NULL,
+    idUsuario INT NOT NULL,
+    idVuelo INT NOT NULL,
+    fechaReserva DATETIME DEFAULT GETDATE(),
+    total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (idUsuario) REFERENCES USUARIOS(idUsuario),
+    FOREIGN KEY (idVuelo) REFERENCES VUELOS(idVuelo)
+);
+
+
+-- ðŸ”¹ Crear la tabla de RelaciÃ³n entre Reservas y Asientos
+CREATE TABLE RESERVA_ASIENTOS (
+    idReservaAsiento INT PRIMARY KEY IDENTITY(1,1),
+    idReserva INT NOT NULL,
+    idVueloAsiento INT NOT NULL,
+    FOREIGN KEY (idReserva) REFERENCES RESERVAS(idReserva) ON DELETE CASCADE,
+    FOREIGN KEY (idVueloAsiento) REFERENCES VUELOS_ASIENTOS(idVueloAsiento) ON DELETE CASCADE
 );

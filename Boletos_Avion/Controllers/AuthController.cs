@@ -23,6 +23,26 @@ namespace Boletos_Avion.Controllers
             return View();
         }
 
+        [HttpGet]
+        public JsonResult CheckSession()
+        {
+            bool isAuthenticated = HttpContext.Session.GetInt32("UserId") != null;
+            return Json(new { authenticated = isAuthenticated });
+        }
+
+        [HttpGet("Authentication")]
+        public IActionResult Authentication(string returnUrl = null)
+        {
+            // Si el usuario ya está autenticado, redirigir a la página de selección de asientos
+            if (HttpContext.Session.GetInt32("UserId") != null)
+            {
+                return RedirectToAction("SeleccionarAsientos", "Vuelos");
+            }
+
+            ViewBag.ReturnUrl = returnUrl; // Guardamos la URL de retorno
+            return View(); // Página de login
+        }
+
         [HttpPost]
         public IActionResult Register(IFormCollection form)
         {
@@ -194,6 +214,7 @@ namespace Boletos_Avion.Controllers
             ViewBag.DocumentoIdentidad = form["DocumentoIdentidad"];
             ViewBag.Direccion = form["Direccion"];
         }
+
 
         [HttpPost]
         public IActionResult Login(string email, string password)

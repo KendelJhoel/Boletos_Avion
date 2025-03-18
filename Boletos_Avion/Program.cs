@@ -1,4 +1,5 @@
 using Boletos_Avion.Controllers;
+using Boletos_Avion.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,8 +19,10 @@ builder.Services.AddScoped<DbController>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AccountController>();
 builder.Services.AddScoped<VuelosService>();
-
-
+builder.Services.AddScoped<AsientoService>();
+builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<ReservaService>();
+builder.Services.AddScoped<AsientoController>();
 
 var app = builder.Build();
 

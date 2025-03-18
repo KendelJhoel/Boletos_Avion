@@ -51,3 +51,35 @@ DELETE FROM AEROPUERTOS;
 
 -- Reiniciar el contador de IDENTITY en SQL Server
 DBCC CHECKIDENT ('AEROPUERTOS', RESEED, 0);
+
+-- Ver todas las fk de las tablas
+SELECT 
+    tc.TABLE_NAME, 
+    tc.CONSTRAINT_NAME, 
+    kcu.COLUMN_NAME, 
+    rc.UNIQUE_CONSTRAINT_NAME AS Referenced_Constraint
+FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc
+JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS kcu 
+    ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS AS rc
+    ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY';
+
+-- Ver asientos reservados
+SELECT 
+    va.idVueloAsiento, 
+    va.numero AS Asiento, 
+    ca.nombre AS Categoria, 
+    ca.precio AS Precio, 
+    va.estado, 
+    v.codigo_vuelo AS CodigoVuelo, 
+    v.fecha_salida, 
+    v.fecha_llegada 
+FROM VUELOS_ASIENTOS va
+JOIN CATEGORIAS_ASIENTOS ca ON va.idCategoria = ca.idCategoria
+JOIN VUELOS v ON va.idVuelo = v.idVuelo
+WHERE va.estado <> 'Disponible'; -- Filtra los asientos que no están disponibles
+
+UPDATE VUELOS_ASIENTOS
+SET estado = 'Disponible'
+WHERE estado = 'Reservado';

@@ -511,8 +511,7 @@ INSERT INTO TIPOS_TARJETAS (nombre) VALUES
 
 
 
--- #_ C A T E G O R I A S - D E - A S I E N T O S _#
-INSERT INTO CATEGORIAS_ASIENTOS (nombre) VALUES
-('Business'),
-('Turista'),
-('Primera Clase');
+INSERT INTO CATEGORIAS_ASIENTOS (nombre, precio) VALUES
+('Turista', 0.00),          -- No agrega costo extra
+('Business', 50.00),        -- Agrega $50 al precio base
+('Primera Clase', 120.00);  -- Agrega $120 al precio base

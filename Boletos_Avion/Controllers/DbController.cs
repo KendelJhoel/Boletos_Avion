@@ -10,9 +10,10 @@ public class DbController
     {
         List<string> connectionOptions = new List<string>
             {
-                "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=15012004;TrustServerCertificate=True;",
                 "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;",
-               
+
+                "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=15012004;TrustServerCertificate=True;",
+                
                 "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;",
                 
             };

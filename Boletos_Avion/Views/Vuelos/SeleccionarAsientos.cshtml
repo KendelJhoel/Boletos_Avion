@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Seleccionar Asientos";
+}
+
+<div id="main-container">
+    <div id="top-container">
+        <h2>Seleccionar Asientos</h2>
+    </div>
+
+    <div id="asientos-container">
+        <div id="asientos-wrapper">
+            <table id="asientos-table">
+                <tbody id="asientos-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="precio-vuelo-container">
+        <h3>Precio del vuelo: $<span id="precio-vuelo">@ViewBag.PrecioVuelo</span></h3>
+    </div>
+
+    <!-- 🔹 Contenedor para la lista de asientos seleccionados -->
+    <div class="asientos-seleccionados-container">
+        <h3>Asientos Seleccionados:</h3>
+        <ul id="lista-asientos-seleccionados"></ul>
+    </div>
+
+    <!-- 🔹 Mostrar el total actualizado -->
+    <div class="totalizador-container">
+        <h3>Total a pagar: $<span id="total">0.00</span></h3>
+    </div>
+
+    <button id="pagarBtn" disabled>Pagar</button>
+
+    <!-- 🔹 Bloque actualizado para mostrar categorías con nombre y precio -->
+    <div id="categorias-container" style="display: none; margin-top: 20px; text-align: center;">
+        <h4 style="font-size: 18px; color: #333;">Categorías de Asientos Disponibles:</h4>
+        <ul id="categorias-list" style="list-style-type: none; padding: 0; font-size: 16px;"></ul>
+    </div>
+</div>
+
+<script src="~/js/asientos.js"></script>
+<link rel="stylesheet" href="~/css/asientos.css" />

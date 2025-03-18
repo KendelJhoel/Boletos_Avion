@@ -190,63 +190,65 @@ public class VuelosService : DbController
             };
         }
 
-        public Vuelo GetVueloById(int id)
+    public Vuelo GetVueloById(int id)
+    {
+        Vuelo vuelo = null;
+        try
         {
-            Vuelo vuelo = null;
-            string query = @"
-        SELECT 
-            v.idVuelo, v.codigo_vuelo, v.idAeropuertoOrigen, 
-            origen.nombre AS nombreAeropuertoOrigen, origenCiudad.nombre AS ciudadOrigen,
-            v.idAeropuertoDestino, destino.nombre AS nombreAeropuertoDestino, destinoCiudad.nombre AS ciudadDestino,
-            v.fecha_salida, v.fecha_llegada, v.idAerolinea, a.nombre AS nombreAerolinea,
-            v.precio_base, v.cantidad_asientos, v.asientos_disponibles, v.estado
-        FROM VUELOS v
-        JOIN AEROPUERTOS origen ON v.idAeropuertoOrigen = origen.idAeropuerto
-        JOIN CIUDADES origenCiudad ON origen.idCiudad = origenCiudad.idCiudad
-        JOIN AEROPUERTOS destino ON v.idAeropuertoDestino = destino.idAeropuerto
-        JOIN CIUDADES destinoCiudad ON destino.idCiudad = destinoCiudad.idCiudad
-        JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
-        WHERE v.idVuelo = @id";
-
             using (SqlConnection connection = GetConnection())
+            using (SqlCommand command = new SqlCommand(@"
+            SELECT v.idVuelo, v.codigo_vuelo, 
+                ao.idAeropuerto AS IdAeropuertoOrigen, co.nombre AS CiudadOrigen, 
+                ad.idAeropuerto AS IdAeropuertoDestino, cd.nombre AS CiudadDestino, 
+                v.fecha_salida, v.fecha_llegada, v.precio_base, 
+                a.nombre AS NombreAerolinea, 
+                cv.nombre AS Categoria, v.estado
+            FROM VUELOS v
+            INNER JOIN AEROPUERTOS ao ON v.idAeropuertoOrigen = ao.idAeropuerto
+            INNER JOIN CIUDADES co ON ao.idCiudad = co.idCiudad
+            INNER JOIN AEROPUERTOS ad ON v.idAeropuertoDestino = ad.idAeropuerto
+            INNER JOIN CIUDADES cd ON ad.idCiudad = cd.idCiudad
+            INNER JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+            LEFT JOIN CATEGORIAS_VUELOS cv ON v.idCategoriaVuelo = cv.idCategoriaVuelo
+            WHERE v.idVuelo = @id", connection))
             {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@id", id);
-                    connection.Open();
+                command.Parameters.AddWithValue("@id", id);
+                connection.Open();
 
-                    using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
                     {
-                        if (reader.Read())
+                        vuelo = new Vuelo
                         {
-                            vuelo = new Vuelo
+                            IdVuelo = Convert.ToInt32(reader["idVuelo"]),
+                            CodigoVuelo = reader["codigo_vuelo"].ToString(),
+                            IdAeropuertoOrigen = Convert.ToInt32(reader["IdAeropuertoOrigen"]),
+                            CiudadOrigen = reader["CiudadOrigen"].ToString(),
+                            IdAeropuertoDestino = Convert.ToInt32(reader["IdAeropuertoDestino"]),
+                            CiudadDestino = reader["CiudadDestino"].ToString(),
+                            FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
+                            FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
+                            PrecioBase = Convert.ToDecimal(reader["precio_base"]),
+                            Categoria = reader["Categoria"].ToString(),
+                            Estado = reader["estado"].ToString(),
+                            Aerolinea = new Aerolinea
                             {
-                                IdVuelo = Convert.ToInt32(reader["idVuelo"]),
-                                CodigoVuelo = reader["codigo_vuelo"].ToString(),
-                                IdAeropuertoOrigen = Convert.ToInt32(reader["idAeropuertoOrigen"]),
-                                NombreAeropuertoOrigen = reader["nombreAeropuertoOrigen"].ToString(),
-                                CiudadOrigen = reader["ciudadOrigen"].ToString(),
-                                IdAeropuertoDestino = Convert.ToInt32(reader["idAeropuertoDestino"]),
-                                NombreAeropuertoDestino = reader["nombreAeropuertoDestino"].ToString(),
-                                CiudadDestino = reader["ciudadDestino"].ToString(),
-                                FechaSalida = Convert.ToDateTime(reader["fecha_salida"]),
-                                FechaLlegada = Convert.ToDateTime(reader["fecha_llegada"]),
-                                IdAerolinea = Convert.ToInt32(reader["idAerolinea"]),
-                                NombreAerolinea = reader["nombreAerolinea"].ToString(),
-                                PrecioBase = Convert.ToDecimal(reader["precio_base"]),
-                                CantidadAsientos = Convert.ToInt32(reader["cantidad_asientos"]),
-                                AsientosDisponibles = Convert.ToInt32(reader["asientos_disponibles"]),
-                                Estado = reader["estado"].ToString()
-                            };
-                        }
+                                Nombre = reader["NombreAerolinea"].ToString()
+                            }
+                        };
                     }
                 }
             }
-
-            return vuelo;
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine("❌ Error al obtener detalles del vuelo: " + ex.Message);
+        }
+        return vuelo;
+    }
 
-        public Vuelo GetVueloDetallesById(int id)
+    public Vuelo GetVueloDetallesById(int id)
         {
             Vuelo vuelo = null;
             string query = @"
@@ -337,13 +339,17 @@ public class VuelosService : DbController
             return vuelo;
         }
 
-        public List<Vuelo> GetVuelos(string origen, string destino, DateTime? fechaIda, decimal? precioMin, decimal? precioMax, string aerolinea, string categoria)
+    // 🔹 Obtener vuelos filtrados con parámetros seguros
+    public List<Vuelo> GetVuelos(string origen, string destino, DateTime? fechaIda, decimal? precioMin, decimal? precioMax, string aerolinea, string categoria)
+    {
+        List<Vuelo> vuelos = new List<Vuelo>();
+
+        try
         {
-            List<Vuelo> vuelos = new List<Vuelo>();
             using (SqlConnection conn = GetConnection())
+            using (SqlCommand cmd = new SqlCommand())
             {
                 List<string> condiciones = new List<string>();
-                SqlCommand cmd = new SqlCommand();
 
                 if (!string.IsNullOrWhiteSpace(origen))
                 {
@@ -384,26 +390,27 @@ public class VuelosService : DbController
                 string whereClause = condiciones.Count > 0 ? "WHERE " + string.Join(" AND ", condiciones) : "";
 
                 string query = $@"
-        SELECT v.idVuelo, v.codigo_vuelo, 
-            ao.idAeropuerto AS IdAeropuertoOrigen, co.nombre AS CiudadOrigen, 
-            ad.idAeropuerto AS IdAeropuertoDestino, cd.nombre AS CiudadDestino, 
-            v.fecha_salida, v.fecha_llegada, v.precio_base, 
-            a.nombre AS NombreAerolinea, 
-            cv.nombre AS Categoria, v.estado,
-            -- Obtener cantidad de asientos disponibles
-            (SELECT COUNT(*) FROM VUELOS_ASIENTOS va WHERE va.idVuelo = v.idVuelo AND va.estado = 'Disponible') AS AsientosDisponibles
-        FROM VUELOS v
-        INNER JOIN AEROPUERTOS ao ON v.idAeropuertoOrigen = ao.idAeropuerto
-        INNER JOIN CIUDADES co ON ao.idCiudad = co.idCiudad
-        INNER JOIN AEROPUERTOS ad ON v.idAeropuertoDestino = ad.idAeropuerto
-        INNER JOIN CIUDADES cd ON ad.idCiudad = cd.idCiudad
-        INNER JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
-        LEFT JOIN CATEGORIAS_VUELOS cv ON v.idCategoriaVuelo = cv.idCategoriaVuelo
-        {whereClause};";
+                SELECT v.idVuelo, v.codigo_vuelo, 
+                    ao.idAeropuerto AS IdAeropuertoOrigen, co.nombre AS CiudadOrigen, 
+                    ad.idAeropuerto AS IdAeropuertoDestino, cd.nombre AS CiudadDestino, 
+                    v.fecha_salida, v.fecha_llegada, v.precio_base, 
+                    a.nombre AS NombreAerolinea, 
+                    cv.nombre AS Categoria, v.estado,
+                    -- Obtener cantidad de asientos disponibles
+                    (SELECT COUNT(*) FROM VUELOS_ASIENTOS va WHERE va.idVuelo = v.idVuelo AND va.estado = 'Disponible') AS AsientosDisponibles
+                FROM VUELOS v
+                INNER JOIN AEROPUERTOS ao ON v.idAeropuertoOrigen = ao.idAeropuerto
+                INNER JOIN CIUDADES co ON ao.idCiudad = co.idCiudad
+                INNER JOIN AEROPUERTOS ad ON v.idAeropuertoDestino = ad.idAeropuerto
+                INNER JOIN CIUDADES cd ON ad.idCiudad = cd.idCiudad
+                INNER JOIN AEROLINEAS a ON v.idAerolinea = a.idAerolinea
+                LEFT JOIN CATEGORIAS_VUELOS cv ON v.idCategoriaVuelo = cv.idCategoriaVuelo
+                {whereClause};";
 
                 cmd.CommandText = query;
                 cmd.Connection = conn;
                 conn.Open();
+
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -430,7 +437,12 @@ public class VuelosService : DbController
                     }
                 }
             }
-            return vuelos;
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine("❌ Error al obtener vuelos: " + ex.Message);
+        }
+        return vuelos;
     }
+}
 

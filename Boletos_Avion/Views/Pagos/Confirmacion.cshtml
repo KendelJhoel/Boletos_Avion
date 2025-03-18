@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Reserva Completada";
+}
+
+<div class="container text-center mt-5">
+    <h2 class="text-success">¡Reserva Completada con Éxito!</h2>
+
+    <div class="alert alert-success mt-4">
+        <p>Tu número de reserva es:</p>
+        <h3><strong>@ViewBag.NumeroReserva</strong></h3>
+    </div>
+
+    <p class="mt-3">Recibirás un correo con los detalles de tu reserva.</p>
+
+    <a href="/" class="btn btn-primary mt-3">Volver al Inicio</a>
+</div>

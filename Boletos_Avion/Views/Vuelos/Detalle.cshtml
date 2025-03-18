@@ -20,6 +20,9 @@
                         ✈️ @Model.CodigoVuelo
                     </h2>
                     <span class="estado @Model.Estado.ToLower()"> @Model.Estado </span>
+                    <a asp-controller="Vuelos" asp-action="SeleccionarAsientos" asp-route-idVuelo="@Model.IdVuelo" class="btn btn-primary">
+                        Seleccionar Asientos
+                    </a>
                 </div>
 
                 <p class="info-vuelo"><strong>Aerolínea:</strong> @Model.NombreAerolinea</p>
@@ -91,8 +94,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
-
     </div>
 </div>
