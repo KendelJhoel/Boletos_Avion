@@ -9,13 +9,13 @@
 
     console.log("📌 ID de Vuelo:", idVuelo);
 
-    // 🔹 Función para obtener los asientos seleccionados desde la tabla
-    function obtenerAsientosSeleccionados() {
-        let asientosSeleccionados = Array.from(document.querySelectorAll(".seat.selected")) // Cambié el selector para que solo obtenga los asientos seleccionados
-            .map(seatCell => seatCell.getAttribute("data-id")) // Obtenemos el ID del asiento desde el atributo data-id
-            .filter(id => id !== undefined && id !== ""); // Filtramos cualquier valor vacío
+    // 🔹 Función para obtener los asientos seleccionados desde la tabla en Pago.cshtml
+    function obtenerAsientosDesdeTabla() {
+        let asientosSeleccionados = Array.from(document.querySelectorAll("#asientos-seleccionados tbody tr"))
+            .map(row => parseInt(row.getAttribute("data-id")))
+            .filter(id => !isNaN(id));
 
-        console.log("📌 Asientos Seleccionados (IDs):", asientosSeleccionados);
+        console.log("📌 Asientos desde la Tabla:", asientosSeleccionados);
         return asientosSeleccionados;
     }
 
@@ -33,7 +33,7 @@
             confirmarPagoBtn.disabled = true;
             confirmarPagoBtn.innerText = "Procesando...";
 
-            let asientos = obtenerAsientosSeleccionados();
+            let asientos = obtenerAsientosDesdeTabla(); // ✅ Obtener los asientos desde la tabla
 
             // ⚠️ Validación: No permitir continuar si no hay asientos
             if (asientos.length === 0) {
@@ -54,10 +54,15 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     idVuelo: idVuelo,
-                    asientos: asientos.join(",") // Convertimos el array de IDs en un string separado por comas
+                    asientos: asientos // ✅ Se envía como un array real
                 })
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         alert(`✅ Reserva confirmada. Número: ${data.numeroReserva}`);
@@ -72,7 +77,7 @@
                 })
                 .catch(error => {
                     console.error("❌ Error en la conexión con el servidor:", error);
-                    errorMessage.innerText = "Error en la conexión con el servidor.";
+                    errorMessage.innerText = "Error en la conexión con el servidor. Por favor, intenta de nuevo.";
                     errorMessage.style.display = "block";
                     confirmarPagoBtn.disabled = false;
                     confirmarPagoBtn.innerText = "Confirmar Pago";

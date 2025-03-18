@@ -73,7 +73,6 @@ namespace Boletos_Avion.Controllers
                     return RedirectToAction("SeleccionarAsientos", "Vuelos", new { idVuelo });
                 }
 
-                // ✅ Pasar el precio del vuelo a la vista
                 ViewBag.PrecioVuelo = vuelo.PrecioBase;
 
                 // ✅ Verificar si se pasaron asientos válidos
@@ -107,24 +106,17 @@ namespace Boletos_Avion.Controllers
                 string numeroReserva = GenerarNumeroReserva(idVuelo);
                 Console.WriteLine($"[LOG] Número de reserva generado: {numeroReserva}");
 
-                // ✅ Obtener la fecha de la reserva (momento actual)
                 DateTime fechaReserva = DateTime.Now;
 
-                // ✅ Guardar en TempData para persistir los datos temporalmente
-                TempData["AsientosSeleccionados"] = JsonConvert.SerializeObject(detallesAsientos);
-                TempData["IdVuelo"] = idVuelo;
-                TempData["NumeroReserva"] = numeroReserva;
-                TempData["IdUsuario"] = userId.Value;
-                TempData["FechaReserva"] = fechaReserva.ToString("o"); // Formato ISO 8601
+                // ✅ **Solución: Guardar correctamente los IDs de los asientos en `Session`**
+                var asientosSimplificados = detallesAsientos.Select(a => new { Id = a.IdVueloAsiento }).ToList();
+                HttpContext.Session.SetString("AsientosSeleccionados", JsonConvert.SerializeObject(asientosSimplificados));
+                HttpContext.Session.SetInt32("IdVuelo", idVuelo);
+                HttpContext.Session.SetString("NumeroReserva", numeroReserva);
+                HttpContext.Session.SetInt32("IdUsuario", userId.Value);
+                HttpContext.Session.SetString("FechaReserva", fechaReserva.ToString("o")); // Formato ISO 8601
 
-                // ✅ Asegurar que los datos no se pierdan después de la redirección
-                TempData.Keep("AsientosSeleccionados");
-                TempData.Keep("IdVuelo");
-                TempData.Keep("NumeroReserva");
-                TempData.Keep("IdUsuario");
-                TempData.Keep("FechaReserva");
-
-                // ✅ Crear el modelo de Pago con solo la información necesaria
+                // ✅ Crear el modelo de Pago con la información necesaria
                 var modeloPago = new Pago
                 {
                     IdVuelo = idVuelo,
@@ -136,6 +128,13 @@ namespace Boletos_Avion.Controllers
                     }).ToList(),
                     NumeroReserva = numeroReserva
                 };
+
+                decimal subtotal = vuelo.PrecioBase + detallesAsientos.Sum(a => a.Precio);
+                decimal iva = subtotal * 0.13M;
+                decimal totalFinal = subtotal + iva;
+
+                // ✅ Guardar total en la sesión para que se use en ConfirmarPago()
+                HttpContext.Session.SetString("TotalReserva", totalFinal.ToString("F2"));
 
                 // ✅ Crear el ViewModel que combina Pago y Vuelo
                 var viewModel = new PagoViewModel
@@ -189,93 +188,147 @@ namespace Boletos_Avion.Controllers
             {
                 Console.WriteLine($"[DEBUG] JSON Recibido: {data}");
 
-                // 🔹 Extraer valores del JSON
+                // ✅ Extraer valores correctamente desde el JSON
                 int idVuelo = data.TryGetProperty("idVuelo", out JsonElement idVueloElement) ? idVueloElement.GetInt32() : 0;
-                string asientosRaw = data.TryGetProperty("asientos", out JsonElement asientosElement) ? asientosElement.ToString() : "";
+                List<int> listaAsientos = data.TryGetProperty("asientos", out JsonElement asientosElement)
+                    ? asientosElement.EnumerateArray().Select(a => a.GetInt32()).ToList()
+                    : new List<int>();
 
                 Console.WriteLine($"[DEBUG] ID del vuelo recibido: {idVuelo}");
-                Console.WriteLine($"[DEBUG] Asientos recibidos: {asientosRaw}");
+                Console.WriteLine($"[DEBUG] Asientos recibidos desde la UI: {string.Join(", ", listaAsientos)}");
 
-                // ✅ Verificar si el usuario está autenticado
+                // ✅ Validar autenticación del usuario
                 int? userId = HttpContext.Session.GetInt32("UserId");
                 if (userId == null)
                 {
-                    Console.WriteLine("[ERROR] Usuario no autenticado.");
                     return Json(new { success = false, message = "Debes iniciar sesión antes de continuar." });
                 }
 
-                var user = _accountService.GetUserById(userId.Value);
-                if (user == null)
-                {
-                    Console.WriteLine("[ERROR] Usuario no encontrado en la BD.");
-                    return Json(new { success = false, message = "Error al recuperar la información del usuario." });
-                }
-
-                // ✅ Verificar si el vuelo existe
                 var vuelo = _vuelosService.GetVueloDetallesById(idVuelo);
                 if (vuelo == null)
                 {
-                    Console.WriteLine("[ERROR] Vuelo no encontrado.");
+                    Console.WriteLine("[ERROR] El vuelo seleccionado no existe.");
                     return Json(new { success = false, message = "El vuelo seleccionado no existe." });
                 }
 
-                // ✅ Procesar los asientos recibidos y convertirlos en IDs de asientos
-                var listaAsientos = asientosRaw.ToString()
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Where(a => int.TryParse(a.Trim(), out _)) // Filtra valores numéricos
-                    .Select(a => int.Parse(a.Trim())) // Convierte a int
-                    .ToList();
+                // ✅ Extraer los asientos desde la sesión
+                string asientosJson = HttpContext.Session.GetString("AsientosSeleccionados");
 
-                // ✅ Llamar a ObtenerDetallesAsientos con la lista corregida
-                var asientosSeleccionados = _asientoService.ObtenerDetallesAsientos(listaAsientos);
-
-                if (asientosSeleccionados == null || asientosSeleccionados.Count == 0)
+                var asientosSeleccionados = JsonConvert.DeserializeObject<List<AsientoSeleccionado>>(asientosJson);
+                if (asientosSeleccionados == null || !asientosSeleccionados.Any())
                 {
-                    Console.WriteLine("[ERROR] No se encontraron detalles de los asientos seleccionados.");
-                    return Json(new { success = false, message = "Los asientos seleccionados no existen o ya fueron reservados." });
-                }
-
-                // ✅ Obtener solo los IDs de los asientos válidos
-                List<int> asientosIds = asientosSeleccionados.Select(a => a.IdVueloAsiento).ToList();
-
-                if (asientosIds.Count == 0)
-                {
-                    Console.WriteLine("[ERROR] No se han seleccionado asientos válidos.");
+                    Console.WriteLine("[ERROR] No se encontraron asientos válidos en la sesión.");
                     return Json(new { success = false, message = "Debes seleccionar al menos un asiento." });
                 }
 
-                Console.WriteLine($"[DEBUG] Asientos procesados: {string.Join(", ", asientosIds)}");
+                if (string.IsNullOrEmpty(asientosJson))
+                {
+                    Console.WriteLine("[ERROR] No hay asientos en la sesión. Intentando recuperar...");
 
-                // ✅ Calcular costos
-                decimal subtotal = vuelo.PrecioBase + asientosSeleccionados.Sum(a => a.Precio);
-                decimal iva = subtotal * 0.13M;
-                decimal totalFinal = subtotal + iva;
+                    // ✅ Si los asientos están en la solicitud, los guardamos en la sesión
+                    if (listaAsientos.Count > 0)
+                    {
+                        HttpContext.Session.SetString("AsientosSeleccionados", JsonConvert.SerializeObject(listaAsientos));
+                        asientosJson = HttpContext.Session.GetString("AsientosSeleccionados");
+                        Console.WriteLine("[LOG] Asientos recuperados desde la solicitud y guardados en sesión.");
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Los asientos seleccionados no existen o ya fueron reservados." });
+                    }
+                }
 
-                // ✅ Crear la reserva
-                string numeroReserva = GenerarNumeroReserva(idVuelo);
+                // ✅ **Solución: Leer correctamente los asientos de la sesión**
+                var asientosGuardados = JsonConvert.DeserializeObject<List<dynamic>>(asientosJson);
+                var asientosIds = asientosGuardados.Select(a => (int)a.Id).ToList();
+
+                Console.WriteLine($"[DEBUG] Asientos almacenados en sesión después de la corrección: {string.Join(", ", asientosIds)}");
+
+                // ✅ Verificar que los asientos seleccionados en la UI coincidan con los de la sesión
+                if (!listaAsientos.All(a => asientosIds.Contains(a)))
+                {
+                    Console.WriteLine($"[ERROR] Diferencia entre UI ({string.Join(", ", listaAsientos)}) y sesión ({string.Join(", ", asientosIds)})");
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Error: Diferencia entre los asientos seleccionados en la UI ({string.Join(", ", listaAsientos)}) y los almacenados en sesión ({string.Join(", ", asientosIds)})."
+                    });
+                }
+
+                // ✅ Verificar disponibilidad antes de reservar
+                bool disponibles = _asientoService.VerificarDisponibilidad(listaAsientos);
+                if (!disponibles)
+                {
+                    Console.WriteLine("[ERROR] Uno o más asientos ya están reservados.");
+                    return Json(new { success = false, message = "Uno o más asientos ya fueron reservados." });
+                }
+
+                string totalReservaStr = HttpContext.Session.GetString("TotalReserva");
+                decimal totalFinal = !string.IsNullOrEmpty(totalReservaStr) ? decimal.Parse(totalReservaStr) : 0;
+
+                string numeroReserva = HttpContext.Session.GetString("NumeroReserva");
                 int idReserva = _reservaService.CrearReserva(userId.Value, idVuelo, numeroReserva, DateTime.Now, totalFinal);
+
                 if (idReserva <= 0)
                 {
                     Console.WriteLine("[ERROR] No se pudo crear la reserva en la base de datos.");
                     return Json(new { success = false, message = "Error al procesar la reserva." });
                 }
 
-                // ✅ Registrar los asientos en la reserva (ahora con IDs correctos)
-                bool asientosGuardados = _reservaService.RegistrarAsientos(idReserva, asientosIds);
-
-                if (!asientosGuardados)
+                // ✅ Guardar asientos en la reserva
+                bool asientosGuardadosDB = _reservaService.RegistrarAsientos(idReserva, asientosIds);
+                if (!asientosGuardadosDB)
                 {
                     Console.WriteLine("[ERROR] Falló la inserción de los asientos.");
                     return Json(new { success = false, message = "Error al asignar los asientos a la reserva." });
                 }
 
-                // ✅ Confirmación exitosa
+                // ✅ Cambiar el estado de los asientos a "Reservado"
+                bool actualizados = _asientoService.CambiarEstadoAsientos(asientosIds, "Reservado");
+                if (!actualizados)
+                {
+                    Console.WriteLine("[ERROR] No se pudo actualizar el estado de los asientos.");
+                    return Json(new { success = false, message = "Error al actualizar el estado de los asientos." });
+                }
+
+                var usuario = _accountService.GetUserById(userId.Value);
+                if (usuario != null)
+                {
+
+                    var asientosCompletos = _asientoService.ObtenerDetallesAsientos(asientosIds); // Asegura obtener detalles reales
+                    var numerosAsientos = asientosCompletos.Select(a => new AsientoSeleccionado
+                    {
+                        Id = a.IdVueloAsiento,
+                        Numero = !string.IsNullOrEmpty(a.Numero) ? a.Numero : "Desconocido",
+                        Precio = a.Precio
+                    }).ToList();
+
+                    Console.WriteLine($"[DEBUG] Asientos que se enviarán al correo: {string.Join(", ", numerosAsientos.Select(a => a.Numero))}");
+
+                    bool correoEnviado = EnviarCorreoConfirmacion(
+                        usuario.Correo,
+                        usuario.Nombre,
+                        numeroReserva,
+                        DateTime.Now,
+                        totalFinal,
+                        numerosAsientos
+                    );
+
+                    if (!correoEnviado)
+                    {
+                        Console.WriteLine("⚠️ Advertencia: No se pudo enviar el correo de confirmación.");
+                    }
+                }
+
+
                 Console.WriteLine($"[LOG] Reserva confirmada: {numeroReserva} - Total: ${totalFinal:F2}");
                 return Json(new { success = true, numeroReserva, totalFinal });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ERROR] Excepción en ConfirmarPago: {ex.Message}");
+                Console.WriteLine($"[ERROR] StackTrace: {ex.StackTrace}");
+
                 return Json(new { success = false, message = "Ocurrió un error al procesar el pago." });
             }
         }
@@ -294,7 +347,9 @@ namespace Boletos_Avion.Controllers
                     EnableSsl = true,
                 };
 
-                string listaAsientos = string.Join(", ", asientos.Select(a => $"{a.Numero} (${a.Precio})"));
+                string listaAsientos = asientos.Any()
+    ? string.Join(", ", asientos.Select(a => string.IsNullOrEmpty(a.Numero) ? "Número desconocido" : a.Numero))
+    : "Sin asientos registrados";
 
                 var mailMessage = new MailMessage
                 {

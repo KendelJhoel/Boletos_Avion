@@ -61,27 +61,21 @@
 </div>
 
 <h3>Asientos Seleccionados</h3>
-<table id="tabla-asientos">
+<table class="table" id="asientos-seleccionados">
     <thead>
         <tr>
             <th>Asiento</th>
             <th>Precio</th>
         </tr>
     </thead>
-    <tbody id="detalle-asientos">
-        @if (Model.Pago.Asientos != null && Model.Pago.Asientos.Count > 0)
+    <tbody>
+        @foreach (var asiento in Model.Pago.Asientos)
         {
-            @foreach (var asiento in Model.Pago.Asientos)
-            {
-                <tr>
-                    <td>@asiento.Numero</td>
-                    <td class="asiento-precio" data-precio="@asiento.Precio">$@asiento.Precio.ToString("F2")</td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr><td colspan="3">No hay asientos seleccionados.</td></tr>
+            <tr data-id="@asiento.Id">
+                <!-- ✅ Se agrega data-id para que pago.js pueda leerlos -->
+                <td>@asiento.Numero</td>
+                <td>@asiento.Precio.ToString("C")</td>
+            </tr>
         }
     </tbody>
 </table>
