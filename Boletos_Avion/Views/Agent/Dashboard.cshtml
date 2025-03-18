@@ -4,3 +4,36 @@
 
 <h2>Bienvenido, Agente</h2>
 <p>Aquí puedes gestionar tus funciones de atención al cliente.</p>
+
+<table class="table pt-5">
+    <thead>
+        <tr>
+           
+            <th scope="col">Función para registar cliente</th>
+            <th scope="col">Función para consultar disponibilidad de vuelos</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <ul class="nav-item">
+                    <a class="btn btn-dark btn-rounded" asp-controller="Agent" asp-action="RegisterClient">
+                        Registrar Cliente
+                    </a>
+                </ul>
+                <ul class="nav-item">
+                    <a class="btn btn-dark btn-rounded" asp-controller="Agent" asp-action="Client">
+                        Lista de clientes
+                    </a>
+                </ul>
+            </td>
+            <td>
+                <ul class="nav-item">
+                    <a class="btn btn-dark btn-rounded" asp-controller="Auth" asp-action="Authentication">
+                        Consultar vuelos
+                    </a>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>

@@ -19,10 +19,12 @@ builder.Services.AddScoped<DbController>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AccountController>();
 builder.Services.AddScoped<VuelosService>();
+
 builder.Services.AddScoped<AsientoService>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<ReservaService>();
 builder.Services.AddScoped<AsientoController>();
+builder.Services.AddScoped<AgentService>();
 
 var app = builder.Build();
 
