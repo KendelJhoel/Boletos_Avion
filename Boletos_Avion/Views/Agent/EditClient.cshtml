@@ -1,39 +1,108 @@
-﻿@model Boletos_Avion.Models.UserModel
+﻿@model Boletos_Avion.Models.EditarCliente
 
 @{
-    ViewData["Title"] = "Editar Cliente";
+    ViewData["Title"] = "Detalle / Ver Cliente";
 }
 
-<h2>Editar Cliente</h2>
+<br />
+<br />
+<h2>Detalle / Ver Cliente</h2>
 
-<form asp-action="EditClient" method="post">
-    <input type="hidden" asp-for="IdUsuario" />
+<div class="profile-container">
+    <br />
 
-    <div class="form-group">
-        <label>Nombre</label>
-        <input type="text" asp-for="Nombre" class="form-control" required />
+    <!-- Mensaje de éxito tras guardar cambios -->
+    @if (TempData["UpdateSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["UpdateSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="profile-header">
+        <h1 id="userNameDisplay">@Model.Client.Nombre</h1>
+        <button id="toggleEditBtn" class="btn btn-link text-black">
+            <i id="editIcon" class="fa fa-pencil"></i>
+        </button>
     </div>
-
-    <div class="form-group">
-        <label>Teléfono</label>
-        <input type="text" asp-for="Telefono" class="form-control" />
+    <hr />
+    <div class="profile-content">
+        <form id="editProfileForm" asp-action="EditClient" method="post">
+            @Html.HiddenFor(model => model.Client.IdUsuario)
+            <table class="table table-bordered profile-table">
+                <tr>
+                    <th>Nombre</th>
+                    <td>
+                        @Html.TextBoxFor(model => model.Client.Nombre, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+                <tr>
+                    <th>Teléfono</th>
+                    <td>
+                        @Html.TextBoxFor(model => model.Client.Telefono, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+                <tr>
+                    <th>Dirección</th>
+                    <td>
+                        @Html.TextBoxFor(model => model.Client.Direccion, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+                <tr>
+                    <th>Documento de Identidad</th>
+                    <td>
+                        @Html.TextBoxFor(model => model.Client.DocumentoIdentidad, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+            </table>
+            <div class="text-center">
+                <button type="submit" id="saveChangesBtn" class="btn btn-success" disabled>Guardar cambios</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="form-group">
-        <label>Dirección</label>
-        <input type="text" asp-for="Direccion" class="form-control" />
-    </div>
+<h3>Reservas Activas</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Número de Reserva</th>
+            <th>Fecha de Reserva</th>
+            <th>Fecha de Salida</th>
+            <th>Fecha de Llegada</th>
+            <th>Total</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var reserva in Model.Reservas)
+        {
+            <tr>
+                <td>@reserva.NumeroReserva</td>
+                <td>@reserva.FechaReserva.ToString("dd/MM/yyyy")</td>
+                <td>@reserva.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@reserva.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@reserva.Total.ToString("C")</td>
+                <td>@reserva.Estado</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
-    <div class="form-group">
-        <label>Documento de Identidad</label>
-        <input type="text" asp-for="DocumentoIdentidad" class="form-control" required />
-    </div>
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleEditBtn = document.getElementById('toggleEditBtn');
+            const saveChangesBtn = document.getElementById('saveChangesBtn');
+            const formControls = document.querySelectorAll('.form-control');
 
-    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-    <a asp-action="Client" class="btn btn-secondary">Cancelar</a>
-</form>
-
-@if (ViewBag.ErrorMessage != null)
-{
-    <p class="text-danger">@ViewBag.ErrorMessage</p>
+            toggleEditBtn.addEventListener('click', function() {
+                formControls.forEach(control => {
+                    control.removeAttribute('readonly');
+                });
+                saveChangesBtn.removeAttribute('disabled');
+            });
+        });
+    </script>
 }

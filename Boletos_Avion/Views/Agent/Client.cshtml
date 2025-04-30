@@ -4,31 +4,188 @@
     ViewData["Title"] = "Lista de Clientes";
 }
 
-<h2>Lista de Clientes</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Teléfono</th>
-            <th>Dirección</th>
-            <th>Documento de Identidad</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var client in Model)
-        {
-            <tr>
-                <td>@client.Nombre</td>
-                <td>@client.Correo</td>
-                <td>@client.Telefono</td>
-                <td>@client.Direccion</td>
-                <td>@client.DocumentoIdentidad</td>
-                <td>
-                    <a asp-controller="Agent" asp-action="EditClient" asp-route-id="@client.IdUsuario" class="btn btn-primary">Editar</a>
-                </td>
-            </tr>
+<style>
+    /* Estilos generales */
+    :root {
+        --primary: #4361ee;
+        --primary-hover: #3a56d4;
+        --secondary: #6c757d;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --table-header: #2c3e50;
+        --table-row-hover: #f5f7ff;
+        --border-color: #e9ecef;
+    }
+
+    /* Contenedor principal */
+    .client-list-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-top: 2rem;
+        overflow-x: auto;
+    }
+
+    /* Título */
+    h2 {
+        color: var(--table-header);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid var(--primary);
+        display: inline-block;
+    }
+
+    /* Tabla mejorada */
+    .client-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+        .client-table thead th {
+            background-color: var(--table-header);
+            color: white;
+            padding: 1rem 1.25rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
         }
-    </tbody>
-</table>
+
+        .client-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        .client-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        .client-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+            .client-table tbody tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+
+            .client-table tbody tr:hover {
+                background-color: var(--table-row-hover);
+                transform: translateX(2px);
+            }
+
+        .client-table td {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+    /* Botones de acción */
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 80px;
+    }
+
+    .btn-edit {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+    }
+
+        .btn-edit:hover {
+            background-color: var(--primary-hover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-edit i {
+            margin-right: 5px;
+        }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .client-list-container {
+            padding: 1rem;
+        }
+
+        .client-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+            .client-table td, .client-table th {
+                padding: 0.75rem;
+            }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Efecto de borde lateral al hacer hover */
+    .client-table tbody tr {
+        position: relative;
+    }
+
+        .client-table tbody tr:hover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background-color: var(--primary);
+        }
+</style>
+
+<div class="client-list-container">
+    <h2>Lista de Clientes</h2>
+
+    <table class="client-table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Dirección</th>
+                <th>Documento</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var client in Model)
+            {
+                <tr>
+                    <td>@client.Nombre</td>
+                    <td>@client.Correo</td>
+                    <td>@client.Telefono</td>
+                    <td>@client.Direccion</td>
+                    <td>@client.DocumentoIdentidad</td>
+                    <td>
+                        <a asp-controller="Agent" asp-action="EditClient" asp-route-id="@client.IdUsuario"
+                           class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Agrega Font Awesome para los íconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />

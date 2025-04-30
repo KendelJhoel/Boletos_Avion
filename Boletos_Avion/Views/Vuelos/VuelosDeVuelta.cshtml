@@ -1,0 +1,51 @@
+﻿@model List<Boletos_Avion.Models.Vuelo>
+
+<link rel="stylesheet" href="~/css/regreso.css" asp-append-version="true" />
+
+
+<div id="vuelos-regreso-container">
+    <h2>Vuelos de Regreso Disponibles</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">
+            No se encontraron vuelos de regreso disponibles.
+        </div>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Fecha Salida</th>
+                    <th>Aerolínea</th>
+                    <th>Precio</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vuelo in Model)
+                {
+                    <tr>
+                        <td>@vuelo.CodigoVuelo</td>
+                        <td>@vuelo.CiudadOrigen, @vuelo.PaisOrigen</td>
+                        <td>@vuelo.CiudadDestino, @vuelo.PaisDestino</td>
+                        <td>@vuelo.FechaSalida.ToString("dd/MM/yyyy")</td>
+                        <td>@vuelo.NombreAerolinea</td>
+                        <td>$@vuelo.PrecioBase.ToString("F2")</td>
+                        <td>
+                            <a asp-controller="Vuelos" asp-action="SeleccionarAsientos"
+                               asp-route-idVuelo="@vuelo.IdVuelo"
+                               asp-route-esRegreso="true"
+                               class="btn btn-success btn-sm">Reservar</a>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

@@ -2,7 +2,7 @@
 
 public class Pago
 {
-    public int IdVuelo { get; set; } // Se mantiene para identificar el vuelo
+    public int IdVuelo { get; set; } 
     public List<AsientoSeleccionado> Asientos { get; set; } = new List<AsientoSeleccionado>();
     public string NumeroReserva { get; set; }
 }

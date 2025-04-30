@@ -1,0 +1,68 @@
+﻿@model Boletos_Avion.Models.ChangeEmailViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/cambiaremail.css" asp-append-version="true" />
+
+<div class="container mt-5">
+    <h2 class="text-center">Cambiar Correo Electrónico (Monitor)</h2>
+    <hr />
+
+    @if (TempData["UpdateSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["UpdateSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="email-display-box text-center my-4">
+        <span id="currentEmail" class="fw-bold text-muted">@ViewContext.HttpContext.Session.GetString("MonitorEmail")</span>
+        <i class="fa fa-arrow-right mx-3 text-primary"></i>
+        <span id="newEmailDisplay" class="fw-bold text-primary">______</span>
+    </div>
+
+    <form>
+        <div class="mb-3">
+            <label for="newEmail" class="form-label">Nuevo Correo Electrónico</label>
+            <input type="email" class="form-control" name="NewEmail" id="newEmail" required />
+            <small class="text-danger" id="emailError"></small>
+        </div>
+
+        <div class="mb-3">
+            <label for="verificationCode" class="form-label">Código de Verificación</label>
+            <input type="text" class="form-control" name="VerificationCode" id="verificationCode" required maxlength="6" />
+            <small class="text-danger" id="codeError"></small>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" id="saveChangesBtn" class="btn btn-primary" disabled>Confirmar Cambio</button>
+            <a href="@Url.Action("ProfileMo", "Monitor")" class="btn btn-secondary" id="cancelChangeEmailBtn">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="passwordConfirmModal" tabindex="-1" aria-labelledby="passwordConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordConfirmLabel">Confirmar Cambio de Correo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Para cambiar tu correo, ingresa tu contraseña actual:</p>
+                <input type="password" class="form-control" id="modalPasswordInput" placeholder="Contraseña" />
+                <small id="modalPasswordError" class="text-danger"></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmPasswordBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/change-email-monitor.js" asp-append-version="true"></script>
+}

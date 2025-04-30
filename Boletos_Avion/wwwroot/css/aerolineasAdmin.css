@@ -1,0 +1,200 @@
+﻿/* ==== Panel de Administrador, Gestión de Monitores, Aeropuertos y Aerolíneas ==== */
+
+body {
+    background-color: #f5f8fb;
+    font-family: 'Segoe UI', sans-serif;
+    margin-top: 30px;
+}
+
+h2 {
+    margin-top: 40px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+p {
+    color: #555;
+}
+
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+    cursor: default;
+}
+
+    .card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+.card-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.card-text {
+    font-size: 0.95rem;
+    color: #6c757d;
+}
+
+.btn-warning.text-white {
+    background-color: #ffc107;
+    border: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+    .btn-warning.text-white:hover {
+        background-color: #e0a800;
+        transform: scale(1.05);
+    }
+
+.btn-primary,
+.btn-success,
+.btn-secondary,
+.btn-danger {
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-right: 6px;
+}
+
+    .btn-primary:hover {
+        background-color: #004fa2;
+        transform: scale(1.05);
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+        transform: scale(1.05);
+    }
+
+    .btn-secondary:hover {
+        background-color: #6c757d;
+        transform: scale(1.05);
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        transform: scale(1.05);
+    }
+
+/* ==== Botones de acción personalizados en tabla ==== */
+.btn-editar {
+    background-color: #f0ad4e;
+    color: white;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-right: 8px;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .btn-editar:hover {
+        background-color: #ec971f;
+        transform: scale(1.05);
+    }
+
+.btn-eliminar {
+    background-color: #d9534f;
+    color: white;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-left: 6px;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .btn-eliminar:hover {
+        background-color: #c9302c;
+        transform: scale(1.05);
+    }
+
+/* ==== Tablas ==== */
+.table {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+    .table th {
+        background-color: #2c3e50;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+/* ==== Modales ==== */
+.modal-content {
+    border-radius: 12px;
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+.form-control:focus,
+select.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert-success,
+.alert-danger {
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+#monitorSuccessAlert {
+    margin-bottom: 20px;
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+    }
+
+    .card-text {
+        font-size: 0.9rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .btn-editar,
+    .btn-eliminar {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .btn {
+        margin-bottom: 8px;
+    }
+}

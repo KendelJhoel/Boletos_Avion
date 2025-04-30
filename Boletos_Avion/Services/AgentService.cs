@@ -14,7 +14,7 @@ public class AgentService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -46,7 +46,7 @@ public class AgentService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -71,7 +71,7 @@ public class AgentService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection())
             {
                 connection.Open();
 
@@ -97,7 +97,7 @@ public class AgentService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -190,7 +190,6 @@ public class AgentService : DbController
         return user;
     }
 
-    // Actualizar la información de un usuario (incluyendo la contraseña)
     public bool UpdateClient(UserModel client)
     {
         string query = @"UPDATE USUARIOS 

@@ -1,7 +1,10 @@
 using Boletos_Avion.Controllers;
 using Boletos_Avion.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // Habilitar sesiones
 builder.Services.AddSession(options =>
@@ -25,6 +28,9 @@ builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<ReservaService>();
 builder.Services.AddScoped<AsientoController>();
 builder.Services.AddScoped<AgentService>();
+builder.Services.AddScoped<AeropuertoService>();
+
+
 
 var app = builder.Build();
 

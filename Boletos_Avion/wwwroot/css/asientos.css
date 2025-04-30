@@ -12,13 +12,14 @@
 /* 🔹 Contenedor del título */
 #top-container {
     width: 100%;
-    padding: 15px;
+    padding: 25px;
     background-color: rgba(255, 255, 255, 0.9);
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     position: relative;
     z-index: 2;
     margin-bottom: 10px;
+    margin-top: 20px;
 }
 
 /* 🔹 Contenedor de la tabla */
@@ -83,6 +84,35 @@
     color: white; /* 🔹 Letra blanca */
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* 🔹 Sombra para mejorar visibilidad */
 }
+
+.btn-pagar {
+    background-color: #2f9e44 !important;
+    color: white !important;
+    padding: 12px 30px;
+    border: 10px;
+    border-radius: 10px !important;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+    .btn-pagar:hover:not(:disabled) {
+        background-color: #74c715 !important;
+        transform: scale(1.03);
+    }
+
+    .btn-pagar:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    /* Cuando está deshabilitado */
+    .btn-pagar:disabled {
+        background-color: #a9a0a0 !important;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
 
 /* 🔹 Separador entre columnas */
 .separator {
@@ -172,3 +202,78 @@
         padding: 5px;
         font-weight: bold;
     }
+
+.resumen-contenedor {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.bloque-izquierdo,
+.bloque-derecho {
+    width: 330px;
+    max-width: 100%;
+}
+
+.info-box {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+    .info-box h5 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .info-box p {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+#lista-asientos-seleccionados li {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Botón Pagar */
+#pagarBtn {
+    background-color: #2f9e44;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+    #pagarBtn:hover:not(:disabled) {
+        background-color: #74c715;
+        transform: scale(1.03);
+    }
+
+    #pagarBtn:disabled {
+        background-color: #a9a0a0;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+.category-label-1 {
+    color: purple;
+    font-weight: bold;
+}
+
+.category-label-2 {
+    color: royalblue;
+    font-weight: bold;
+}
+
+.category-label-3 {
+    color: orange;
+    font-weight: bold;
+}

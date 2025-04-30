@@ -220,7 +220,7 @@
             passwordStrength.removeClass('bg-success').addClass('bg-warning');
         }
 
-        checkForChanges(); 
+        checkForChanges();
 
     });
 
@@ -230,7 +230,7 @@
     });
 
     $('#saveChangesBtn').hide();
-    $('#togglePasswordVisibility').prop('disabled', true);
+    $('#togglePasswordVisibility').prop(true);
 
     $("#editProfileForm").on("submit", function () {
         isEditing = false;

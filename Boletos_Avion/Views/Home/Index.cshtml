@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Inicio - GESTION BOLETOS";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+
 }
 
 @section Styles {
@@ -15,7 +15,7 @@
     <h2 class="mb-4 text-center fw-bold">Encuentra tu próximo vuelo</h2>
 
     <!-- Formulario -->
-    <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded bg-light filtros-busqueda">
+    <form asp-action="BuscarVuelos" asp-controller="Vuelos" method="post" class="p-4 shadow rounded filtros-busqueda">
 
         <div class="row justify-content-center align-items-center text-center">
             <div class="col-md-3">
@@ -82,13 +82,14 @@
         }
 
         <div class="d-flex justify-content-center mt-4">
-            <button class="btn btn-warning btn-sm px-4 py-1 rounded-pill fw-bold shadow" type="submit">
+            <button class="btn btn-search px-4 py-1 rounded-pill fw-bold shadow" type="submit">
                 🔍 Buscar Vuelos
             </button>
-            <button type="button" class="btn btn-danger btn-sm px-4 py-1 rounded-pill fw-bold shadow ms-3 opacity-75" id="limpiarFiltros">
+            <button type="button" class="btn btn-clear px-4 py-1 rounded-pill fw-bold shadow ms-3" id="limpiarFiltros">
                 ✖ Limpiar Filtros
             </button>
         </div>
+
 
     </form>
 
@@ -106,9 +107,9 @@
 
     @if (Model != null && Model.Count > 0)
     {
-        <div class="table-responsive shadow-lg p-3 bg-white rounded">
+        <div class="table-responsive shadow-sm p-3 bg-transparent  rounded">
             <table class="table table-hover text-center">
-                <thead class="bg-dark text-white">
+                <thead style="background-color: #2c3e50" class="text-white">
                     <tr>
                         <th>Código Vuelo</th>
                         <th>Ciudad Origen</th>
@@ -151,7 +152,6 @@
 </div>
 
 
-<!-- Carrusel de Categorías -->
 <div class="container mt-5">
     <h2 class="mb-4 text-center fw-bold">Categorías</h2>
 
@@ -234,7 +234,6 @@
     <h2 class="text-center mb-4">Más información de interés</h2>
 
     <div class="row row-cols-1 row-cols-md-4 g-4">
-        <!-- Tarjeta 1 -->
         <div class="col">
             <div class="card h-100 shadow">
                 <img src="~/images/asientos.jpg" class="card-img-top" alt="Imagen 1">
@@ -246,7 +245,6 @@
                 </div>
             </div>
         </div>
-        <!-- Tarjeta 2 -->
         <div class="col">
             <div class="card h-100 shadow">
                 <img src="~/images/maletas.jpg" class="card-img-top" alt="Imagen 2">
@@ -258,7 +256,6 @@
                 </div>
             </div>
         </div>
-        <!-- Tarjeta 3 -->
         <div class="col">
             <div class="card h-100 shadow">
                 <img src="~/images/asientos.jpg" class="card-img-top" alt="Imagen 3">
@@ -270,7 +267,6 @@
                 </div>
             </div>
         </div>
-        <!-- Tarjeta 4 -->
         <div class="col">
             <div class="card h-100 shadow">
                 <img src="~/images/maletas.jpg" class="card-img-top" alt="Imagen 4">
@@ -293,12 +289,12 @@
         var errorMensaje = document.getElementById("errorDestino");
 
         if (destino === "") {
-            errorMensaje.style.display = "block"; // Muestra el mensaje de error
-            return false; // Evita el envío del formulario
+            errorMensaje.style.display = "block";
+            return false;
         }
 
-        errorMensaje.style.display = "none"; // Oculta el mensaje de error si todo está bien
-        return true; // Permite el envío del formulario
+        errorMensaje.style.display = "none";
+        return true;
     }
 
     document.getElementById("limpiarFiltros").addEventListener("click", function () {
@@ -309,6 +305,6 @@
         document.getElementById("precioMax").value = "";
         document.getElementById("aerolinea").selectedIndex = 0;
         document.getElementById("categoria").selectedIndex = 0;
-        document.getElementById("errorDestino").style.display = "none"; // Oculta el mensaje al limpiar
+        document.getElementById("errorDestino").style.display = "none";
     });
 </script>

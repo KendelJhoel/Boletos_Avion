@@ -1,0 +1,254 @@
+﻿@model List<Boletos_Avion.Models.Aerolinea>
+@{
+    ViewData["Title"] = "Aerolíneas Registradas";
+    var ciudades = ViewData["Ciudades"] as List<Boletos_Avion.Models.Ciudad>;
+    var categorias = ViewData["CategoriasVuelo"] as List<Boletos_Avion.Models.CategoriaVuelo>;
+    var aerolineas = ViewData["Aerolineas"] as List<Boletos_Avion.Models.Aerolinea>;
+}
+
+<link rel="stylesheet" href="~/css/aerolineasAdmin.css" asp-append-version="true" />
+
+<h2 class="mb-4">Aerolíneas Registradas</h2>
+
+<div class="d-flex justify-content-between mb-3">
+    <input type="text" id="buscadorAerolinea" class="form-control w-50" placeholder="Buscar aerolínea por nombre..." />
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarAerolinea">
+        Agregar Nueva Aerolínea
+    </button>
+</div>
+
+<table class="table table-bordered table-striped" id="tablaAerolineas">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Cantidad de Vuelos</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var aerolinea in Model)
+        {
+            <tr>
+                <td>@aerolinea.Nombre</td>
+                <td>@aerolinea.CantidadVuelos</td>
+                <td>
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarAerolinea-@aerolinea.IdAerolinea">Ver</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal Agregar Aerolínea -->
+<div class="modal fade" id="modalAgregarAerolinea" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formAgregarAerolinea">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">Agregar Aerolínea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="Nombre" class="form-label">Nombre de la Aerolínea</label>
+                        <input name="Nombre" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="validarYCrearAerolinea()">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Vuelo -->
+<div class="modal fade" id="modalCrearVuelo" tabindex="-1" aria-labelledby="modalCrearVueloLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formCrearVuelo" method="post" action="/Vuelo/Crear">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalCrearVueloLabel">Crear Nuevo Vuelo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Ciudad Origen</label>
+                            <select id="ciudadOrigenCrear" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                @foreach (var ciudad in ciudades)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Aeropuerto Origen</label>
+                            <select id="aeropuertoOrigenCrear" name="IdAeropuertoOrigen" class="form-select" required>
+                                <option value="">Seleccione</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Ciudad Destino</label>
+                            <select id="ciudadDestinoCrear" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                @foreach (var ciudad in ciudades)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Aeropuerto Destino</label>
+                            <select id="aeropuertoDestinoCrear" name="IdAeropuertoDestino" class="form-select" required>
+                                <option value="">Seleccione</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Fecha de Salida</label>
+                            <input type="datetime-local" name="FechaSalida" class="form-control" required />
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Fecha de Llegada</label>
+                            <input type="datetime-local" name="FechaLlegada" class="form-control" required />
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Aerolínea</label>
+                            <select id="IdAerolineaCrearVuelo" name="IdAerolinea" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                @foreach (var aer in aerolineas)
+                                {
+                                    <option value="@aer.IdAerolinea">@aer.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Categoría</label>
+                            <select name="IdCategoriaVuelo" class="form-select" required>
+                                <option value="">Seleccione</option>
+                                @foreach (var cat in categorias)
+                                {
+                                    <option value="@cat.IdCategoriaVuelo">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label">Precio Base</label>
+                            <input type="number" name="PrecioBase" class="form-control" step="0.01" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Crear Vuelo</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modales edición -->
+@foreach (var aerolinea in Model)
+{
+    <div class="modal fade" id="modalEditarAerolinea-@aerolinea.IdAerolinea" tabindex="-1" aria-labelledby="modalEditarLabel-@aerolinea.IdAerolinea" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-controller="Aerolinea" asp-action="Edit" method="post">
+                    <input type="hidden" name="IdAerolinea" value="@aerolinea.IdAerolinea" />
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditarLabel-@aerolinea.IdAerolinea">Editar Aerolínea</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de la Aerolínea</label>
+                            <input name="Nombre" class="form-control" value="@aerolinea.Nombre" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.getElementById("buscadorAerolinea").addEventListener("keyup", function () {
+            const filtro = this.value.toLowerCase();
+            document.querySelectorAll("#tablaAerolineas tbody tr").forEach(fila => {
+                const nombre = fila.querySelector("td").textContent.toLowerCase();
+                fila.style.display = nombre.includes(filtro) ? "" : "none";
+            });
+        });
+
+        async function validarYCrearAerolinea() {
+            const nombre = document.querySelector('#formAgregarAerolinea input[name="Nombre"]').value.trim();
+            if (!nombre) {
+                Swal.fire('⚠️ Campo requerido', 'Por favor ingresa un nombre de aerolínea.', 'warning');
+                return;
+            }
+
+            const resp = await fetch(`/Aerolinea/ExisteNombre?nombre=${encodeURIComponent(nombre)}`);
+            const data = await resp.json();
+
+            if (data.existe) {
+                Swal.fire('❌ Ya existe', 'Ese nombre ya está registrado.', 'error');
+            } else {
+                const form = document.getElementById('formAgregarAerolinea');
+                const formData = new FormData(form);
+                const response = await fetch('/Aerolinea/Create', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '✅ Aerolínea creada',
+                        text: '¿Deseas crear un vuelo ahora?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, crear vuelo',
+                        cancelButtonText: 'No'
+                    }).then(result => {
+                        if (result.isConfirmed) {
+                            const modal = new bootstrap.Modal(document.getElementById('modalCrearVuelo'));
+                            modal.show();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire('❌ Error', 'No se pudo crear la aerolínea.', 'error');
+                }
+            }
+        }
+
+        function cargarAeropuertos(ciudadId, selectDestinoId) {
+            fetch(`/Admin/ObtenerAeropuertosPorCiudad?idCiudad=${ciudadId}`)
+                .then(r => r.json())
+                .then(data => {
+                    const select = document.getElementById(selectDestinoId);
+                    select.innerHTML = '<option value="">Seleccione</option>';
+                    data.forEach(a => {
+                        select.innerHTML += `<option value="${a.idAeropuerto}">${a.nombre}</option>`;
+                    });
+                });
+        }
+
+        document.getElementById("ciudadOrigenCrear")?.addEventListener("change", function () {
+            cargarAeropuertos(this.value, "aeropuertoOrigenCrear");
+        });
+
+        document.getElementById("ciudadDestinoCrear")?.addEventListener("change", function () {
+            cargarAeropuertos(this.value, "aeropuertoDestinoCrear");
+        });
+    </script>
+}

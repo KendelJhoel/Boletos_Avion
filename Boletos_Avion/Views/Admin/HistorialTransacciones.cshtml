@@ -1,0 +1,70 @@
+﻿@model List<Boletos_Avion.Models.TransaccionViewModel>
+@{
+    ViewData["Title"] = "Historial de Transacciones";
+}
+
+<style>
+    table th, table td {
+        vertical-align: middle;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    .text-success {
+        color: #198754 !important;
+    }
+
+    .rounded-3 {
+        border-radius: 1rem !important;
+    }
+</style>
+
+
+<div class="container mt-5">
+    <h2 class="mb-4 fw-bold text-dark">Historial de Transacciones</h2>
+
+    <div class="mb-4 fs-5">
+        <strong>Total General Pagado:</strong>
+        <span class="text-success fw-semibold">$@ViewBag.TotalGeneral</span>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive shadow-sm rounded-3 border">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">Número de Reserva</th>
+                        <th class="text-center">Nombre del Cliente</th>
+                        <th class="text-center">Documento de Identidad</th>
+                        <th class="text-center">Total Pagado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center fw-medium">@item.NumeroReserva</td>
+                            <td class="text-center">@item.NombreCliente</td>
+                            <td class="text-center">@item.DocumentoIdentidad</td>
+                            <td class="text-center text-success fw-semibold">$@item.TotalPagado</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-4" role="alert">
+            No hay transacciones disponibles.
+        </div>
+    }
+</div>
+

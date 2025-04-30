@@ -1,0 +1,71 @@
+﻿/* 📦 Contenedor principal con margen */
+#vuelos-regreso-container {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+    /* ✈️ Título */
+    #vuelos-regreso-container h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    /* 🧾 Tabla de vuelos */
+    #vuelos-regreso-container .table {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+    }
+
+    #vuelos-regreso-container th {
+        background-color: #496c90;
+        color: white;
+        text-align: center;
+    }
+
+    #vuelos-regreso-container td {
+        text-align: center;
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    /* ✅ Botón de reservar */
+    #vuelos-regreso-container .btn-success {
+        padding: 6px 14px;
+        font-weight: bold;
+        border-radius: 20px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        background-color: #2c3e50;
+    }
+
+        #vuelos-regreso-container .btn-success:hover {
+            background-color: #496c90;
+            transform: scale(1.03);
+        }
+
+        #vuelos-regreso-container .btn-success:active {
+            transform: scale(0.95);
+        }
+
+    /* ⚠️ Alerta cuando no hay vuelos */
+    #vuelos-regreso-container .alert-warning {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+/* 📱 Responsive para móviles */
+@media (max-width: 768px) {
+    #vuelos-regreso-container .table {
+        font-size: 0.9rem;
+    }
+
+    #vuelos-regreso-container h2 {
+        font-size: 1.4rem;
+    }
+}

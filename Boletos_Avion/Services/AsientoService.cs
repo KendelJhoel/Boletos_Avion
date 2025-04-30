@@ -33,8 +33,8 @@ public class AsientoService : DbController
                         IdVuelo = reader.GetInt32(1),
                         Numero = reader.GetString(2),
                         IdCategoria = reader.GetInt32(3),
-                        NombreCategoria = reader.GetString(4), // ✅ Ahora se obtiene el nombre de la categoría
-                        Precio = reader.GetDecimal(5), // ✅ Ahora usa el precio real de la BD
+                        NombreCategoria = reader.GetString(4), 
+                        Precio = reader.GetDecimal(5), 
                         Estado = reader.GetString(6)
                     });
                 }
@@ -44,7 +44,7 @@ public class AsientoService : DbController
     }
 
 
-    // 🔹 Reservar asientos
+    //  Reervar asientos
     public bool ReservarAsientos(List<int> asientosIds)
     {
         using (SqlConnection connection = GetConnection())
@@ -93,7 +93,6 @@ public class AsientoService : DbController
         {
             connection.Open();
 
-            // 🔹 Crear una consulta con parámetros dinámicos para evitar SQL Injection
             string query = @"
         SELECT COUNT(*) 
         FROM VUELOS_ASIENTOS 
@@ -102,14 +101,13 @@ public class AsientoService : DbController
 
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                // 🔹 Agregar parámetros dinámicos para cada ID de asiento
                 for (int i = 0; i < asientosIds.Count; i++)
                 {
                     command.Parameters.AddWithValue($"@id{i}", asientosIds[i]);
                 }
 
                 int count = (int)command.ExecuteScalar();
-                return count == 0; // 🔹 Devuelve `true` si no hay asientos reservados
+                return count == 0; 
             }
         }
     }
@@ -141,8 +139,8 @@ public class AsientoService : DbController
                         IdVueloAsiento = reader.GetInt32(0),
                         Numero = reader.GetString(1),
                         IdCategoria = reader.GetInt32(2),
-                        NombreCategoria = reader.GetString(3), // Ahora obtenemos el nombre de la categoría
-                        Precio = reader.GetDecimal(4), // ✅ Precio real desde la BD
+                        NombreCategoria = reader.GetString(3), 
+                        Precio = reader.GetDecimal(4),
                         Estado = reader.GetString(5)
                     });
                 }
@@ -176,12 +174,12 @@ public class AsientoService : DbController
                 {
                     detalles.Add(new
                     {
-                        idVueloAsiento = reader.GetInt32(0), // ID del asiento en el vuelo
-                        numero = reader.GetString(1), // Número del asiento
-                        idCategoria = reader.GetInt32(2), // ID de la categoría
-                        nombreCategoria = reader.GetString(3), // Nombre de la categoría
-                        precio = reader.GetDecimal(4), // Precio del asiento
-                        estado = reader.GetString(5) // Estado del asiento (Disponible, Reservado, etc.)
+                        idVueloAsiento = reader.GetInt32(0), 
+                        numero = reader.GetString(1), 
+                        idCategoria = reader.GetInt32(2), 
+                        nombreCategoria = reader.GetString(3), 
+                        precio = reader.GetDecimal(4), 
+                        estado = reader.GetString(5) 
                     });
                 }
             }
@@ -199,7 +197,6 @@ public class AsientoService : DbController
             {
                 try
                 {
-                    // 🔹 Insertar la reserva y obtener el ID generado
                     string queryReserva = @"
                 INSERT INTO RESERVAS (NumeroReserva, IdUsuario, IdVuelo, FechaReserva) 
                 VALUES (@NumeroReserva, @IdUsuario, @IdVuelo, GETDATE());
@@ -214,7 +211,6 @@ public class AsientoService : DbController
                         reservaId = Convert.ToInt32(command.ExecuteScalar());
                     }
 
-                    // 🔹 Asociar los asientos a la reserva
                     foreach (var idAsiento in asientos)
                     {
                         string queryReservaAsientos = @"
@@ -230,12 +226,12 @@ public class AsientoService : DbController
                         }
                     }
 
-                    transaction.Commit(); // 🔹 Confirmar la transacción si todo salió bien
+                    transaction.Commit();
                     return true;
                 }
                 catch
                 {
-                    transaction.Rollback(); // 🔹 Si hay un error, se deshacen los cambios
+                    transaction.Rollback(); 
                     return false;
                 }
             }
@@ -281,6 +277,108 @@ public class AsientoService : DbController
         }
     }
 
+    public void InsertarAsientosPorTipo(int idVuelo, int cantPrimera, int cantBusiness, int cantTurista, SqlConnection conn, SqlTransaction transaction)
+    {
+        Dictionary<string, int> categorias = new Dictionary<string, int>();
 
+        string queryCategorias = "SELECT idCategoria, nombre FROM CATEGORIAS_ASIENTOS";
+        using (SqlCommand cmd = new SqlCommand(queryCategorias, conn, transaction))
+        using (SqlDataReader reader = cmd.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                string nombre = reader["nombre"].ToString().Trim().ToLower();
+                int idCategoria = Convert.ToInt32(reader["idCategoria"]);
+                categorias[nombre] = idCategoria;
+            }
+        }
+
+        void insertar(string tipoNombre, int cantidad, char prefijo)
+        {
+            if (!categorias.ContainsKey(tipoNombre.ToLower())) return;
+
+            int idCategoria = categorias[tipoNombre.ToLower()];
+
+            for (int i = 1; i <= cantidad; i++)
+            {
+                string numAsiento = $"{prefijo}{i}";
+                string insert = @"
+                INSERT INTO VUELOS_ASIENTOS (idVuelo, numero, idCategoria, estado)
+                VALUES (@idVuelo, @numero, @idCategoria, 'disponible')";
+
+                using (SqlCommand cmd = new SqlCommand(insert, conn, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@idVuelo", idVuelo);
+                    cmd.Parameters.AddWithValue("@numero", numAsiento);
+                    cmd.Parameters.AddWithValue("@idCategoria", idCategoria);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        insertar("Primera Clase", cantPrimera, 'P');
+        insertar("Business", cantBusiness, 'B');
+        insertar("Turista", cantTurista, 'T');
+    }
+
+    public List<Asiento> ObtenerAsientosPorReserva(int idReserva)
+    {
+        List<Asiento> asientos = new List<Asiento>();
+
+        string query = @"
+        SELECT va.idVueloAsiento, va.numero, va.idCategoria, c.nombre AS nombreCategoria,
+               c.precio, va.estado
+        FROM RESERVA_ASIENTOS ra
+        JOIN VUELOS_ASIENTOS va ON ra.idVueloAsiento = va.idVueloAsiento
+        JOIN CATEGORIAS_ASIENTOS c ON va.idCategoria = c.idCategoria
+        WHERE ra.idReserva = @idReserva";
+
+        using (SqlConnection connection = GetConnection())
+        using (SqlCommand command = new SqlCommand(query, connection))
+        {
+            command.Parameters.AddWithValue("@idReserva", idReserva);
+            connection.Open();
+
+            using (SqlDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    asientos.Add(new Asiento
+                    {
+                        IdVueloAsiento = reader.GetInt32(0),
+                        Numero = reader.GetString(1),
+                        IdCategoria = reader.GetInt32(2),
+                        NombreCategoria = reader.GetString(3),
+                        Precio = reader.GetDecimal(4),
+                        Estado = reader.GetString(5)
+                    });
+                }
+            }
+        }
+
+        return asientos;
+    }
+
+    public bool LiberarAsientosPorReserva(int idReserva)
+    {
+        using (SqlConnection connection = GetConnection())
+        {
+            connection.Open();
+
+            string query = @"
+            UPDATE va
+            SET va.estado = 'Disponible'
+            FROM VUELOS_ASIENTOS va
+            INNER JOIN RESERVA_ASIENTOS ra ON ra.idVueloAsiento = va.idVueloAsiento
+            WHERE ra.idReserva = @idReserva";
+
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@idReserva", idReserva);
+                int filas = command.ExecuteNonQuery();
+                return filas > 0;
+            }
+        }
+    }
 
 }

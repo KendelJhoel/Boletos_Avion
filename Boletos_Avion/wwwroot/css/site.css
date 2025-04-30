@@ -26,3 +26,7 @@ body {
     height:contain;
 
 }
+
+table th, table td {
+    vertical-align: middle;
+}

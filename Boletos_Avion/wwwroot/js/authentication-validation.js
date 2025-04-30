@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('input[name="DocumentoIdentidad"]').addEventListener('blur', validateDUI);
     document.getElementById('password').addEventListener('input', validatePassword);
     document.getElementById('confirmPassword').addEventListener('input', validateConfirmPassword);
+
+    // Activar formato automático de DUI al escribir
+    const duiInput = document.querySelector('input[name="DocumentoIdentidad"]');
+    if (duiInput) {
+        duiInput.addEventListener('input', function () {
+            formatDUI(this);
+        });
+    }
 });
 
 // Validación de correo
@@ -44,7 +52,7 @@ function validatePhone() {
 // Validación de DUI
 function validateDUI() {
     const documento = document.querySelector('input[name="DocumentoIdentidad"]').value;
-    fetch(`/Auth/CheckDocumento?documento=${documento}`)
+    fetch(`/Auth/CheckDocumento?documento=${encodeURIComponent(documento)}`)
         .then(response => response.json())
         .then(data => {
             const errorElement = document.getElementById('documentoError');
@@ -165,46 +173,28 @@ function formatDUI(input) {
     }
 }
 
-// Validar términos y condiciones antes de enviar
+// validr términos y condiciones
 function validateAndSubmit() {
     const password = document.getElementById('password').value.trim();
-    const correo = document.getElementById('correoInput').value.trim();
     const termsCheckbox = document.getElementById('acceptTermsCheckbox');
     const termsError = document.getElementById('termsError');
 
-    // Detectar contraseñas reservadas
+    // detctr contras reservadas
     if (password === "AGENT123" || password === "ADMIN2025") {
-        // Si es Agente o Administrador, omitir el checkbox de términos
         document.getElementById('registerForm').submit();
     } else {
-        // Verificar si el cliente aceptó los términos
         if (!termsCheckbox.checked) {
             termsError.textContent = 'Debes aceptar los términos y condiciones para registrarte.';
             setInputInvalid('acceptTermsCheckbox');
         } else {
-            termsError.textContent = ''; // Limpiar el mensaje de error
+            termsError.textContent = '';
             setInputValid('acceptTermsCheckbox');
             document.getElementById('registerForm').submit();
         }
     }
 }
 
-
 function showTermsModal() {
     const modal = new bootstrap.Modal(document.getElementById('termsModal'));
     modal.show();
 }
-
-// Cambiar estado visual del checkbox
-function setInputValid(inputName) {
-    const input = document.getElementById(inputName);
-    input.classList.remove('is-invalid');
-    input.classList.add('is-valid');
-}
-
-function setInputInvalid(inputName) {
-    const input = document.getElementById(inputName);
-    input.classList.remove('is-valid');
-    input.classList.add('is-invalid');
-}
-

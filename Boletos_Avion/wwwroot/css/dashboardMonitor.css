@@ -1,0 +1,120 @@
+﻿/* Estilo general */
+body {
+    background-color: #f8f9fa;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Títulos */
+h4 {
+    font-weight: 600;
+    color: #003566;
+}
+
+h1 {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-weight: 1000;
+    color: #000000;
+    margin-top: 30px; /* Ajusta este valor según el espacio que desees */
+}
+
+hr {
+    border-top: 2px solid #003566;
+}
+
+/* Tabla de vuelos */
+.table {
+    background-color: #fff;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+    .table thead {
+        background-color: #003566;
+        color: white;
+    }
+
+    .table td, .table th {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+/* Hover fila tabla */
+.table-row-hover:hover {
+    background-color: #dbe9f4;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Botones */
+.btn {
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-vuelo {
+    background-color: #003566;
+    border-color: rgba(0, 119, 182, 0.25);
+    color: #fff;
+}
+
+    .btn-vuelo:hover {
+        background-color: #0077b6;
+        border-color: rgba(0, 119, 182, 0.25);
+        color: black;
+    }
+
+.btn-crear {
+    background-color: #003566;
+    border-color: rgba(0, 119, 182, 0.25);
+    color: #fff;
+}
+
+    .btn-crear:hover {
+        background-color: #0077b6;
+        border-color: rgba(0, 119, 182, 0.25);
+        color: black;
+    }
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+    .btn-danger:hover {
+        background-color: #b02a37;
+        border-color: #b02a37;
+    }
+
+/* Formularios */
+.form-label {
+    font-weight: 500;
+    color: #003566;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0077b6;
+    box-shadow: 0 0 0 0.2rem rgba(0, 119, 182, 0.25);
+}
+
+/* Modal */
+.modal-title {
+    font-weight: 600;
+    color: #003566;
+}
+
+/* Círculo estado de vuelo */
+#estadoCirculo {
+    border: 1px solid #ccc;
+}
+
+/* Mensajes y alertas */
+.alert-info {
+    background-color: #e9f5ff;
+    border-color: #b6e0fe;
+    color: #084298;
+}
+
+.fw-semibold {
+    font-weight: 600 !important;
+}

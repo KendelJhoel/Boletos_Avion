@@ -5,43 +5,34 @@
     string filtro = ViewData["Filtro"]?.ToString() ?? "Categoría Desconocida";
 }
 
-<!-- Imagen de fondo para todo el body -->
-<style>
-    body {
-        background: url('@Url.Content("~/images/back.jpg")') no-repeat center center fixed;
-        background-size: cover;
-    }
-</style>
+<div class="containers my-5">
+    <h2 class="text-center mb-4 fw-bold">Vuelos filtrados por: @filtro</h2>
 
-<div class="container my-4">
-    <!-- Título centrado sin fondo azul -->
-    <h2 class="text-center mb-4">Vuelos filtrados por: @filtro</h2>
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            
-            @if (Model.Any())
-            {
-                <p class="text-center mb-4">
-                    <br />
-                    <strong>📌 Nota:</strong> Puede hacer clic en cualquier columna para ordenar los datos.
-                    <br />
-                    Mantenga presionada la tecla <strong>Shift</strong> y haga clic en otra columna para aplicar ordenamiento combinado.
-                    <br />
-                    También puede hacer clic en cualquier fila para ver los detalles del vuelo.
-                </p>
+    @if (Model.Any())
+    {
+        <div class="alert alert-info text-start py-3 px-4 shadow-sm border rounded">
+            <p class="mb-2"><strong>📌 Nota:</strong></p>
+            <ul class="mb-0 ps-4">
+                <li>Haz clic en los encabezados para ordenar por columna.</li>
+                <li>Presiona <strong>Shift</strong> y haz clic en otra columna para ordenar múltiples.</li>
+                <li>Puedes hacer clic en una fila para ver los detalles del vuelo.</li>
+            </ul>
+        </div>
 
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4 bg-white rounded">
                 <div class="table-responsive">
-                    <table id="tablaVuelos" class="table table-striped table-hover table-bordered mb-0">
-                        <thead>
-                            <tr class="custom-header">
-                                <th class="sortable">Ciudad Origen (Aeropuerto)</th>
-                                <th class="sortable">Ciudad Destino (Aeropuerto)</th>
-                                <th class="sortable">Aerolínea</th>
-                                <th class="sortable">Salida</th>
-                                <th class="sortable">Llegada</th>
-                                <th class="sortable">Precio Base</th>
-                                <th class="sortable">Estado</th>
-                                <th class="sortable">Asientos Disponibles</th>
+                    <table id="tablaVuelos" class="table table-hover table-bordered align-middle text-center">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th>Ciudad Origen (Aeropuerto)</th>
+                                <th>Ciudad Destino (Aeropuerto)</th>
+                                <th>Aerolínea</th>
+                                <th>Salida</th>
+                                <th>Llegada</th>
+                                <th>Precio Base</th>
+                                <th>Estado</th>
+                                <th>Asientos Disponibles</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -53,7 +44,7 @@
                                     <td>@vuelo.NombreAerolinea</td>
                                     <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
                                     <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
-                                    <td>$@vuelo.PrecioBase.ToString("N2")</td>
+                                    <td class="text-success fw-bold">$@vuelo.PrecioBase.ToString("N2")</td>
                                     <td>@vuelo.Estado</td>
                                     <td>@vuelo.AsientosDisponibles</td>
                                 </tr>
@@ -61,164 +52,52 @@
                         </tbody>
                     </table>
                 </div>
-            }
-            else
-            {
-                <div class="alert alert-warning text-center mt-4" role="alert">
-                    ⚠️ No hay vuelos disponibles para esta categoría adicional.
-                </div>
-            }
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="alert alert-warning text-center mt-4" role="alert">
+            ⚠️ No hay vuelos disponibles para esta categoría adicional.
+        </div>
+    }
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/categoria.css" />
+}
 
 @section Scripts {
-    <style>
-        /* Efecto hover para filas clickeables con sombra, transición suave y resalte en negrita al hacer click */
-        .clickable-row {
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease, font-weight 0.2s ease;
-        }
-
-            .clickable-row:hover {
-                background-color: #cce5ff;
-                transform: scale(1.01);
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
-
-            .clickable-row:active {
-                font-weight: bold;
-            }
-
-        /* Estilos adicionales para embellecer la tabla */
-        #tablaVuelos {
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-            #tablaVuelos th,
-            #tablaVuelos td {
-                vertical-align: middle;
-                padding: 0.75rem;
-            }
-            /* Línea sutil entre filas */
-            #tablaVuelos tbody tr {
-                border-bottom: 1px solid #dee2e6;
-            }
-
-        /* Encabezado de la tabla: fondo azul y letras negras */
-        .custom-header {
-            background-color: #0056b3;
-        }
-
-            .custom-header th {
-                position: relative;
-                color: white !important;
-                font-weight: 600;
-                border-bottom: 2px solid #0056b3;
-                padding-right: 40px;
-                transition: background-color 0.3s ease;
-            }
-
-                .custom-header th:hover {
-                    background-color: #004494;
-                }
-
-                .custom-header th::after {
-                    content: "⇅";
-                    position: absolute;
-                    right: 15px;
-                    color: white !important;
-                    font-size: 0.9rem;
-                }
-
-        /* Personalización de los botones de paginación de DataTables */
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            background-color: #f8f9fa !important;
-            color: #0056b3 !important;
-            border: 1px solid transparent !important;
-            border-radius: 0.25rem !important;
-            padding: 0.5rem 1rem !important;
-            margin: 0 0.2rem;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-            .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
-            .dataTables_wrapper .dataTables_paginate .paginate_button:focus,
-            .dataTables_wrapper .dataTables_paginate .paginate_button:active {
-                background-color: #0056b3 !important;
-                color: #fff !important;
-                border: 1px solid #0056b3 !important;
-            }
-
-            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-                background-color: #0056b3 !important;
-                color: #fff !important;
-                border: 1px solid #0056b3 !important;
-            }
-    </style>
-
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
     <script>
         $(document).ready(function () {
             var tabla = $('#tablaVuelos').DataTable({
-                "ordering": true,
-                "paging": true,
-                "pageLength": 25,
-                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-                "info": true,
-                "searching": false,
-                "orderMulti": true,
-                "order": [],
-                "autoWidth": false,
-                "language": {
-                    "lengthMenu": "Mostrar _MENU_ vuelos por página",
-                    "zeroRecords": "No se encontraron vuelos",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ vuelos",
-                    "infoEmpty": "No hay vuelos disponibles",
-                    "infoFiltered": "(filtrado de _MAX_ vuelos en total)",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Último",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
+                ordering: true,
+                paging: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+                info: true,
+                searching: false,
+                orderMulti: true,
+                order: [],
+                autoWidth: false,
+                language: {
+                    lengthMenu: "Mostrar _MENU_ vuelos por página",
+                    zeroRecords: "No se encontraron vuelos",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ vuelos",
+                    infoEmpty: "No hay vuelos disponibles",
+                    infoFiltered: "(filtrado de _MAX_ vuelos en total)",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
                     }
                 }
             });
 
-            // Manejo del ordenamiento personalizado de columnas
-            var estadoColumnas = {};
-            $('#tablaVuelos thead th').on('click', function (event) {
-                var index = $(this).index();
-                if (!estadoColumnas[index]) {
-                    estadoColumnas[index] = 0;
-                }
-                estadoColumnas[index] = (estadoColumnas[index] + 1) % 3;
-                var ordenActual = tabla.order();
-                if (!event.shiftKey) {
-                    estadoColumnas = { [index]: estadoColumnas[index] };
-                    ordenActual = [];
-                }
-                if (estadoColumnas[index] === 0) {
-                    ordenActual = ordenActual.filter(o => o[0] !== index);
-                }
-                else if (estadoColumnas[index] === 1) {
-                    ordenActual = ordenActual.filter(o => o[0] !== index);
-                    ordenActual.push([index, 'asc']);
-                }
-                else {
-                    ordenActual = ordenActual.filter(o => o[0] !== index);
-                    ordenActual.push([index, 'desc']);
-                }
-                tabla.order(ordenActual).draw();
-            });
-
-            // Redirección al hacer clic en una fila
             $('#tablaVuelos tbody').on("click", "tr", function () {
                 var url = $(this).data("href");
                 if (url) {

@@ -1,0 +1,179 @@
+﻿@model List<Boletos_Avion.Models.Aeropuerto>
+@{
+    ViewData["Title"] = "Gestión de Aeropuertos";
+}
+
+<h2 class="mb-4">Gestión de Aeropuertos</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Ciudad</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var aeropuerto in Model)
+        {
+            <tr class="fila-aeropuerto"
+                data-id="@aeropuerto.IdAeropuerto"
+                data-nombre="@aeropuerto.Nombre"
+                data-ciudad="@aeropuerto.NombreCiudad">
+                <td>@aeropuerto.Nombre</td>
+                <td>@aeropuerto.NombreCiudad</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="modalAeropuerto" tabindex="-1" aria-labelledby="modalAeropuertoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Aeropuerto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAeropuerto">
+                    <input type="hidden" id="idAeropuerto" />
+
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input type="text" class="form-control" id="nombreAeropuerto" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Ciudad</label>
+                        <p id="ciudadAeropuerto" class="form-control-plaintext text-muted mb-0"></p>
+                    </div>
+
+                    <div class="mb-3 d-none" id="grupoAdminPassAero">
+                        <label>Contraseña Administrador</label>
+                        <input type="password" class="form-control" id="adminPassAeropuerto" placeholder="Ingrese ADMIN2025" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <div>
+                    <button type="button" id="btnToggleAero" class="btn btn-outline-primary">
+                        <span id="estadoEdicionTextoAero">Editar</span>
+                    </button>
+                    <button type="button" id="btnGuardarAeropuerto" class="btn btn-success ms-2" disabled style="display:none;">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let modoEdicionAero = false;
+        let cambiosPendientesAero = false;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.fila-aeropuerto').forEach(fila => {
+                fila.addEventListener('click', () => {
+                    const id = fila.dataset.id;
+                    const nombre = fila.dataset.nombre;
+                    const ciudad = fila.dataset.ciudad;
+
+                    document.getElementById('idAeropuerto').value = id;
+                    document.getElementById('nombreAeropuerto').value = nombre;
+                    document.getElementById('ciudadAeropuerto').textContent = ciudad;
+
+                    salirModoEdicionAero(true);
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalAeropuerto'));
+                    modal.show();
+                });
+            });
+
+            document.getElementById('btnToggleAero').addEventListener('click', () => {
+                if (!modoEdicionAero) {
+                    entrarModoEdicionAero();
+                } else {
+                    if (cambiosPendientesAero && !confirm("Hay cambios sin guardar. ¿Deseas salir sin guardar?")) return;
+                    salirModoEdicionAero();
+                }
+            });
+
+            document.getElementById('nombreAeropuerto').addEventListener('input', () => {
+                if (modoEdicionAero) {
+                    cambiosPendientesAero = true;
+                    verificarCambiosAero();
+                }
+            });
+
+            document.getElementById('btnGuardarAeropuerto').addEventListener('click', async () => {
+                const pass = document.getElementById('adminPassAeropuerto').value.trim();
+                if (pass !== "ADMIN2025") {
+                    alert("❌ Contraseña incorrecta.");
+                    return;
+                }
+
+                const id = document.getElementById('idAeropuerto').value;
+                const nombre = document.getElementById('nombreAeropuerto').value;
+
+                const response = await fetch('/Aeropuerto/EditarDesdeAdmin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        IdAeropuerto: id,
+                        Nombre: nombre
+                    })
+                });
+
+                if (response.ok) {
+                    alert("✅ Aeropuerto actualizado.");
+                    location.reload();
+                } else {
+                    alert("❌ Error al actualizar aeropuerto.");
+                }
+            });
+
+            document.getElementById('modalAeropuerto').addEventListener('hide.bs.modal', function (e) {
+                if (modoEdicionAero && cambiosPendientesAero) {
+                    if (!confirm("¿Salir sin guardar los cambios?")) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            function entrarModoEdicionAero() {
+                modoEdicionAero = true;
+                cambiosPendientesAero = false;
+                document.getElementById('nombreAeropuerto').removeAttribute('readonly');
+                document.getElementById('grupoAdminPassAero').classList.remove('d-none');
+                document.getElementById('btnGuardarAeropuerto').style.display = 'inline-block';
+                document.getElementById('estadoEdicionTextoAero').textContent = 'Lectura';
+            }
+
+            function salirModoEdicionAero(forzar = false) {
+                if (!forzar && cambiosPendientesAero) {
+                    if (!confirm("¿Salir sin guardar cambios?")) return;
+                }
+                modoEdicionAero = false;
+                cambiosPendientesAero = false;
+                document.getElementById('nombreAeropuerto').setAttribute('readonly', true);
+                document.getElementById('grupoAdminPassAero').classList.add('d-none');
+                document.getElementById('btnGuardarAeropuerto').style.display = 'none';
+                document.getElementById('btnGuardarAeropuerto').disabled = true;
+                document.getElementById('adminPassAeropuerto').value = '';
+                document.getElementById('estadoEdicionTextoAero').textContent = 'Editar';
+            }
+
+            function verificarCambiosAero() {
+                const original = document.querySelector(`tr[data-id="${document.getElementById('idAeropuerto').value}"]`);
+                const originalNombre = original.dataset.nombre;
+                const actualNombre = document.getElementById('nombreAeropuerto').value;
+
+                const huboCambios = actualNombre !== originalNombre;
+                document.getElementById('btnGuardarAeropuerto').disabled = !huboCambios;
+            }
+        });
+    </script>
+}

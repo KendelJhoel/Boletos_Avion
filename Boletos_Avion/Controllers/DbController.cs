@@ -12,14 +12,15 @@ public class DbController
             {
                 "Data Source=DESKTOP-34DG23J\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=Chiesafordel1+;TrustServerCertificate=True;",
 
-                "Data Source=DESKTOP-IT9FVD5\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=15012004;TrustServerCertificate=True;",
-                
-                "Data Source=DESKTOP-MP89LU5;Initial Catalog=GestionBoletos;User ID=jona;Password=4321;TrustServerCertificate=True;",
-                
+                "Data Source=LAPTOP-OECTJNHV;Initial Catalog=GestionBoletos;User ID=rafael;Password=rafixtete2003;TrustServerCertificate=True;",
+
+                "Data Source=RAVEN\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=123;TrustServerCertificate=True;",
+
+                "Data Source=DESKTOP-JO4PON1\\SQLEXPRESS;Initial Catalog=GestionBoletos;User ID=sa;Password=H ola123!;TrustServerCertificate=True;",
             };
 
         connectionString = GetAvailableConnection(connectionOptions);
-        connection = new SqlConnection(connectionString); // 🔹 Inicializa la conexión UNA SOLA VEZ
+        connection = new SqlConnection(connectionString); 
     }
 
     private string GetAvailableConnection(List<string> connectionOptions)
@@ -47,7 +48,7 @@ public class DbController
     {
         if (connection == null || connection.State == System.Data.ConnectionState.Closed)
         {
-            connection = new SqlConnection(connectionString); // 🔹 Si está cerrada, la reabre.
+            connection = new SqlConnection(connectionString); 
         }
         return connection;
     }
