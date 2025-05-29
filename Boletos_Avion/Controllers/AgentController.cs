@@ -13,11 +13,15 @@ namespace Boletos_Avion.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly AgentService _agentService;
+        private readonly ILogger<AgentController> _logger;
+        private readonly AccountService _accountService;
 
-        public AgentController(IConfiguration configuration, AgentService agentService)
+        public AgentController(IConfiguration configuration, AgentService agentService, AccountService accountService, ILogger<AgentController> logger)
         {
             _configuration = configuration;
             _agentService = agentService;
+            _accountService = accountService;
+            _logger = logger;
         }
         public IActionResult Dashboard()
         {
@@ -42,10 +46,23 @@ namespace Boletos_Avion.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register(IFormCollection form)
+        public IActionResult RegisterClient(IFormCollection form)
         {
             try
             {
+                // Validación básica de campos requeridos
+                if (string.IsNullOrEmpty(form["Nombre"]) || string.IsNullOrEmpty(form["Apellido"]) ||
+                    string.IsNullOrEmpty(form["Correo"]) || string.IsNullOrEmpty(form["Telefono"]) ||
+                    string.IsNullOrEmpty(form["Direccion"]) || string.IsNullOrEmpty(form["DocumentoIdentidad"]))
+                {
+                    ViewBag.RegisterError = "Todos los campos son obligatorios.";
+                    SetRegistrationValues(form);
+                    return View("RegisterClient");
+                }
+
+                // Generar contraseña automática segura
+                string generatedPassword = GenerateSecurePassword();
+
                 UserModel newUser = new UserModel
                 {
                     Nombre = $"{form["Nombre"]} {form["Apellido"]}",
@@ -53,95 +70,69 @@ namespace Boletos_Avion.Controllers
                     Telefono = form["Telefono"],
                     Direccion = form["Direccion"],
                     DocumentoIdentidad = form["DocumentoIdentidad"],
-                    Contrasena = form["Contrasena"]
+                    Contrasena = generatedPassword, // Usamos la contraseña generada
+                    IdRol = 3 // Rol de cliente
                 };
 
-                string confirmPassword = form["ConfirmarContrasena"];
-
-                // Validación de campos vacíos
-                if (string.IsNullOrWhiteSpace(newUser.Correo) || string.IsNullOrWhiteSpace(newUser.Contrasena) ||
-                    string.IsNullOrWhiteSpace(newUser.Nombre) || string.IsNullOrWhiteSpace(newUser.Telefono) ||
-                    string.IsNullOrWhiteSpace(newUser.Direccion) || string.IsNullOrWhiteSpace(newUser.DocumentoIdentidad))
-                {
-                    ViewBag.RegisterError = "Todos los campos son obligatorios.";
-                    SetRegistrationValues(form);
-                    return View("RegisterClient");
-                }
-
-                // Validación de coincidencia de contraseñas
-                if (newUser.Contrasena != confirmPassword)
-                {
-                    ViewBag.RegisterError = "Las contraseñas no coinciden.";
-                    SetRegistrationValues(form);
-                    return View("RegisterClient");
-                }
-
-                bool isReservedPassword = false;
-                if (newUser.Contrasena == "AGENT123")
-                {
-                    newUser.IdRol = 2; // Agente
-                    //newUser.Contrasena = GenerateRandomPassword();
-                    isReservedPassword = true;
-                }
-                else if (newUser.Contrasena == "ADMIN2025")
-                {
-                    newUser.IdRol = 1; // Administrador
-                    //newUser.Contrasena = GenerateRandomPassword();
-                    isReservedPassword = true;
-                }
-                else
-                {
-                    newUser.IdRol = 3; // Cliente
-                }
-
-                // Validación de la contraseña para clientes
-                if (!ValidatePassword(newUser.Contrasena))
-                {
-                    ViewBag.RegisterError = "La contraseña no cumple con los requerimientos de seguridad.";
-                    SetRegistrationValues(form);
-                    return View("RegisterClient");
-                }
-
-                // Validación de duplicados
+                // Validaciones de duplicados
                 if (_agentService.CheckUserExists(newUser.Correo))
                 {
                     ViewBag.RegisterError = "El correo ya está registrado.";
                     SetRegistrationValues(form);
                     return View("RegisterClient");
                 }
+
                 if (_agentService.CheckPhoneExists(newUser.Telefono))
                 {
-                    ViewBag.RegisterError = "El número de teléfono ya está en uso.";
-                    SetRegistrationValues(form);
-                    return View("RegisterClient");
-                }
-                if (_agentService.CheckDocumentExists(newUser.DocumentoIdentidad))
-                {
-                    ViewBag.RegisterError = "El documento de identidad ya está registrado.";
+                    ViewBag.RegisterError = "El teléfono ya está registrado.";
                     SetRegistrationValues(form);
                     return View("RegisterClient");
                 }
 
-                bool success = _agentService.RegisterUser(newUser);
-                if (success)
+                if (_agentService.CheckDocumentExists(newUser.DocumentoIdentidad))
                 {
-                    SendWelcomeEmail(newUser.Correo, newUser.Nombre);
-                    TempData["RegisterSuccess"] = "Registro exitoso. Por favor, inicia sesión.";
-                    return RedirectToAction("Authentication", "Auth");
-                }
-                else
-                {
-                    ViewBag.RegisterError = "❌ Error al registrar el cliente en la base de datos.";
+                    ViewBag.RegisterError = "El documento ya está registrado.";
                     SetRegistrationValues(form);
                     return View("RegisterClient");
                 }
-            }
-            catch (Exception ex)
-            {
-                ViewBag.RegisterError = $"Ocurrió un error inesperado: {ex.Message}";
+
+                // Registrar usuario
+                bool success = _agentService.RegisterUser(newUser);
+
+                if (success)
+                {
+                    // Enviar correo con credenciales
+                    SendWelcomeEmailWithCredentials(newUser.Correo, newUser.Nombre, generatedPassword);
+
+                    TempData["SuccessMessage"] = $"Cliente registrado exitosamente. Las credenciales se enviaron a {newUser.Correo}";
+                    return RedirectToAction("Client"); // Redirige a la lista de clientes
+                }
+
+                ViewBag.RegisterError = "Error al registrar el cliente.";
                 SetRegistrationValues(form);
                 return View("RegisterClient");
             }
+            catch (Exception ex)
+            {
+                ViewBag.RegisterError = $"Error: {ex.Message}";
+                SetRegistrationValues(form);
+                return View("RegisterClient");
+            }
+        }
+
+        private string GenerateSecurePassword()
+        {
+            // Genera una contraseña aleatoria segura
+            const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*?_-";
+            var random = new Random();
+            var chars = new char[12];
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                chars[i] = validChars[random.Next(0, validChars.Length)];
+            }
+
+            return new string(chars);
         }
 
         // Función para validar los requerimientos de la contraseña
@@ -162,9 +153,6 @@ namespace Boletos_Avion.Controllers
 
         private void SetRegistrationValues(IFormCollection form)
         {
-            // Indicamos a la vista que se debe activar la pestaña de registro
-            ViewBag.ActiveTab = "register";
-            // Preservamos los valores ingresados
             ViewBag.Nombre = form["Nombre"];
             ViewBag.Apellido = form["Apellido"];
             ViewBag.Correo = form["Correo"];
@@ -173,16 +161,12 @@ namespace Boletos_Avion.Controllers
             ViewBag.Direccion = form["Direccion"];
         }
 
-        private bool SendWelcomeEmail(string email, string name)
+        private void SendWelcomeEmailWithCredentials(string email, string name, string password)
         {
             try
             {
-                Console.WriteLine($"✉ Intentando enviar correo de bienvenida a: {email}");
-
                 string senderEmail = _configuration["EmailSettings:SenderEmail"];
                 string senderPassword = _configuration["EmailSettings:SenderPassword"];
-
-                Console.WriteLine($"📧 Usando credenciales: {senderEmail}");
 
                 var smtpClient = new SmtpClient("smtp.gmail.com")
                 {
@@ -194,44 +178,120 @@ namespace Boletos_Avion.Controllers
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(senderEmail),
-                    Subject = "¡Bienvenido a Boletos Avión!",
-                    Body = $"Hola {name}, tu cuenta ha sido registrada exitosamente. ¡Disfruta de nuestros servicios!",
+                    Subject = "¡Bienvenido a Nuestro Sistema!",
+                    Body = $@"
+Hola {name},
+
+Tu cuenta ha sido creada exitosamente por nuestro equipo.
+
+Tus credenciales de acceso son:
+Correo: {email}
+Contraseña: {password}
+
+Por seguridad, te recomendamos cambiar tu contraseña después de iniciar sesión por primera vez.
+
+¡Bienvenido!
+",
                     IsBodyHtml = false,
                 };
+
                 mailMessage.To.Add(email);
                 smtpClient.Send(mailMessage);
-
-                Console.WriteLine($"✅ Correo enviado correctamente a: {email}");
-                return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error al enviar correo de bienvenida: {ex.Message}");
-                return false;
+                // Loggear el error
+                Console.WriteLine($"Error enviando correo: {ex.Message}");
+                // Puedes decidir si quieres mostrar este error al agente o no
             }
         }
+        [HttpGet]
+        public IActionResult CheckEmail(string email)
+        {
+            try
+            {
+                bool exists = _agentService.CheckUserExists(email);
+                return Json(new { exists });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verificando email");
+                return Json(new { exists = false });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult CheckPhone(string phone)
+        {
+            try
+            {
+                // Limpiar formato para la búsqueda
+                string cleanPhone = phone.Replace("-", "");
+                bool exists = _agentService.CheckPhoneExists(cleanPhone);
+                return Json(new { exists });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verificando teléfono");
+                return Json(new { exists = false });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult CheckDocument(string document)
+        {
+            try
+            {
+                // Limpiar formato para la búsqueda
+                string cleanDocument = document.Replace("-", "");
+                bool exists = _agentService.CheckDocumentExists(cleanDocument);
+                return Json(new { exists });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verificando documento");
+                return Json(new { exists = false });
+            }
+        }
+        [HttpGet]
         public IActionResult EditClient(int id)
         {
-            var client = _agentService.GetUserById(id);
+            var client = _accountService.GetUserById(id);
             if (client == null)
             {
                 return NotFound();
             }
-            return View(client);
+
+            var reservas = _accountService.GetReservasActivas(id);
+            var model = new EditarCliente
+            {
+                Client = client,
+                Reservas = reservas ?? new List<Reservas>() // Asegúrate de inicializar la lista de reservas
+            };
+
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult EditClient(UserModel client)
+        public IActionResult EditClient(EditarCliente model)
         {
-            bool success = _agentService.UpdateClient(client);
-            if (success)
+            if (!ModelState.IsValid)
             {
-                return RedirectToAction("ClientList");
+                model.Reservas = _accountService.GetReservasActivas(model.Client.IdUsuario); // Asegúrate de volver a cargar las reservas en caso de error
+                return View(model);
+            }
+
+            var updateSuccess = _accountService.UpdateUser(model.Client);
+            if (updateSuccess)
+            {
+                TempData["UpdateSuccess"] = "Datos actualizados correctamente.";
+                return RedirectToAction("Client");
             }
             else
             {
-                ViewBag.ErrorMessage = "Error al actualizar la información del cliente.";
-                return View(client);
+                ModelState.AddModelError("", "Error al actualizar los datos. Intente nuevamente.");
+                model.Reservas = _accountService.GetReservasActivas(model.Client.IdUsuario); // Asegúrate de volver a cargar las reservas en caso de error
+                return View(model);
             }
         }
 

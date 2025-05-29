@@ -1,0 +1,157 @@
+﻿/* ====== Fondo General ====== */
+body {
+    background: url('/images/back.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #212529;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.containers {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-weight: bold;
+    text-transform: uppercase;
+    color: rgb(0, 0, 0);
+}
+
+/* ====== Tabla de Vuelos ====== */
+#tablaVuelos {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+    background-color: white;
+}
+
+    #tablaVuelos th {
+        vertical-align: middle;
+        padding: 0.8rem;
+        text-align: center;
+        color: white;
+    }
+
+    #tablaVuelos td {
+        vertical-align: middle;
+        padding: 0.8rem;
+        text-align: center;
+        color: #333;
+    }
+
+    #tablaVuelos tbody tr {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+/* ====== Encabezado personalizado ====== */
+.custom-header {
+    background-color: #0056b3;
+    color: white;
+}
+
+    .custom-header th {
+        font-weight: bold;
+        position: relative;
+        transition: background-color 0.3s ease;
+    }
+
+        .custom-header th:hover {
+            background-color: #003f7f;
+        }
+
+        .custom-header th::after {
+            content: "⇅";
+            position: absolute;
+            right: 12px;
+            color: white;
+            font-size: 0.8rem;
+        }
+
+/* ====== Hover y selección ====== */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .clickable-row:hover {
+        background-color: #e3f2fd;
+        transform: scale(1.01);
+        font-weight: 500;
+    }
+
+    .clickable-row:active {
+        font-weight: bold;
+    }
+
+/* ====== Responsive ====== */
+@media (max-width: 768px) {
+    #tablaVuelos th,
+    #tablaVuelos td {
+        font-size: 0.9rem;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+
+    .container {
+        padding: 20px;
+    }
+}
+
+/* ====== Alertas ====== */
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+#tablaVuelos_wrapper {
+    margin-top: 20px;
+}
+
+.dataTables_length label,
+.dataTables_info {
+    font-weight: 500;
+    color: #333;
+}
+
+.dataTables_length select {
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+.dataTables_paginate .paginate_button {
+    border-radius: 20px !important;
+    margin: 2px;
+    padding: 5px 12px !important;
+    color: #0056b3 !important;
+    background-color: #e9ecef !important;
+    transition: all 0.3s ease;
+}
+
+    .dataTables_paginate .paginate_button:hover {
+        background-color: #0056b3 !important;
+        color: #fff !important;
+    }
+
+    .dataTables_paginate .paginate_button.current {
+        background-color: #0056b3 !important;
+        color: #fff !important;
+        font-weight: bold;
+    }
+
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    .clickable-row:hover {
+        background-color: #dbe9f6;
+    }

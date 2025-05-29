@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Mail;
 using Boletos_Avion.Models;
 using System.Linq;
+using Boletos_Avion.Services;
 
 namespace Boletos_Avion.Controllers
 {
@@ -230,20 +231,35 @@ namespace Boletos_Avion.Controllers
 
                 switch (user.IdRol)
                 {
-                    case 1:
-                        return RedirectToAction("Dashboard", "Admin");
-                    case 2:
-                        return RedirectToAction("Dashboard", "Agent");
-                    default:
-                        return RedirectToAction("Index", "Home");
+                    case 1: return RedirectToAction("Dashboard", "Admin");
+                    case 2: return RedirectToAction("Dashboard", "Agent");
+                    default: return RedirectToAction("Index", "Home");
                 }
             }
             else
             {
+                // 🔁 Intentar con los monitores si no está en USUARIOS
+                var monitorService = new Boletos_Avion.Services.MonitorService();
+                var monitor = monitorService.ValidateMonitor(email, password);
+
+                if (monitor != null)
+                {
+                    HttpContext.Session.SetInt32("MonitorId", monitor.IdMonitor);
+                    HttpContext.Session.SetString("MonitorEmail", monitor.Correo);
+                    HttpContext.Session.SetString("MonitorName", monitor.Nombre);
+                    HttpContext.Session.SetInt32("IdAerolinea", monitor.IdAerolinea);
+                    HttpContext.Session.SetString("MonitorPassword", monitor.Contrasena);
+
+
+                    return RedirectToAction("Dashboard", "Monitor");
+                }
+
                 ViewBag.LoginError = "Correo o contraseña incorrectos.";
                 return View("Authentication");
             }
+
         }
+
 
         [HttpGet]
         public IActionResult Logout()
@@ -346,11 +362,18 @@ namespace Boletos_Avion.Controllers
         }
 
         [HttpGet]
-        public JsonResult CheckCorreo(string correo)
+        public async Task<JsonResult> CheckCorreo(string correo)
         {
-            bool exists = _authService.CheckUserExists(correo);
+            bool existeUsuario = _authService.CheckUserExists(correo);
+
+            var monitorService = new MonitorService();
+            bool existeMonitor = await monitorService.ExisteCorreoAsync(correo);
+
+            bool exists = existeUsuario || existeMonitor;
+
             return Json(new { exists });
         }
+
 
         [HttpGet]
         public JsonResult CheckTelefono(string telefono)
@@ -360,9 +383,15 @@ namespace Boletos_Avion.Controllers
         }
 
         [HttpGet]
-        public JsonResult CheckDocumento(string documento)
+        public async Task<JsonResult> CheckDocumento(string documento)
         {
-            bool exists = _authService.CheckDocumentExists(documento);
+            bool existeEnUsuarios = _authService.CheckDocumentExists(documento);
+
+            var monitorService = new MonitorService();
+            bool existeEnMonitores = await monitorService.ExisteDocumentoAsync(documento);
+
+            bool exists = existeEnUsuarios || existeEnMonitores;
+
             return Json(new { exists });
         }
 
@@ -377,34 +406,37 @@ namespace Boletos_Avion.Controllers
         {
             try
             {
-                Console.WriteLine($"🔍 Verificando existencia del usuario con correo: {correo}");
+                Console.WriteLine($"🔍 Verificando existencia del correo: {correo}");
 
+                bool enviado = false;
+
+                // Buscar en USUARIOS
                 if (_authService.CheckUserExists(correo))
                 {
-                    Console.WriteLine($"✅ Usuario encontrado, obteniendo contraseña...");
-
                     string password = _authService.GetUserPasswordByEmail(correo);
-                    Console.WriteLine($"🔐 Contraseña obtenida: {password}");
-
-                    bool emailSent = SendPasswordEmail(correo, password);
-
-                    if (emailSent)
-                    {
-                        Console.WriteLine($"✅ Correo de recuperación enviado correctamente a: {correo}");
-                        TempData["ResetSuccess"] = "Tus credenciales han sido enviadas al correo proporcionado.";
-                        return RedirectToAction("Password_reset", "Auth");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"❌ Error al enviar el correo a: {correo}");
-                        ViewBag.ResetError = "Error al enviar el correo. Intenta nuevamente.";
-                        return View("Password_reset");
-                    }
+                    enviado = SendPasswordEmail(correo, password);
                 }
                 else
                 {
-                    Console.WriteLine($"❌ El correo ingresado no está registrado: {correo}");
-                    ViewBag.ResetError = "El correo ingresado no está registrado.";
+                    // Buscar en MONITOR
+                    var monitorService = new MonitorService();
+                    bool existeMonitor = monitorService.ExisteCorreoAsync(correo).Result;
+
+                    if (existeMonitor)
+                    {
+                        string password = monitorService.ObtenerContrasenaPorCorreo(correo);
+                        enviado = SendPasswordEmail(correo, password);
+                    }
+                }
+
+                if (enviado)
+                {
+                    TempData["ResetSuccess"] = "Tus credenciales han sido enviadas al correo proporcionado.";
+                    return RedirectToAction("Password_reset", "Auth");
+                }
+                else
+                {
+                    ViewBag.ResetError = "Error al enviar el correo. Intenta nuevamente.";
                     return View("Password_reset");
                 }
             }
@@ -415,6 +447,7 @@ namespace Boletos_Avion.Controllers
                 return View("Password_reset");
             }
         }
+
 
         private bool SendPasswordEmail(string correo, string password)
         {
@@ -478,5 +511,18 @@ namespace Boletos_Avion.Controllers
 
             return Json(new { valid = isValid });
         }
+
+        [HttpGet]
+        public JsonResult GetLoggedInUserId()
+        {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                return Json(new { id = (int?)null });
+            }
+
+            return Json(new { id = userId });
+        }
+
     }
 }

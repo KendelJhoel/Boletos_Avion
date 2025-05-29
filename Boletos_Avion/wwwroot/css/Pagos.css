@@ -1,0 +1,237 @@
+﻿body {
+    background-color: #e3ecf5cc;
+}
+
+.resumen-container {
+    padding: 30px;
+    max-width: 1000px;
+    margin-top: 50px;
+}
+
+.col-md-6 
+
+.margen {
+    background-color: #496c90ff;
+}
+
+.resumen-header {
+    margin-top: 40px;
+    margin-bottom: 30px;
+    text-align: left;
+    font-size: 1.8rem;
+}
+
+.resumen-pago h3,
+.resumen-pago h2,
+.resumen-pago p {
+    margin-bottom: 8px;
+    margin-top: 4px;
+}
+
+.resumen-header {
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+
+.margen {
+    margin-top: 20px;
+}
+
+h3:first-of-type {
+    margin-top: 30px;
+}
+
+
+.resumen-header .arrow {
+    font-size: 1.5rem;
+    margin: 0 10px;
+}
+
+.resumen-header .duracion {
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.info-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: space-between;
+}
+
+.info-box, .asientos-box, .resumen-box {
+    flex: 1 1 300px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+    .asientos-box table {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+#abrirModalPago {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    background-color: #496c90ff;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: pointer;
+}
+
+    #abrirModalPago:hover {
+        background-color: #567aa1cc;
+        transform: scale(1.03);
+    }
+
+    #abrirModalPago:active {
+        transform: scale(0.97);
+    }
+
+    #abrirModalPago:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+@media (max-width: 768px) {
+    .resumen-header h3 {
+        font-size: 1.5rem;
+    }
+
+    .info-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+/* === CSS modal === */
+
+#modalConfirmacion .modal-content {
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+#modalConfirmacion .modal-header {
+    background-color: #f1f1f1;
+    color: black;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+#modalConfirmacion .modal-title {
+    font-weight: bold;
+    font-size: 1.4rem;
+}
+
+h5.modal-title {
+    text-align: center;
+}
+
+#modalConfirmacion .btn-close {
+    filter: brightness(5) invert(0);
+}
+
+#modalConfirmacion .modal-body {
+    padding: 25px;
+    background-color: #f1f1f1;
+}
+
+    #modalConfirmacion .modal-body label {
+        font-weight: 600;
+        color: #333;
+    }
+
+#modalConfirmacion .form-control {
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    transition: border-color 0.3s ease;
+}
+
+    #modalConfirmacion .form-control:focus {
+        border-color: #496c90;
+        box-shadow: 0 0 5px rgba(73, 108, 144, 0.5);
+    }
+
+/* Footer */
+#modalConfirmacion .modal-footer {
+    background-color: #f1f1f1;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    padding: 15px 20px;
+}
+
+    #modalConfirmacion .modal-footer .btn {
+        padding: 10px 25px;
+        font-weight: bold;
+        font-size: 1rem;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    #modalConfirmacion .modal-footer .btn-success {
+        background-color: #2f9e44;
+        color: white;
+        border: none;
+    }
+
+        #modalConfirmacion .modal-footer .btn-success:hover {
+            background-color: #74c715;
+            transform: scale(1.03);
+        }
+
+        #modalConfirmacion .modal-footer .btn-success:active {
+            transform: scale(0.97);
+        }
+
+    #modalConfirmacion .modal-footer .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+    }
+
+        #modalConfirmacion .modal-footer .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: scale(1.03);
+        }
+
+        #modalConfirmacion .modal-footer .btn-secondary:active {
+            transform: scale(0.97);
+        }
+
+#modalConfirmacion #error-message {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.iconos-tarjetas {
+    display: flex;
+    gap: 12px;
+    justify-content: start;
+    align-items: center;
+}
+
+.icono-tarjeta {
+    width: 30px;
+    margin: 0 5px;
+    opacity: 0.3;
+    transition: all 0.2s ease-in-out;
+}
+
+    .icono-tarjeta.activa {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+

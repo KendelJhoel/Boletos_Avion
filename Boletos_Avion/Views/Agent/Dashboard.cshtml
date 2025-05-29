@@ -1,39 +1,153 @@
 ﻿@{
     ViewData["Title"] = "Panel de Agente";
 }
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
 
-<h2>Bienvenido, Agente</h2>
-<p>Aquí puedes gestionar tus funciones de atención al cliente.</p>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f5f7ff;
+        padding: 2rem;
+    }
 
-<table class="table pt-5">
-    <thead>
-        <tr>
-           
-            <th scope="col">Función para registar cliente</th>
-            <th scope="col">Función para consultar disponibilidad de vuelos</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-                <ul class="nav-item">
-                    <a class="btn btn-dark btn-rounded" asp-controller="Agent" asp-action="RegisterClient">
-                        Registrar Cliente
-                    </a>
-                </ul>
-                <ul class="nav-item">
-                    <a class="btn btn-dark btn-rounded" asp-controller="Agent" asp-action="Client">
-                        Lista de clientes
-                    </a>
-                </ul>
-            </td>
-            <td>
-                <ul class="nav-item">
-                    <a class="btn btn-dark btn-rounded" asp-controller="Auth" asp-action="Authentication">
-                        Consultar vuelos
-                    </a>
-                </ul>
-            </td>
-        </tr>
-    </tbody>
-</table>
+    .dashboard-header {
+        margin-bottom: 2.5rem;
+        text-align: center;
+    }
+
+        .dashboard-header h1 {
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+    .function-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .function-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        border-top: 4px solid var(--primary);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(67, 97, 238, 0.15);
+        }
+
+    .card-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        background: rgba(67, 97, 238, 0.1);
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .card-description {
+        color: #6c757d;
+        margin-bottom: 2rem;
+        text-align: center;
+        flex-grow: 1;
+    }
+
+    .card-button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-align: center;
+        display: block;
+        width: fit-content;
+        margin: 0 auto;
+        text-decoration: none;
+    }
+
+        .card-button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
+
+    .divider {
+        border: 0;
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(0,0,0,0.1), transparent);
+        margin: 2rem 0;
+    }
+</style>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Bienvenido, Agente</h1>
+            <p>Aquí puedes gestionar tus funciones de atención al cliente.</p>
+        </div>
+
+        <hr class="divider">
+
+        <div class="function-cards">
+            <!-- Tarjeta 1: Registrar Cliente -->
+            <div class="function-card">
+                <div class="card-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3 class="card-title">Registrar Cliente</h3>
+                <p class="card-description">Registra nuevos clientes en el sistema y genera sus credenciales de acceso.</p>
+                <a class="card-button" asp-controller="Agent" asp-action="RegisterClient">
+                    <i class="fas fa-arrow-right me-2"></i>Acceder
+                </a>
+            </div>
+
+            <!-- Tarjeta 2: Lista de Clientes -->
+            <div class="function-card">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="card-title">Lista de Clientes</h3>
+                <p class="card-description">Visualiza y gestiona todos los clientes registrados en el sistema.</p>
+                <a class="card-button" asp-controller="Agent" asp-action="Client">
+                    <i class="fas fa-arrow-right me-2"></i>Acceder
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>

@@ -1,0 +1,619 @@
+﻿@model List<Boletos_Avion.Models.Vuelo>
+
+@{
+    ViewData["Title"] = "Vuelos Registrados";
+}
+
+<h2 class="text-center mt-4">✈️ Vuelos Registrados</h2>
+
+<style>
+    th {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .arrow {
+        margin-left: 5px;
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+        .arrow.asc::after {
+            content: '▲';
+        }
+
+        .arrow.desc::after {
+            content: '▼';
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+        Mostrar
+        <select id="selectFilasPorPagina" class="form-select d-inline-block w-auto mx-2">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+        filas por página
+    </div>
+    <ul id="pagination" class="pagination mb-0"></ul>
+</div>
+
+<div class="container mt-4">
+    <div class="table-responsive">
+        <table id="tablaVuelos" class="table table-bordered table-hover shadow-sm text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th data-col="0">Código <span class="arrow" data-arrow="0"></span></th>
+                    <th data-col="1">Aerolínea <span class="arrow" data-arrow="1"></span></th>
+                    <th data-col="2">Categoría <span class="arrow" data-arrow="2"></span></th>
+                    <th data-col="3">Salida <span class="arrow" data-arrow="3"></span></th>
+                    <th data-col="4">Llegada <span class="arrow" data-arrow="4"></span></th>
+                    <th data-col="5">Precio <span class="arrow" data-arrow="5"></span></th>
+                    <th data-col="6">Origen <span class="arrow" data-arrow="6"></span></th>
+                    <th data-col="7">Destino <span class="arrow" data-arrow="7"></span></th>
+                    <th data-col="8">Estado <span class="arrow" data-arrow="8"></span></th>
+                </tr>
+            </thead>
+            <tbody id="bodyVuelos">
+                @foreach (var vuelo in Model)
+                {
+                    <tr data-id="@vuelo.IdVuelo">
+                        <td>@vuelo.CodigoVuelo</td>
+                        <td>@vuelo.NombreAerolinea</td>
+                        <td>@vuelo.Categoria</td>
+                        <td>@vuelo.FechaSalida.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@vuelo.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@vuelo.PrecioBase.ToString("C")</td>
+                        <td>@vuelo.CiudadOrigen</td>
+                        <td>@vuelo.CiudadDestino</td>
+                        <td>
+                            @if (vuelo.Estado == "Disponible")
+                            {
+                                <span class="badge bg-success">Disponible</span>
+                            }
+                            else if (vuelo.Estado == "Lleno")
+                            {
+                                <span class="badge bg-secondary">Lleno</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@vuelo.Estado</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL: Editar vuelo -->
+<div class="modal fade" id="modalEditarVuelo" tabindex="-1" aria-labelledby="modalEditarVueloLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content p-3">
+            <div class="modal-header">
+                <h5 class="modal-title">✈️ Editar vuelo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input type="hidden" id="editIdVuelo" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Código de Vuelo</label>
+                        <input type="text" class="form-control" id="editCodigoVuelo" disabled />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad Origen</label>
+                            <select class="form-select" id="editCiudadOrigen" disabled>
+                                <option disabled selected>Seleccione una ciudad</option>
+                                @foreach (var ciudad in ViewBag.Ciudades)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aeropuerto Origen</label>
+                            <select class="form-select" id="editAeropuertoOrigen" disabled>
+                                <option disabled selected>Seleccione un aeropuerto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad Destino</label>
+                            <select class="form-select" id="editCiudadDestino" disabled>
+                                <option disabled selected>Seleccione una ciudad</option>
+                                @foreach (var ciudad in ViewBag.Ciudades)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aeropuerto Destino</label>
+                            <select class="form-select" id="editAeropuertoDestino" disabled>
+                                <option disabled selected>Seleccione un aeropuerto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de salida</label>
+                            <input type="datetime-local" class="form-control" id="editFechaSalida" disabled />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de llegada</label>
+                            <input type="datetime-local" class="form-control" id="editFechaLlegada" disabled />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aerolínea</label>
+                            <select class="form-select" id="editAerolinea" disabled>
+                                <option disabled selected>Seleccione una aerolínea</option>
+                                @foreach (var aerolinea in ViewBag.Aerolineas)
+                                {
+                                    <option value="@aerolinea.IdAerolinea">@aerolinea.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Categoría de Vuelo</label>
+                            <select class="form-select" id="editCategoriaVuelo" disabled>
+                                <option disabled selected>Seleccione una categoría</option>
+                                @foreach (var cat in ViewBag.CategoriasVuelo)
+                                {
+                                    <option value="@cat.IdCategoriaVuelo">@cat.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Precio base</label>
+                        <input type="number" class="form-control" id="editPrecioBase" min="1" step="0.01" disabled />
+                    </div>
+                </form>
+
+                <div class="mt-3 d-flex align-items-center">
+                    <div id="estadoCirculo" class="me-2 rounded-circle d-inline-block" style="width: 15px; height: 15px;"></div>
+                    <span id="estadoTexto" class="fw-bold"></span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="btnAccionVuelo" class="btn btn-danger me-auto" style="display: none;">Cancelar vuelo</button>
+                <button id="btnGuardarCambios" class="btn btn-primary" style="display: none;">Guardar Cambios</button>
+                <button id="btnDisponibilizarVuelo" class="btn btn-success" style="display: none;">Disponibilizar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const tabla = document.getElementById("tablaVuelos");
+        const ths = tabla.querySelectorAll("thead th");
+        const arrows = document.querySelectorAll(".arrow");
+        const originalRows = Array.from(tabla.tBodies[0].rows);
+        let ordenes = Array.from(ths).map(() => "none");
+
+        function ordenarTabla() {
+            let filas = [...originalRows];
+            const criterios = ordenes
+                .map((orden, index) => ({ orden, index }))
+                .filter(o => o.orden !== "none");
+
+            if (criterios.length === 0) {
+                mostrarFilas(originalRows);
+                return;
+            }
+
+            filas.sort((a, b) => {
+                for (let { orden, index } of criterios) {
+                    const valA = a.cells[index].innerText.trim();
+                    const valB = b.cells[index].innerText.trim();
+                    const numA = parseFloat(valA.replace(/[^0-9.-]+/g, ""));
+                    const numB = parseFloat(valB.replace(/[^0-9.-]+/g, ""));
+                    const esNumero = !isNaN(numA) && !isNaN(numB);
+                    let comp = esNumero ? numA - numB : valA.localeCompare(valB);
+                    if (comp !== 0) return orden === "asc" ? comp : -comp;
+                }
+                return 0;
+            });
+
+            mostrarFilas(filas);
+        }
+
+        function mostrarFilas(filas) {
+            const tbody = tabla.tBodies[0];
+            tbody.innerHTML = "";
+            filas.forEach(f => tbody.appendChild(f));
+        }
+
+        ths.forEach((th, i) => {
+            th.addEventListener("click", () => {
+                ordenes[i] = ordenes[i] === "none" ? "asc" :
+                             ordenes[i] === "asc" ? "desc" : "none";
+                arrows.forEach(a => a.className = "arrow");
+                ordenes.forEach((o, j) => {
+                    if (o !== "none") {
+                        document.querySelector(`.arrow[data-arrow='${j}']`)?.classList.add(o);
+                    }
+                });
+                ordenarTabla();
+            });
+        });
+
+        tabla.querySelectorAll("tbody tr").forEach(fila => {
+            fila.addEventListener("click", () => {
+                const idVuelo = fila.getAttribute("data-id");
+                if (idVuelo) abrirModalEdicion(idVuelo);
+            });
+        });
+        
+        function abrirModalEdicion(idVuelo) {
+            fetch(`/Admin/ObtenerVuelo?idVuelo=${idVuelo}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("No se pudo obtener el vuelo");
+                    return response.json();
+                })
+                .then(vuelo => {
+                    const editable = vuelo.estado === "Cancelado";
+
+                    // Campos básicos
+                    document.getElementById("editIdVuelo").value = vuelo.idVuelo;
+                    document.getElementById("editCodigoVuelo").value = vuelo.codigoVuelo;
+                    document.getElementById("editPrecioBase").value = vuelo.precioBase;
+                    document.getElementById("editFechaSalida").value = vuelo.fechaSalida;
+                    document.getElementById("editFechaLlegada").value = vuelo.fechaLlegada;
+
+                    // Aerolínea
+                    cargarAerolineas(vuelo.idAerolinea);
+
+                    // Categoría
+                    const selectCategoria = document.getElementById("editCategoriaVuelo");
+                    if (selectCategoria) {
+                        const idCategoria = String(vuelo.idCategoriaVuelo);
+                        [...selectCategoria.options].forEach(opt => {
+                            opt.selected = (opt.value === idCategoria);
+                        });
+                    }
+
+                    // Ciudades y aeropuertos
+                    cargarCiudades(vuelo.idCiudadOrigen, vuelo.idCiudadDestino);
+
+                    // Aeropuertos se cargan después de ciudades
+                    setTimeout(() => {
+                        cargarAeropuertosPorCiudad(vuelo.idCiudadOrigen, "editAeropuertoOrigen", vuelo.idAeropuertoOrigen);
+                        cargarAeropuertosPorCiudad(vuelo.idCiudadDestino, "editAeropuertoDestino", vuelo.idAeropuertoDestino);
+                    }, 150);
+
+                    // 🧠 Mostrar info útil del vuelo usando los selects ya llenos
+                    setTimeout(() => {
+                        const ciudadOrigen = document.getElementById("editCiudadOrigen");
+                        const ciudadDestino = document.getElementById("editCiudadDestino");
+                        const aeropuertoOrigen = document.getElementById("editAeropuertoOrigen");
+                        const aeropuertoDestino = document.getElementById("editAeropuertoDestino");
+                        const aerolinea = document.getElementById("editAerolinea");
+
+                        const getText = (select, id) => {
+                            const opt = [...select.options].find(o => o.value === String(id));
+                            return opt ? opt.text : "(no encontrado)";
+                        };
+
+                        console.log("📦 INFO DEL VUELO:");
+                        console.log(`🌆 Ciudad Origen: ID ${vuelo.idCiudadOrigen}, Nombre: ${getText(ciudadOrigen, vuelo.idCiudadOrigen)}`);
+                        console.log(`🌆 Ciudad Destino: ID ${vuelo.idCiudadDestino}, Nombre: ${getText(ciudadDestino, vuelo.idCiudadDestino)}`);
+                        console.log(`🛫 Aeropuerto Origen: ID ${vuelo.idAeropuertoOrigen}, Nombre: ${getText(aeropuertoOrigen, vuelo.idAeropuertoOrigen)}`);
+                        console.log(`🛬 Aeropuerto Destino: ID ${vuelo.idAeropuertoDestino}, Nombre: ${getText(aeropuertoDestino, vuelo.idAeropuertoDestino)}`);
+                        console.log(`🏢 Aerolínea: ID ${vuelo.idAerolinea}, Nombre: ${getText(aerolinea, vuelo.idAerolinea)}`);
+                    }, 400);
+
+                    // Estado visual
+                    const estadoTexto = document.getElementById("estadoTexto");
+                    estadoTexto.textContent = vuelo.estado;
+
+                    const estadoCirculo = document.getElementById("estadoCirculo");
+                    estadoCirculo.className = "me-2 rounded-circle d-inline-block";
+                    estadoCirculo.style.backgroundColor =
+                        vuelo.estado === "Disponible" ? "green" :
+                        vuelo.estado === "Cancelado" ? "red" : "gray";
+
+                    // Controles y botones según estado
+                    setEdicionActiva(editable);
+                    document.getElementById("btnAccionVuelo").style.display = !editable ? "inline-block" : "none";
+                    document.getElementById("btnDisponibilizarVuelo").style.display = editable ? "inline-block" : "none";
+                    document.getElementById("btnGuardarCambios").style.display = editable ? "inline-block" : "none";
+
+                    // Mostrar modal
+                    new bootstrap.Modal(document.getElementById("modalEditarVuelo")).show();
+                })
+                .catch(error => {
+                    console.error("❌ Error al abrir modal:", error);
+                    alert("❌ Error al cargar los detalles del vuelo.");
+                });
+        }
+
+        function cargarAeropuertosPorCiudad(idCiudad, idSelect, idAeropuertoSeleccionado) {
+            if (!idCiudad) return;
+
+            fetch(`/Admin/ObtenerAeropuertosPorCiudad?idCiudad=${idCiudad}`)
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById(idSelect);
+                    select.innerHTML = '<option value="">Seleccione un aeropuerto</option>';
+
+                    data.forEach(a => {
+                        const opt = document.createElement("option");
+                        opt.value = a.idAeropuerto;
+                        opt.text = `${a.nombre}${a.nombreCiudad ? ' - ' + a.nombreCiudad : ''}`;
+                        select.appendChild(opt);
+                    });
+
+                    if (idAeropuertoSeleccionado) {
+                        select.value = String(idAeropuertoSeleccionado);
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Error al cargar aeropuertos por ciudad:", err);
+                });
+        }
+
+        function cargarAerolineas(idAerolineaSeleccionada) {
+            fetch("/Admin/ObtenerAerolineas")
+                .then(res => res.json())
+                .then(aerolineas => {
+                    const sel = document.getElementById("editAerolinea");
+                    sel.innerHTML = '<option value="">Seleccione una aerolínea</option>';
+                    aerolineas.forEach(a => {
+                        console.log("🛫 Aerolínea cargada:", a.idAerolinea, a.nombre);
+                        const opt = document.createElement("option");
+                        opt.value = String(a.idAerolinea);
+                        opt.text = a.nombre;
+                        sel.appendChild(opt);
+                    });
+                    if (idAerolineaSeleccionada !== null) sel.value = String(idAerolineaSeleccionada);
+                });
+        }
+
+        function cargarCiudades(idCiudadOrigen, idCiudadDestino) {
+            fetch("/Admin/ObtenerCiudades")
+                .then(res => res.json())
+                .then(ciudades => {
+                    const selOrigen = document.getElementById("editCiudadOrigen");
+                    const selDestino = document.getElementById("editCiudadDestino");
+
+                    selOrigen.innerHTML = '<option value="">Seleccione una ciudad</option>';
+                    selDestino.innerHTML = '<option value="">Seleccione una ciudad</option>';
+
+                    ciudades.forEach(c => {
+                        console.log("🌆 Ciudad cargada:", c.idCiudad, c.nombre);
+
+                        const opt1 = document.createElement("option");
+                        opt1.value = String(c.idCiudad);
+                        opt1.text = c.nombre;
+                        selOrigen.appendChild(opt1);
+
+                        const opt2 = document.createElement("option");
+                        opt2.value = String(c.idCiudad);
+                        opt2.text = c.nombre;
+                        selDestino.appendChild(opt2);
+                    });
+
+                    if (idCiudadOrigen !== null) selOrigen.value = String(idCiudadOrigen);
+                    if (idCiudadDestino !== null) selDestino.value = String(idCiudadDestino);
+                });
+        }
+
+        document.getElementById("editCiudadOrigen").addEventListener("change", function () {
+            const idCiudad = this.value;
+            cargarAeropuertosPorCiudad(idCiudad, "editAeropuertoOrigen");
+        });
+
+        document.getElementById("editCiudadDestino").addEventListener("change", function () {
+            const idCiudad = this.value;
+            cargarAeropuertosPorCiudad(idCiudad, "editAeropuertoDestino");
+        });
+
+        function setEdicionActiva(activa) {
+            const ids = [
+                "editCodigoVuelo",
+                "editAeropuertoOrigen",  // ✅ SÍ editable
+                "editAeropuertoDestino", // ✅ SÍ editable
+                "editFechaSalida", "editFechaLlegada",
+                "editCategoriaVuelo", "editPrecioBase",
+                "editAerolinea"
+            ];
+
+            // 🔒 Ciudades siempre deshabilitadas
+            document.getElementById("editCiudadOrigen").disabled = true;
+            document.getElementById("editCiudadDestino").disabled = true;
+
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = !activa;
+            });
+        }
+
+        document.getElementById("btnAccionVuelo")?.addEventListener("click", function () {
+            const idVuelo = document.getElementById("editIdVuelo").value;
+            if (confirm("¿Deseas cancelar este vuelo?")) {
+                fetch(`/Admin/CancelarVuelo?idVuelo=${idVuelo}`, { method: "POST" })
+                    .then(res => res.text())
+                    .then(msg => {
+                        alert("✅ " + msg);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditarVuelo")).hide();
+                        setTimeout(() => window.location.reload(), 1000);
+                    });
+            }
+        });
+
+        document.getElementById("btnDisponibilizarVuelo")?.addEventListener("click", function () {
+            const idVuelo = document.getElementById("editIdVuelo").value;
+            if (confirm("¿Deseas disponibilizar este vuelo nuevamente?")) {
+                fetch(`/Admin/DisponibilizarVuelo?idVuelo=${idVuelo}`, { method: "POST" })
+                    .then(res => res.text())
+                    .then(msg => {
+                        alert("✅ " + msg);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditarVuelo")).hide();
+                        setTimeout(() => window.location.reload(), 1000);
+                    });
+            }
+        });
+
+        document.getElementById("btnGuardarCambios")?.addEventListener("click", function () {
+            const vueloActualizado = {
+                IdVuelo: document.getElementById("editIdVuelo").value,
+                IdCiudadOrigen: document.getElementById("editCiudadOrigen").value,
+                IdAeropuertoOrigen: document.getElementById("editAeropuertoOrigen").value,
+                IdCiudadDestino: document.getElementById("editCiudadDestino").value,
+                IdAeropuertoDestino: document.getElementById("editAeropuertoDestino").value,
+                FechaSalida: document.getElementById("editFechaSalida").value,
+                FechaLlegada: document.getElementById("editFechaLlegada").value,
+                IdCategoriaVuelo: document.getElementById("editCategoriaVuelo").value,
+                PrecioBase: document.getElementById("editPrecioBase").value,
+                IdAerolinea: document.getElementById("editAerolinea").value
+            };
+
+            fetch(`/Admin/ActualizarVuelo`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(vueloActualizado)
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert("✅ " + msg);
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditarVuelo")).hide();
+                setTimeout(() => window.location.reload(), 1000);
+            })
+            .catch(error => {
+                console.error("❌ Error al guardar:", error);
+                alert("❌ No se pudo guardar el vuelo.");
+            });
+        });
+    </script>
+
+    <script>
+        const tabla = document.getElementById("tablaVuelos");
+        const ths = tabla.querySelectorAll("thead th");
+        const arrows = document.querySelectorAll(".arrow");
+        let ordenes = Array.from(ths).map(() => "none");
+        let paginaActual = 1;
+        let filasPorPagina = parseInt(document.getElementById("selectFilasPorPagina").value);
+
+        let todasFilas = Array.from(tabla.tBodies[0].rows);
+
+        function aplicarOrdenamiento() {
+            const criterios = ordenes
+                .map((orden, index) => ({ orden, index }))
+                .filter(o => o.orden !== "none");
+
+            if (criterios.length === 0) return todasFilas;
+
+            return [...todasFilas].sort((a, b) => {
+                for (let { orden, index } of criterios) {
+                    const valA = a.cells[index].innerText.trim();
+                    const valB = b.cells[index].innerText.trim();
+                    const numA = parseFloat(valA.replace(/[^0-9.-]+/g, ""));
+                    const numB = parseFloat(valB.replace(/[^0-9.-]+/g, ""));
+                    const esNumero = !isNaN(numA) && !isNaN(numB);
+                    let comp = esNumero ? numA - numB : valA.localeCompare(valB);
+                    if (comp !== 0) return orden === "asc" ? comp : -comp;
+                }
+                return 0;
+            });
+        }
+
+        function mostrarPagina() {
+            const filasOrdenadas = aplicarOrdenamiento();
+            const tbody = tabla.querySelector("tbody");
+            tbody.innerHTML = "";
+
+            const inicio = (paginaActual - 1) * filasPorPagina;
+            const fin = inicio + filasPorPagina;
+            const paginaFilas = filasOrdenadas.slice(inicio, fin);
+
+            paginaFilas.forEach(f => tbody.appendChild(f));
+            reiniciarEventosFilas();
+            generarPaginacion(filasOrdenadas.length);
+        }
+
+        function reiniciarEventosFilas() {
+            tabla.querySelectorAll("tbody tr").forEach(fila => {
+                fila.addEventListener("click", () => {
+                    const idVuelo = fila.getAttribute("data-id");
+                    if (idVuelo) abrirModalEdicion(idVuelo);
+                });
+            });
+        }
+
+        function generarPaginacion(totalFilas) {
+            const totalPaginas = Math.ceil(totalFilas / filasPorPagina);
+            const contenedor = document.getElementById("pagination");
+            contenedor.innerHTML = "";
+
+            const crearBoton = (pagina, texto, activo = false, deshabilitado = false) => {
+                const li = document.createElement("li");
+                li.className = "page-item" + (activo ? " active" : "") + (deshabilitado ? " disabled" : "");
+                const a = document.createElement("a");
+                a.className = "page-link";
+                a.href = "#";
+                a.innerText = texto;
+                a.onclick = e => {
+                    e.preventDefault();
+                    if (!deshabilitado) {
+                        paginaActual = pagina;
+                        mostrarPagina();
+                    }
+                };
+                li.appendChild(a);
+                return li;
+            };
+
+            contenedor.appendChild(crearBoton(1, "⏮", false, paginaActual === 1));
+            for (let i = 1; i <= totalPaginas; i++) {
+                contenedor.appendChild(crearBoton(i, i, paginaActual === i));
+            }
+            contenedor.appendChild(crearBoton(totalPaginas, "⏭", false, paginaActual === totalPaginas));
+        }
+
+        ths.forEach((th, i) => {
+            th.addEventListener("click", () => {
+                ordenes[i] = ordenes[i] === "none" ? "asc" :
+                             ordenes[i] === "asc" ? "desc" : "none";
+
+                arrows.forEach(a => a.className = "arrow");
+                ordenes.forEach((o, j) => {
+                    if (o !== "none") {
+                        document.querySelector(`.arrow[data-arrow='${j}']`)?.classList.add(o);
+                    }
+                });
+
+                paginaActual = 1;
+                mostrarPagina();
+            });
+        });
+
+        document.getElementById("selectFilasPorPagina").addEventListener("change", e => {
+            filasPorPagina = parseInt(e.target.value);
+            paginaActual = 1;
+            mostrarPagina();
+        });
+
+        // Inicializar al cargar
+        mostrarPagina();
+    </script>
+}

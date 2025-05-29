@@ -105,9 +105,9 @@ namespace Boletos_Avion.Controllers
         public IActionResult ChangeEmail()
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
+            int? monitorId = HttpContext.Session.GetInt32("MonitorId");
 
-            // Si no hay usuario autenticado, redirigir a la pantalla de autenticación
-            if (userId == null)
+            if (userId == null && monitorId == null)
             {
                 return RedirectToAction("Authentication", "Auth");
             }
@@ -116,37 +116,70 @@ namespace Boletos_Avion.Controllers
         }
 
         [HttpPost]
-        public JsonResult ChangeEmail([FromBody] EditProfileViewModel model)
+        public async Task<JsonResult> ChangeEmail([FromBody] EditProfileViewModel model)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
+            int? monitorId = HttpContext.Session.GetInt32("MonitorId");
+
+            if (userId == null && monitorId == null)
             {
                 return Json(new { success = false, message = "Sesión expirada. Inicia sesión nuevamente." });
             }
 
-            // Obtener la contraseña real de la BD
-            string storedPassword = _authService.GetUserPasswordById(userId.Value);
+            string storedPassword = "";
+            string currentEmail = "";
+            bool updated = false;
 
-            if (storedPassword != model.Contrasena)
+            if (userId != null)
             {
-                return Json(new { success = false, message = "Contraseña incorrecta." });
-            }
+                // 🔍 USUARIO NORMAL
+                storedPassword = _authService.GetUserPasswordById(userId.Value);
+                currentEmail = HttpContext.Session.GetString("UserEmail");
 
-            // Verifica que el nuevo correo no esté vacío
-            if (string.IsNullOrEmpty(model.Nombre))
+                if (storedPassword != model.Contrasena)
+                {
+                    return Json(new { success = false, message = "Contraseña incorrecta." });
+                }
+
+                if (string.IsNullOrEmpty(model.Nombre))
+                {
+                    return Json(new { success = false, message = "El correo no puede estar vacío." });
+                }
+
+                updated = _accountService.UpdateUserEmail(userId.Value, model.Nombre);
+
+                if (updated)
+                {
+                    HttpContext.Session.SetString("UserEmail", model.Nombre);
+                }
+            }
+            else if (monitorId != null)
             {
-                return Json(new { success = false, message = "El correo no puede estar vacío." });
-            }
+                // 🔍 MONITOR
+                storedPassword = HttpContext.Session.GetString("MonitorPassword");
+                currentEmail = HttpContext.Session.GetString("MonitorEmail");
 
-            // Actualizar el correo en la BD
-            bool updated = _accountService.UpdateUserEmail(userId.Value, model.Nombre);
+                if (storedPassword != model.Contrasena)
+                {
+                    return Json(new { success = false, message = "Contraseña incorrecta." });
+                }
+
+                if (string.IsNullOrEmpty(model.Nombre))
+                {
+                    return Json(new { success = false, message = "El correo no puede estar vacío." });
+                }
+
+                var monitorService = new MonitorService();
+                updated = await monitorService.ActualizarCorreoMonitorAsync(monitorId.Value, model.Nombre);
+
+                if (updated)
+                {
+                    HttpContext.Session.SetString("MonitorEmail", model.Nombre);
+                }
+            }
 
             if (updated)
             {
-                // 🔥 **Actualizar la sesión con el nuevo correo**
-                HttpContext.Session.SetString("UserEmail", model.Nombre);
-
-                // 🔥 **Enviar correo de confirmación usando la misma lógica existente**
                 bool emailSent = SendEmailChangeConfirmation(model.Nombre);
                 if (!emailSent)
                 {
@@ -155,11 +188,10 @@ namespace Boletos_Avion.Controllers
 
                 return Json(new { success = true });
             }
-            else
-            {
-                return Json(new { success = false, message = "Error al actualizar el correo." });
-            }
+
+            return Json(new { success = false, message = "Error al actualizar el correo." });
         }
+
 
         // 🔹 Función que envía el correo de confirmación usando la misma lógica existente
         private bool SendEmailChangeConfirmation(string newEmail)
@@ -208,17 +240,29 @@ namespace Boletos_Avion.Controllers
         public JsonResult CheckPassword(string password)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
+            int? monitorId = HttpContext.Session.GetInt32("MonitorId");
+
+            if (userId == null && monitorId == null)
             {
                 return Json(new { valid = false });
             }
 
-            // Obtener la contraseña de la base de datos
-            string storedPassword = _authService.GetUserPasswordById(userId.Value);
-            bool isValid = storedPassword == password; // 🔥 Compara sin hashing (ajusta si usas hashing)
+            string storedPassword = "";
+
+            if (userId != null)
+            {
+                storedPassword = _authService.GetUserPasswordById(userId.Value);
+            }
+            else if (monitorId != null)
+            {
+                storedPassword = HttpContext.Session.GetString("MonitorPassword");
+            }
+
+            bool isValid = storedPassword == password;
 
             return Json(new { valid = isValid });
         }
+
 
         [HttpGet] // [HttpGet] para que coincida con la solicitud fetch
         public IActionResult ValidateVerificationCode(string code)
@@ -291,9 +335,13 @@ namespace Boletos_Avion.Controllers
         public IActionResult SendEmailVerification()
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
-            string userEmail = HttpContext.Session.GetString("UserEmail");
+            int? monitorId = HttpContext.Session.GetInt32("MonitorId");
 
-            if (userId == null || string.IsNullOrEmpty(userEmail))
+            string userEmail = userId != null
+                ? HttpContext.Session.GetString("UserEmail")
+                : HttpContext.Session.GetString("MonitorEmail");
+
+            if ((userId == null && monitorId == null) || string.IsNullOrEmpty(userEmail))
             {
                 return Json(new { success = false, message = "Usuario no autenticado." });
             }
@@ -312,6 +360,7 @@ namespace Boletos_Avion.Controllers
 
             return Json(new { success = false, message = "Error al enviar el código." });
         }
+
 
         [HttpPost]
         public IActionResult ClearVerificationCode()

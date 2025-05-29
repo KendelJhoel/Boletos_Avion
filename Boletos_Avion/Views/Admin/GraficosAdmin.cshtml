@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Gráficos y Reportes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center mb-4">Panel de Estadísticas</h2>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Reservas por País de Destino</h5>
+                <canvas id="graficoPaisDestino"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Top 10 Clientes con más Reservas</h5>
+                <canvas id="graficoTopClientes"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Comparativa de Ventas por Aerolínea</h5>
+                <canvas id="graficoVentasAerolinea"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12 mb-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Ocupación de Vuelos por Categoría</h5>
+            <canvas id="graficoOcupacionCategorias"></canvas>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        $(document).ready(function () {
+           
+            fetch('/Admin/GraficoReservasPorPaisDestino')
+                .then(res => res.json())
+                .then(data => {
+                    const labels = data.map(x => x.pais);
+                    const values = data.map(x => x.total);
+                    new Chart(document.getElementById('graficoPaisDestino'), {
+                        type: 'bar',
+                        data: { labels: labels, datasets: [{ label: 'Reservas', data: values }] },
+                        options: { responsive: true }
+                    });
+                });
+
+            fetch('/Admin/GraficoTopClientes')
+                .then(res => res.json())
+                .then(data => {
+                    const labels = data.map(x => x.nombre);
+                    const values = data.map(x => x.total);
+                    new Chart(document.getElementById('graficoTopClientes'), {
+                        type: 'bar',
+                        data: { labels: labels, datasets: [{ label: 'Reservas', data: values }] },
+                        options: { indexAxis: 'y', responsive: true }
+                    });
+                });
+
+
+        fetch('/Admin/GraficoVentasPorAerolinea')
+            .then(res => res.json())
+            .then(data => {
+                const meses = [...new Set(data.flatMap(x => x.ventas.map(v => v.mes)))]; // Eje X: meses
+                const datasets = data.map(aerolinea => ({
+                    label: aerolinea.aerolinea,
+                    data: meses.map(mes => {
+                        const venta = aerolinea.ventas.find(v => v.mes === mes);
+                        return venta ? venta.total : 0;
+                    }),
+                    fill: false,
+                    borderWidth: 2,
+                    tension: 0.3
+                }));
+
+                new Chart(document.getElementById('graficoVentasAerolinea'), {
+                    type: 'line',
+                    data: {
+                        labels: meses,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Comparativa de Ventas Mensuales por Aerolínea'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Mes' }
+                            },
+                            y: {
+                                title: { display: true, text: 'Monto Facturado (USD)' },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        fetch('/Admin/GraficoOcupacionPorCategoria')
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    console.error("Error del servidor:", data.message);
+                    return;
+                }
+
+                const codigosVuelo = [...new Set(data.map(x => x.codigoVuelo))];
+                const categorias = [...new Set(data.map(x => x.categoria))];
+
+                const datasets = categorias.map(cat => {
+                    return {
+                        label: cat,
+                        data: codigosVuelo.map(v => {
+                            const match = data.find(x => x.codigoVuelo === v && x.categoria === cat);
+                            return match ? match.reservados : 0;
+                        }),
+                        backgroundColor: getRandomColor()
+                    };
+                });
+
+                new Chart(document.getElementById('graficoOcupacionCategorias'), {
+                    type: 'bar',
+                    data: {
+                        labels: codigosVuelo,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Ocupación por Categoría de Vuelo'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: { display: true, text: 'Código de Vuelo' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                stacked: true,
+                                title: { display: true, text: 'Reservas Realizadas' }
+                            }
+                        }
+                    }
+                });
+
+                function getRandomColor() {
+                    return 'hsl(' + Math.random() * 360 + ', 70%, 70%)';
+                }
+            });
+
+    </script>
+}

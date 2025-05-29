@@ -2,6 +2,8 @@
     const asientosBody = document.getElementById("asientos-body");
     const pagarBtn = document.getElementById("pagarBtn");
     const listaAsientosSeleccionados = document.getElementById("lista-asientos-seleccionados");
+    const idClienteSelect = document.getElementById("idCliente");
+    const esAgente = sessionStorage.getItem("esAgente") === "true";
     let seleccionados = [];
     let idVuelo = new URLSearchParams(window.location.search).get("idVuelo");
 
@@ -9,14 +11,21 @@
     const precioVuelo = parseFloat(document.getElementById("precio-vuelo").textContent) || 0;
 
     function actualizarTotal() {
-        let totalAsientos = seleccionados.reduce((acc, id) => {
-            let asientoElement = document.querySelector(`[data-id="${id}"]`);
-            return acc + (asientoElement ? parseFloat(asientoElement.dataset.precio) : 0);
-        }, 0);
+        const precioVuelo = parseFloat(document.getElementById("precio-vuelo").textContent) || 0;
+        let totalAdicional = 0;
 
-        let totalFinal = precioVuelo + totalAsientos; // ✅ Sumar el precio del vuelo al total
+        seleccionados.forEach(id => {
+            let asientoElement = document.querySelector(`[data-id="${id}"]`);
+            if (asientoElement) {
+                totalAdicional += parseFloat(asientoElement.dataset.precio) || 0;
+            }
+        });
+
+        const totalVuelo = precioVuelo * seleccionados.length;
+        const totalFinal = totalVuelo + totalAdicional;
+
         document.getElementById("total").textContent = totalFinal.toFixed(2);
-        verificarBotonPagar();
+        document.getElementById("multiplicador").textContent = seleccionados.length > 0 ? ` x${seleccionados.length}` : "";
     }
 
     function actualizarListaAsientos() {
@@ -24,8 +33,13 @@
         seleccionados.forEach(id => {
             let asientoElement = document.querySelector(`[data-id="${id}"]`);
             if (asientoElement) {
+                let numero = asientoElement.textContent;
+                let precio = asientoElement.dataset.precio;
+                let idCategoria = asientoElement.dataset.categoria;
+                let nombreCategoria = asientoElement.dataset.nombrecategoria;
+
                 let li = document.createElement("li");
-                li.textContent = `Asiento ${asientoElement.textContent}: $${asientoElement.dataset.precio}`;
+                li.innerHTML = `Asiento ${numero}: $${parseFloat(precio).toFixed(2)} - <span class="category-label-${idCategoria}">${nombreCategoria}</span>`;
                 listaAsientosSeleccionados.appendChild(li);
             }
         });
@@ -79,15 +93,21 @@
                 let seatCell = document.createElement("td");
                 seatCell.classList.add("seat");
 
-                // ✅ Asegurar que siempre tenga una categoría
+                // ✅ Agregar clase visual según categoría
                 let categoriaClase = asiento.idCategoria ? `category-${asiento.idCategoria}` : "category-default";
                 seatCell.classList.add(categoriaClase);
 
+                // ✅ Añadir todos los datos necesarios como atributos personalizados
                 seatCell.dataset.id = asiento.idVueloAsiento;
                 seatCell.dataset.precio = asiento.precio;
+                seatCell.dataset.categoria = asiento.idCategoria;
+                seatCell.dataset.nombrecategoria = asiento.nombreCategoria;
                 seatCell.textContent = asiento.numero;
+
+                // ✅ Imagen de fondo del asiento
                 seatCell.style.backgroundImage = "url('/images/asiento.png')";
 
+                // 🔴 Marcar ocupados
                 if (asiento.estado === "Reservado") {
                     seatCell.classList.add("occupied");
                 }
@@ -106,6 +126,9 @@
 
                     actualizarTotal();
                     actualizarListaAsientos();
+                    verificarBotonPagar(); // 🔥 Agrega esta línea
+                    console.log("Asientos seleccionados:", seleccionados);
+
                 });
 
                 row.appendChild(seatCell);
@@ -125,7 +148,6 @@
             actualizarTotal();
         })
         .catch(error => console.error("❌ Error al cargar los asientos:", error));
-
     // ✅ Evento del botón "Pagar"
     pagarBtn.addEventListener("click", () => {
         if (seleccionados.length === 0) {
@@ -133,19 +155,74 @@
             return;
         }
 
+        const esAgente = sessionStorage.getItem("esAgente") === "true";
+        const esRegreso = sessionStorage.getItem("esRegreso") === "true";
+        let idCliente = null;
+
+        // Validación para agentes
+        if (esAgente) {
+            idCliente = esRegreso ?
+                sessionStorage.getItem("idClienteRegreso") :
+                (idClienteSelect ? idClienteSelect.value : null);
+
+            if (!idCliente) {
+                alert("Debes seleccionar un cliente para continuar.");
+                return;
+            }
+        }
+        const asientosParam = seleccionados.join(",");
+        let url = `/Pagos/Pago?idVuelo=${idVuelo}&asientos=${encodeURIComponent(asientosParam)}&esRegreso=${esRegreso}`;
+
+        // Agregar idCliente si es necesario
+        if (idCliente) {
+            url += `&idCliente=${idCliente}`;
+        }
+
+        console.log("URL de redirección:", url);
+
         fetch('/Auth/CheckSession')
             .then(response => response.json())
             .then(data => {
                 if (!data.authenticated) {
-                    window.location.href = `/Auth/Authentication?redirectUrl=${encodeURIComponent(window.location.href)}`;
-                } else {
-                    let asientosIds = seleccionados.join(",");
-                    window.location.href = `/Pagos/Pago?idVuelo=${idVuelo}&asientos=${asientosIds}`;
+                    window.location.href = `/Auth/Authentication?redirectUrl=${encodeURIComponent(url)}`;
+                    return;
+                }
+
+                // Lógica para AGENTES
+                if (esAgente) {
+                    const idCliente = document.getElementById("idCliente")?.value ||
+                        sessionStorage.getItem("idClienteRegreso");
+
+                    if (!idCliente) {
+                        alert("Debes seleccionar un cliente para continuar.");
+                        return;
+                    }
+
+                    url += `&idCliente=${idCliente}`;
+                    window.location.href = url;
+                }
+                // Lógica para CLIENTES NORMALES
+                else {
+                    fetch('/Auth/GetLoggedInUserId')
+                        .then(response => response.json())
+                        .then(userData => {
+                            if (userData.id) {
+                                url += `&idCliente=${userData.id}`;
+                                window.location.href = url;
+                            } else {
+                                throw new Error("No se pudo obtener ID de usuario");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("Error al obtener tus datos. Intenta nuevamente.");
+                        });
                 }
             })
             .catch(error => {
-                console.error("❌ Error al verificar sesión:", error);
-                alert("Error al verificar sesión. Intenta de nuevo.");
+                console.error("Error al verificar sesión:", error);
+                alert("Error al verificar sesión");
             });
-    });
+});
+
 });

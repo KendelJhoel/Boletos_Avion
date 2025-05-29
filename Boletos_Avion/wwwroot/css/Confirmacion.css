@@ -1,0 +1,83 @@
+﻿/* 🔹 Contenedor principal */
+.container.text-center.mt-5 {
+    padding: 30px;
+}
+
+/* ✅ Estilo para título */
+.container h2.text-success {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* ✅ Estilo para alerta de reserva */
+.alert.alert-success {
+    font-size: 1.2rem;
+    padding: 25px;
+    border-radius: 10px;
+}
+
+/* ✅ Botón principal (Volver al Inicio) */
+.container .btn-primary {
+    background-color: #496c90;
+    border: none;
+    padding: 10px 25px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .container .btn-primary:hover {
+        background-color: #2f4f75;
+        transform: scale(1.03);
+    }
+
+/* 🧾 Estilo personalizado para botón "No, gracias" */
+.btn-no {
+    background-color: #dc3545;
+    color: white;
+    font-weight: bold;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .btn-no:hover {
+        background-color: #b02a37;
+        transform: scale(1.03);
+    }
+
+/* ✨ Estilo para el modal */
+#modalVueloVuelta .modal-content {
+    border-radius: 15px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+#modalVueloVuelta .modal-header {
+    border-bottom: none;
+}
+
+#modalVueloVuelta .modal-footer {
+    border-top: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    #modalVueloVuelta .modal-footer {
+        flex-direction: column;
+    }
+
+    .btn-no,
+    #btnSi {
+        width: 100%;
+    }
+}
+
+p.mt-3 {
+    text-transform: capitalize;
+}

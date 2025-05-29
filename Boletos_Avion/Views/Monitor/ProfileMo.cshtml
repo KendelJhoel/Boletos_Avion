@@ -1,0 +1,150 @@
+﻿@model Boletos_Avion.Models.EditProfileViewModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Profile.css" asp-append-version="true" />
+}
+
+<div class="profile-container">
+
+    <br />
+
+    @if (TempData["UpdateSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["UpdateSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <div class="profile-header">
+        <h1 id="userNameDisplay">@Model.Nombre</h1>
+
+        <div>
+            <p id="userEmailDisplay" class="d-inline">@ViewContext.HttpContext.Session.GetString("MonitorEmail")</p>
+            <a href="#" id="editEmailBtn" class="ms-2" data-bs-toggle="modal" data-bs-target="#confirmEmailChangeModal">
+                <i class="fa fa-edit"></i>
+            </a>
+        </div>
+
+        <button id="toggleEditBtn" class="btn btn-link text-white">
+            <i id="editIcon" class="fa fa-pencil"></i>
+        </button>
+    </div>
+    <hr />
+    <div class="profile-content">
+        <form id="editProfileForm" asp-controller="Monitor" asp-action="EditMonitorProfile" method="post">
+            @Html.HiddenFor(model => model.IdUsuario)
+            <table class="table table-bordered profile-table">
+                <tr>
+                    <th>Nombre</th>
+                    <td>
+                        @Html.TextBoxFor(model => model.Nombre, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+                <tr>
+                    <th>Correo</th>
+                    <td>
+                        <input type="text" class="form-control" readonly value="@ViewContext.HttpContext.Session.GetString("MonitorEmail")" />
+                    </td>
+                </tr>
+                <tr>
+                    <th>Documento de Identidad</th>
+                    <small id="duiError" class="text-danger" style="display: none;"></small>
+                    <br />
+                    <td>
+                        @Html.TextBoxFor(model => model.DocumentoIdentidad, new { @class = "form-control", @readonly = "readonly" })
+                    </td>
+                </tr>
+                <tr>
+                    <th>Contraseña</th>
+                    <td>
+                        <div class="input-group">
+                            @Html.TextBoxFor(model => model.Contrasena, new { @class = "form-control", type = "password", @readonly = "readonly", id = "passwordField" })
+                            <button type="button" class="btn btn-outline-secondary" id="togglePasswordVisibility">
+                                <i class="fa fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+
+                        <div class="progress mt-2" id="passwordStrength" style="display: none;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <ul class="list-unstyled mt-2" id="passwordRequirements" style="display: none;">
+                            <li id="length" class="text-danger">Mínimo 8 caracteres</li>
+                            <li id="uppercase" class="text-danger">Al menos 1 letra mayúscula</li>
+                            <li id="lowercase" class="text-danger">Al menos 1 letra minúscula</li>
+                            <li id="number" class="text-danger">Al menos 1 número</li>
+                            <li id="specialChar" class="text-danger">Al menos 1 carácter especial</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+            <div class="text-center">
+                <button type="submit" id="saveChangesBtn" class="btn btn-success" disabled>Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmEmailChangeModal" tabindex="-1" aria-labelledby="confirmEmailChangeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmEmailChangeLabel">Confirmar cambio de correo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas cambiar tu correo electrónico?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="confirmEmailChangeBtn" class="btn btn-primary">Sí, cambiar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="discardChangesModal" tabindex="-1" aria-labelledby="discardChangesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="discardChangesModalLabel">Descartar cambios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                ¿Desea descartar los cambios realizados?
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="modalCancelBtn" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                <button type="button" id="modalConfirmBtn" class="btn btn-danger">Sí, descartar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmPasswordModal" tabindex="-1" aria-labelledby="confirmPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmPasswordModalLabel">Confirmar cambios</h5>
+            </div>
+            <div class="modal-body">
+                <p>Para guardar los cambios, ingrese su contraseña actual:</p>
+                <input type="password" class="form-control" id="confirmPasswordInput" />
+                <small id="confirmPasswordError" class="text-danger"></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="confirmSaveChanges">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/profilemo.js" asp-append-version="true"></script>
+}
+

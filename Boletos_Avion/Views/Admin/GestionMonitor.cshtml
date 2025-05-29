@@ -1,0 +1,298 @@
+﻿@model List<Boletos_Avion.Models.Monitor>
+@{
+    ViewData["Title"] = "Gestión de Monitores";
+    var aerolineas = ViewData["Aerolineas"] as List<Boletos_Avion.Models.Aerolinea>;
+}
+
+<link rel="stylesheet" href="~/css/gestionmonitor.css" asp-append-version="true" />
+
+<h2 class="mb-4">Gestión de Monitores</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-times-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarMonitor">Agregar Monitor</button>
+</div>
+
+<table id="tablaMonitores" class="table table-hover table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Documento</th>
+            <th>Aerolínea</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var monitor in Model)
+        {
+            <tr class="fila-monitor" data-id="@monitor.IdMonitor"
+                data-nombre="@monitor.Nombre"
+                data-correo="@monitor.Correo"
+                data-dui="@monitor.DocumentoIdentidad"
+                data-idaerolinea="@monitor.IdAerolinea">
+                <td>@monitor.Nombre</td>
+                <td>@monitor.Correo</td>
+                <td>@monitor.DocumentoIdentidad</td>
+                <td>@monitor.NombreAerolinea</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="modal fade" id="modalAgregarMonitor" tabindex="-1" aria-labelledby="modalMonitorLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Monitor" asp-action="Create" method="post" autocomplete="off">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMonitorLabel">Agregar Monitor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="Nombre" class="form-label">Nombre</label>
+                        <input name="Nombre" class="form-control" oninput="validateNombre(this)" required />
+                        <div id="nombreError" class="form-text text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="correoInput" class="form-label">Correo</label>
+                        <input type="email" name="Correo" id="correoInput" class="form-control" required onblur="validateMonitorEmail()" />
+                        <div id="correoError" class="form-text text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="DocumentoIdentidad" class="form-label">Documento Identidad</label>
+                        <input type="text" name="DocumentoIdentidad" class="form-control" id="duiInput" oninput="formatDUI(this)" onblur="validateMonitorDUI()" required />
+                        <div id="documentoError" class="form-text text-danger"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Contrasena" class="form-label">Contraseña</label>
+                        <input type="password" name="Contrasena" class="form-control" required />
+                        <small class="form-text text-muted">Debe ingresar la contraseña única para administradores.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="IdAerolinea" class="form-label">Aerolínea</label>
+                        <select name="IdAerolinea" class="form-select" required>
+                            <option value="">Seleccione una aerolínea</option>
+                            @foreach (var aerolinea in aerolineas)
+                            {
+                                <option value="@aerolinea.IdAerolinea">@aerolinea.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMonitor" tabindex="-1" aria-labelledby="modalMonitorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Monitor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarMonitor">
+                    <input type="hidden" id="idMonitor" />
+                    <div class="mb-3">
+                        <label>Correo</label>
+                        <p id="correoMonitor" class="form-control-plaintext text-muted" style="margin-bottom: 0;"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label>Nombre</label>
+                        <input type="text" class="form-control" id="nombreMonitor" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label>DUI</label>
+                        <input type="text" class="form-control" id="duiMonitor" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label>Aerolínea</label>
+                        <select id="aerolineaMonitor" class="form-select" disabled>
+                            @foreach (var aero in aerolineas)
+                            {
+                                <option value="@aero.IdAerolinea">@aero.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="grupoAdminPass">
+                        <label>Contraseña Administrador</label>
+                        <input type="password" class="form-control" id="adminPass" placeholder="Ingrese ADMIN2025" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <div>
+                    <button type="button" id="btnToggleEditar" class="btn btn-outline-primary">
+                        <span id="estadoEdicionTexto">Editar</span>
+                    </button>
+                    <button type="button" id="btnGuardarCambios" class="btn btn-success ms-2" disabled style="display:none;">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let modoEdicion = false;
+        let cambiosPendientes = false;
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.querySelectorAll('.fila-monitor').forEach(fila => {
+                fila.addEventListener('click', () => {
+                    const id = fila.dataset.id;
+                    const nombre = fila.dataset.nombre;
+                    const correo = fila.dataset.correo;
+                    const dui = fila.dataset.dui;
+                    const idAero = fila.dataset.idaerolinea;
+
+                    document.getElementById('idMonitor').value = id;
+                    document.getElementById('correoMonitor').textContent = correo;
+                    document.getElementById('nombreMonitor').value = nombre;
+                    document.getElementById('duiMonitor').value = dui;
+                    document.getElementById('aerolineaMonitor').value = idAero;
+
+                    salirModoEdicion(true);
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalMonitor'));
+                    modal.show();
+                });
+            });
+
+            document.getElementById('btnToggleEditar').addEventListener('click', () => {
+                if (!modoEdicion) {
+                    entrarModoEdicion();
+                } else {
+                    if (cambiosPendientes) {
+                        if (!confirm("Hay cambios sin guardar. ¿Deseas salir sin guardar?")) return;
+                    }
+                    salirModoEdicion();
+                }
+            });
+
+            ['nombreMonitor', 'duiMonitor', 'aerolineaMonitor'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    if (modoEdicion) {
+                        cambiosPendientes = true;
+                        verificarCambios();
+                    }
+                });
+            });
+
+            document.getElementById('duiMonitor').addEventListener('input', function () {
+                let value = this.value.replace(/[^0-9]/g, '');
+                if (value.length >= 9) {
+                    this.value = value.slice(0, 8) + '-' + value.slice(8, 9);
+                } else {
+                    this.value = value;
+                }
+            });
+
+            document.getElementById('modalMonitor').addEventListener('hide.bs.modal', function (e) {
+                if (modoEdicion && cambiosPendientes) {
+                    if (!confirm("Hay cambios sin guardar. ¿Deseas salir sin guardar?")) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            document.getElementById('btnGuardarCambios').addEventListener('click', async () => {
+                const pass = document.getElementById('adminPass').value.trim();
+                if (pass !== "ADMIN2025") {
+                    alert("❌ Contraseña de administrador incorrecta.");
+                    return;
+                }
+
+                const id = document.getElementById('idMonitor').value;
+                const nombre = document.getElementById('nombreMonitor').value.trim();
+                const dui = document.getElementById('duiMonitor').value.trim();
+                const idAerolinea = document.getElementById('aerolineaMonitor').value;
+
+                const response = await fetch('/Monitor/EditarDesdeAdmin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        IdMonitor: id,
+                        Nombre: nombre,
+                        DocumentoIdentidad: dui,
+                        IdAerolinea: parseInt(idAerolinea)
+                    })
+                });
+
+                if (response.ok) {
+                    alert("✅ Monitor actualizado correctamente.");
+                    location.reload();
+                } else {
+                    alert("❌ Error al guardar los cambios.");
+                }
+            });
+
+            function entrarModoEdicion() {
+                modoEdicion = true;
+                cambiosPendientes = false;
+                document.getElementById('nombreMonitor').removeAttribute('readonly');
+                document.getElementById('duiMonitor').removeAttribute('readonly');
+                document.getElementById('aerolineaMonitor').removeAttribute('disabled');
+                document.getElementById('grupoAdminPass').classList.remove('d-none');
+                document.getElementById('btnGuardarCambios').style.display = 'inline-block';
+                document.getElementById('estadoEdicionTexto').textContent = 'Lectura';
+            }
+
+            function salirModoEdicion(forzar = false) {
+                if (!forzar && cambiosPendientes) {
+                    if (!confirm("¿Estás segura de salir sin guardar los cambios?")) return;
+                }
+                modoEdicion = false;
+                cambiosPendientes = false;
+                document.getElementById('nombreMonitor').setAttribute('readonly', true);
+                document.getElementById('duiMonitor').setAttribute('readonly', true);
+                document.getElementById('aerolineaMonitor').setAttribute('disabled', true);
+                document.getElementById('grupoAdminPass').classList.add('d-none');
+                document.getElementById('btnGuardarCambios').style.display = 'none';
+                document.getElementById('btnGuardarCambios').disabled = true;
+                document.getElementById('adminPass').value = '';
+                document.getElementById('estadoEdicionTexto').textContent = 'Editar';
+            }
+
+            function verificarCambios() {
+                const original = document.querySelector(`tr[data-id="${document.getElementById('idMonitor').value}"]`);
+                const originalNombre = original.dataset.nombre;
+                const originalDui = original.dataset.dui;
+                const originalAero = original.dataset.idaerolinea;
+
+                const actualNombre = document.getElementById('nombreMonitor').value;
+                const actualDui = document.getElementById('duiMonitor').value;
+                const actualAero = document.getElementById('aerolineaMonitor').value;
+
+                const huboCambios = actualNombre !== originalNombre || actualDui !== originalDui || actualAero !== originalAero;
+
+                document.getElementById('btnGuardarCambios').disabled = !huboCambios;
+            }
+        });
+    </script>
+}
+
+

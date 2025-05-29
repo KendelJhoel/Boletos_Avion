@@ -1,0 +1,222 @@
+﻿@model DetalleReservaViewModel
+
+@{
+    ViewData["Title"] = "Detalle de la Reserva";
+}
+
+<link rel="stylesheet" href="~/css/Detallereserva.css" asp-append-version="true" />
+
+<div class="container mt-4">
+    <h2 class="mb-4">Detalle de la Reserva</h2>
+
+    <div class="row">
+        <!-- Info de la reserva -->
+        <div class="col-md-6">
+            <div class="card card-detalle">
+                <div class="card-header card-header-reserva">Reserva</div>
+                <div class="card-body">
+                    <p><strong>Número de Reserva:</strong> @Model.Reserva.NumeroReserva</p>
+                    <p><strong>Estado:</strong> @Model.Reserva.Estado</p>
+                    <p><strong>Total Pagado:</strong> $@Model.Reserva.Total</p>
+                    <p><strong>Fecha de Reserva:</strong> @Model.Reserva.FechaReserva.ToShortDateString()</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del vuelo -->
+        <div class="card card-detalle">
+            <div class="card-header card-header-vuelo">Información del Vuelo</div>
+            <div class="card-body row">
+                <div class="col-md-6">
+                    <h5>🛫 Origen</h5>
+                    <p><strong>Ciudad:</strong> @Model.Vuelo.CiudadOrigen</p>
+                    <p><strong>Aeropuerto:</strong> @Model.Vuelo.NombreAeropuertoOrigen</p>
+                    <p><strong>País:</strong> @Model.Vuelo.PaisOrigen</p>
+                    <img src="@($"https://flagcdn.com/w320/{Model.Vuelo.CodigoPaisOrigen?.ToLower()}.png")"
+                         alt="Bandera @Model.Vuelo.PaisOrigen"
+                         class="img-fluid mt-2" />
+                    <p><strong>Fecha de salida:</strong> @Model.Vuelo.FechaSalida.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>🛬 Destino</h5>
+                    <p><strong>Ciudad:</strong> @Model.Vuelo.CiudadDestino</p>
+                    <p><strong>Aeropuerto:</strong> @Model.Vuelo.NombreAeropuertoDestino</p>
+                    <p><strong>País:</strong> @Model.Vuelo.PaisDestino</p>
+                    <img src="@($"https://flagcdn.com/w320/{Model.Vuelo.CodigoPaisDestino?.ToLower()}.png")"
+                         alt="Bandera @Model.Vuelo.PaisDestino"
+                         class="img-fluid mt-2" />
+                    <p><strong>Fecha de llegada:</strong> @Model.Vuelo.FechaLlegada.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+            </div>
+            <div class="card-footer">
+                <strong>✈ Aerolínea:</strong> @Model.Vuelo.NombreAerolinea
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <a href="@Url.Action("Detalle", "Vuelos", new { id = Model.Vuelo.IdVuelo })" class="btn-detalle-vuelo">
+            ✈ Ver Detalle Completo del Vuelo
+        </a>
+    </div>
+
+
+    <!-- Asientos -->
+    <div class="card card-detalle">
+        <div class="card-header card-header-asientos">Asientos</div>
+        <div class="card-body">
+            @if (Model.Asientos != null && Model.Asientos.Any())
+            {
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Número de Asiento</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.Asientos.Count; i++)
+                        {
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>@Model.Asientos[i].Numero</td>
+                                <td>@Model.Asientos[i].NombreCategoria</td>
+                                <td>@Model.Asientos[i].Estado</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h5 class="alert-heading">No hay asientos reservados</h5>
+                    <p>Esta reserva no tiene asientos asignados aún.</p>
+                    <hr>
+                    <p class="mb-0">Para reservar asientos, regresa al listado de vuelos y elige uno disponible.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Botón cancelar reserva -->
+    @if (Model.Reserva.Estado == "Activo")
+    {
+        <div class="text-end">
+            <button class="btn btn-danger" onclick="abrirModalCancelar()">Cancelar Reserva</button>
+        </div>
+    }
+</div>
+
+
+<!-- Modal -->
+<div id="modalCancelar" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Cancelación</h5>
+                <button type="button" class="btn-close" onclick="cerrarModalCancelar()"></button>
+            </div>
+            <div class="mt-3">
+                <h6><strong>Política de Cancelación:</strong></h6>
+                <ul>
+                    <li><strong>Más de 15 días antes del vuelo:</strong> Reembolso del 50% del total pagado.</li>
+                    <li><strong>Entre 7 y 15 días antes del vuelo:</strong> No hay reembolso, pero puedes cancelar.</li>
+                    <li><strong>Menos de 7 días antes del vuelo:</strong> No es posible cancelar.</li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <div id="mensajeReembolso" class="alert alert-info mt-3" style="display:none;"></div>
+                <p>Ingresa tu contraseña para cancelar la reserva:</p>
+                <input type="password" id="contrasenaInput" class="form-control" placeholder="Contraseña" />
+                <p id="mensajeError" class="text-danger mt-2"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="cerrarModalCancelar()">Cerrar</button>
+                <button class="btn btn-danger" onclick="confirmarCancelacion()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resultado de Cancelación -->
+<div class="modal fade" id="modalResultadoCancelacion" tabindex="-1" aria-labelledby="tituloResultadoCancelacion" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-success">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="tituloResultadoCancelacion">Reserva Cancelada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="mensajeResultadoCancelacion">
+                <!-- mensaje dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal" onclick="location.reload()">Aceptar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function abrirModalCancelar() {
+        const modal = document.getElementById("modalCancelar");
+        modal.style.display = "block";
+    }
+
+    function cerrarModalCancelar() {
+        const modal = document.getElementById("modalCancelar");
+        modal.style.display = "none";
+        document.getElementById("mensajeError").innerText = "";
+        document.getElementById("contrasenaInput").value = "";
+    }
+
+    async function confirmarCancelacion() {
+        const contrasena = document.getElementById("contrasenaInput").value;
+        const reservaId = @Model.Reserva.IdReserva;
+
+        try {
+            const response = await fetch(`/Account/CheckPassword?password=${encodeURIComponent(contrasena)}`);
+            const result = await response.json();
+
+            if (!result.valid) {
+                document.getElementById("mensajeError").innerText = "Contraseña incorrecta.";
+                return;
+            }
+
+            const cancelar = await fetch(`/Reserva/CancelarReserva?id=${reservaId}`, {
+                method: "POST"
+            });
+
+            const responseJson = await cancelar.json();
+
+            if (responseJson.success) {
+        const mensajeHTML = `
+            <p>✅ <strong>Reserva cancelada correctamente.</strong></p>
+            <p>${responseJson.mensajeReembolso}</p>
+        `;
+
+        document.getElementById("mensajeResultadoCancelacion").innerHTML = mensajeHTML;
+        const modal = new bootstrap.Modal(document.getElementById("modalResultadoCancelacion"));
+        modal.show();
+
+        cerrarModalCancelar(); // Cierra el modal de confirmación anterior
+    } else {
+        const mensajeHTML = `
+            <p>❌ <strong>Error al cancelar la reserva.</strong></p>
+            <p>Intenta nuevamente más tarde.</p>
+        `;
+
+        document.getElementById("mensajeResultadoCancelacion").innerHTML = mensajeHTML;
+        const modal = new bootstrap.Modal(document.getElementById("modalResultadoCancelacion"));
+        modal.show();
+    }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Cancelación no pemitida.");
+    }
+    }
+</script>

@@ -1,6 +1,705 @@
 ﻿@{
     ViewData["Title"] = "Panel de Administrador";
+    var aerolineas = ViewData["Aerolineas"] as List<Boletos_Avion.Models.Aerolinea>;
+    var ciudades = ViewData["Ciudades"] as List<Boletos_Avion.Models.Ciudad>;
+
+
 }
 
-<h2>Bienvenido, Administrador</h2>
-<p>Aquí puedes gestionar los usuarios y funciones del sistema.</p>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // 🟢 Validar campos y control del botón Crear Vuelo
+        const form = document.getElementById("formCrearVuelo");
+        const btnCrear = document.getElementById("btnCrearVuelo");
+        const inputs = form.querySelectorAll("input, select");
+        const msgAsientos = document.getElementById("msgAsientos");
+
+        function validarFormulario() {
+            const primera = parseInt(document.getElementById("CantidadPrimera").value || 0);
+            const business = parseInt(document.getElementById("CantidadBusiness").value || 0);
+            const turista = parseInt(document.getElementById("CantidadTurista").value || 0);
+            const total = primera + business + turista;
+
+            let camposLlenos = true;
+            inputs.forEach(input => {
+                if (input.hasAttribute("required") && !input.value) {
+                    camposLlenos = false;
+                }
+            });
+
+            if (total >= 80 && total <= 100 && camposLlenos) {
+                btnCrear.disabled = false;
+                msgAsientos.classList.remove("text-danger");
+                msgAsientos.classList.add("text-success");
+                msgAsientos.textContent = `Total asientos: ${total} ✅`;
+            } else {
+                btnCrear.disabled = true;
+                msgAsientos.classList.add("text-danger");
+                msgAsientos.classList.remove("text-success");
+                msgAsientos.textContent = "La suma total de asientos debe ser entre 80 y 100.";
+            }
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener("input", validarFormulario);
+            input.addEventListener("change", validarFormulario);
+        });
+
+        // 🟦 Validar campos de fechas y aeropuertos al crear vuelo
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const salida = new Date(document.querySelector('[name="FechaSalida"]').value);
+            const llegada = new Date(document.querySelector('[name="FechaLlegada"]').value);
+            const origen = document.getElementById('idAeropuertoOrigen').value;
+            const destino = document.getElementById('idAeropuertoDestino').value;
+            const precio = parseFloat(document.getElementById('precioBase').value);
+
+            if (!origen || !destino || origen === destino) {
+                Swal.fire("Error", "❌ El aeropuerto de origen y destino no pueden ser iguales ni estar vacíos.", "error");
+                return;
+            }
+
+            if (salida >= llegada) {
+                Swal.fire("Error", "❌ La fecha de llegada debe ser posterior a la de salida.", "error");
+                return;
+            }
+
+            if (isNaN(precio) || precio <= 0) {
+                Swal.fire("Error", "❌ El precio base debe ser mayor a cero.", "error");
+                return;
+            }
+
+            // 🟦 Enviar datos al servidor
+            const formData = new FormData(form);
+
+            fetch('/Vuelos/CrearVuelo', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '✈️ Vuelo creado',
+                            text: `Código de vuelo: ${data.codigo}`,
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire("Error", data.message || "Ocurrió un error al crear el vuelo.", "error");
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ Error al crear vuelo:", err);
+                    Swal.fire("Error", "Ocurrió un error inesperado.", "error");
+                });
+        });
+
+        // 🟦 Formatear DUI (por si se usa en otro lado)
+        function formatDUI(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value.length > 8) {
+                input.value = value.slice(0, 8) + '-' + value.slice(8, 9);
+            } else {
+                input.value = value;
+            }
+        }
+
+        // 🟦 Abrir modal de edición de vuelo
+        function abrirModalEdicion(idVuelo) {
+            fetch(`/Monitor/ObtenerVuelo?idVuelo=${idVuelo}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("No se pudo obtener el vuelo");
+                    return response.json();
+                })
+                .then(vuelo => {
+                    console.log("✅ Vuelo recibido:", vuelo);
+
+                    document.getElementById("editIdVuelo").value = vuelo.idVuelo;
+                    document.getElementById("editCodigoVuelo").value = vuelo.codigoVuelo;
+                    document.getElementById("editPrecioBase").value = vuelo.precioBase;
+                    document.getElementById("editFechaSalida").value = vuelo.fechaSalida;
+                    document.getElementById("editFechaLlegada").value = vuelo.fechaLlegada;
+
+                    document.getElementById("editCiudadOrigen").value = vuelo.idCiudadOrigen;
+                    setTimeout(() => cargarAeropuertos(vuelo.idCiudadOrigen, "editAeropuertoOrigen", vuelo.idAeropuertoOrigen), 200);
+
+                    document.getElementById("editCiudadDestino").value = vuelo.idCiudadDestino;
+                    setTimeout(() => cargarAeropuertos(vuelo.idCiudadDestino, "editAeropuertoDestino", vuelo.idAeropuertoDestino), 200);
+
+                    const selectCategoria = document.getElementById("editCategoriaVuelo");
+                    if (selectCategoria) {
+                        const option = [...selectCategoria.options].find(o => o.value === String(vuelo.idCategoriaVuelo));
+                        if (option) option.selected = true;
+                    }
+
+                    document.getElementById("estadoTexto").textContent = vuelo.estado;
+                    const estadoCirculo = document.getElementById("estadoCirculo");
+                    estadoCirculo.className = "me-2 rounded-circle d-inline-block";
+                    estadoCirculo.style.backgroundColor = vuelo.estado === "Disponible" ? "green"
+                        : vuelo.estado === "Cancelado" ? "red" : "gray";
+
+                    const btnAccion = document.getElementById("btnAccionVuelo");
+                    if (vuelo.estado !== "Cancelado") {
+                        btnAccion.style.display = "inline-block";
+                        btnAccion.className = "btn btn-danger";
+                        btnAccion.textContent = "Cancelar vuelo";
+                    } else {
+                        btnAccion.style.display = "none";
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById("modalEditarVuelo"));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error("❌ Error al abrir modal de edición:", error);
+                    alert("❌ Ocurrió un error al intentar cargar los detalles del vuelo.");
+                });
+        }
+
+        // 🟦 Cancelar vuelo desde el modal
+        document.getElementById("btnAccionVuelo").addEventListener("click", function () {
+            const idVuelo = document.getElementById("editIdVuelo").value;
+            if (confirm("¿Deseas cancelar este vuelo?")) {
+                fetch(`/Admin/CancelarVuelo?idVuelo=${idVuelo}`, { method: "POST" })
+                    .then(res => res.text())
+                    .then(msg => {
+                        alert("✅ " + msg);
+                        bootstrap.Modal.getOrCreateInstance(document.getElementById("modalEditarVuelo")).hide();
+                        setTimeout(() => window.location.reload(), 1000);
+                    })
+                    .catch(err => {
+                        console.error("❌ Error al cancelar vuelo:", err);
+                        alert("❌ Error al cancelar el vuelo.");
+                    });
+            }
+        });
+
+        // 🟦 Cargar aeropuertos dinámicamente por ciudad
+        function cargarAeropuertos(idCiudad, selectId, idSeleccionado = null) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = "<option disabled selected>Cargando aeropuertos...</option>";
+            select.disabled = true;
+
+            fetch(`/Monitor/GetAeropuertosPorCiudad?idCiudad=${idCiudad}`)
+                .then(response => response.json())
+                .then(data => {
+                    select.innerHTML = "";
+                    if (data.length === 0) {
+                        const option = document.createElement("option");
+                        option.text = "Sin aeropuertos disponibles";
+                        option.disabled = true;
+                        option.selected = true;
+                        select.appendChild(option);
+                        return;
+                    }
+
+                    data.forEach((aeropuerto, index) => {
+                        const option = document.createElement("option");
+                        option.value = aeropuerto.idAeropuerto;
+                        option.text = aeropuerto.nombre;
+                        if (idSeleccionado) {
+                            option.selected = aeropuerto.idAeropuerto === idSeleccionado;
+                        } else if (index === 0) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
+                    select.disabled = false;
+                    validarFormulario();
+                })
+                .catch(error => {
+                    console.error("❌ Error al cargar aeropuertos:", error);
+                    select.innerHTML = "<option disabled selected>Error al cargar</option>";
+                });
+        }
+    </script>
+}
+
+<link rel="stylesheet" href="~/css/dashboarAdmin.css" asp-append-version="true" />
+
+<h2 class="mb-4">Bienvenido, Administrador</h2>
+@if (TempData["ShowSuccessMessage"] != null && TempData["Success"] != null)
+{
+    <div id="monitorSuccessAlert" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+    </div>
+
+    <script>
+        setTimeout(() => {
+            window.location.href = '/Admin/GestionarMonitor';
+        }, 2000); // Espera 2 segundos y redirige
+    </script>
+}
+
+<p class="mb-4">Aquí puedes gestionar las entidades del sistema.</p>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <!-- Agregar Vuelo -->
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-plane-departure fa-3x mb-3 text-primary"></i>
+                <h5 class="card-title">Agregar Vuelo</h5>
+                <p class="card-text">Crea un nuevo vuelo y asígnalo a una aerolínea disponible.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearVueloModal">
+                    Ir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agregar Aerolínea -->
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-plane fa-3x mb-3 text-primary"></i>
+                <h5 class="card-title">Agregar Aerolínea</h5>
+                <p class="card-text">Registra una nueva aerolínea en el sistema.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAerolinea">Ir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agregar Aeropuerto -->
+    <div class="col">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <i class="fas fa-building fa-3x mb-3 text-success"></i>
+                <h5 class="card-title">Agregar Aeropuerto</h5>
+                <p class="card-text">Agrega un nuevo aeropuerto para futuras rutas.</p>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAeropuerto">Ir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar Monitor -->
+<div class="modal fade" id="modalMonitor" tabindex="-1" aria-labelledby="modalMonitorLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <input type="text" style="display:none">
+            <input type="password" style="display:none">
+
+            <form asp-controller="Monitor" asp-action="Create" method="post" id="registerForm" autocomplete="off">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMonitorLabel">Agregar Monitor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="Nombre" class="form-label">Nombre</label>
+                        <input name="Nombre" class="form-control" autocomplete="off" oninput="validateNombre(this)" required />
+                        <div id="nombreError" class="form-text text-danger"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="correoInput" class="form-label">Correo</label>
+                        <input type="email"
+                               name="Correo"
+                               id="correoInput"
+                               class="form-control"
+                               autocomplete="off"
+                               required
+                               onblur="validateMonitorEmail()" />
+                        <div id="correoError" class="form-text text-danger"></div>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="DocumentoIdentidad" class="form-label">Documento Identidad</label>
+                        <input type="text"
+                               name="DocumentoIdentidad"
+                               class="form-control"
+                               id="duiInput"
+                               autocomplete="off"
+                               oninput="formatDUI(this)"
+                               onblur="validateMonitorDUI()"
+                               required />
+                        <div id="documentoError" class="form-text text-danger"></div>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label for="Contrasena" class="form-label">Contraseña</label>
+                        <input type="password" name="Contrasena" class="form-control" autocomplete="off" required />
+                        <small class="form-text text-muted">Debe ingresar la contraseña única para administradores.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="IdAerolinea" class="form-label">Aerolínea</label>
+                        <select name="IdAerolinea" class="form-select" required>
+                            <option value="">Seleccione una aerolínea</option>
+                            @if (aerolineas != null && aerolineas.Count > 0)
+                            {
+                                foreach (var aerolinea in aerolineas)
+                                {
+                                    <option value="@aerolinea.IdAerolinea">@aerolinea.Nombre</option>
+                                }
+                            }
+                            else
+                            {
+                                <option disabled>No hay aerolíneas disponibles</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Agregar Aeropuerto -->
+<div class="modal fade" id="modalAeropuerto" tabindex="-1" aria-labelledby="modalAeropuertoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Aeropuerto" asp-action="AgregarAeropuerto" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAeropuertoLabel">Agregar Aeropuerto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="Nombre" class="form-label">Nombre del Aeropuerto</label>
+                        <input name="Nombre" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="IdCiudad" class="form-label">Ciudad</label>
+                        <select name="IdCiudad" class="form-select" required>
+                            <option value="">Seleccione una ciudad</option>
+                            @foreach (var ciudad in ciudades)
+                            {
+                                <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                            }
+                        </select>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAerolinea" tabindex="-1" aria-labelledby="modalAerolineaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-controller="Aerolinea" asp-action="Create" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAerolineaLabel">Agregar Aerolínea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="Nombre" class="form-label">Nombre de la Aerolínea</label>
+                        <input name="Nombre" class="form-control" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--TABLA DE VUELOS 15-->
+@{
+    var vuelos = ViewBag.VuelosRecientes as List<Boletos_Avion.Models.Vuelo>;
+}
+@if (vuelos != null && vuelos.Count > 0)
+{
+    <div class="mt-5">
+        <h3 class="text-center fw-bold mb-3">Últimos 15 Vuelos Agregados</h3>
+        <div class="table-responsive shadow-sm p-3 bg-white rounded">
+            <table class="table table-hover text-center">
+                <thead style="background-color: #2c3e50;" class="text-white">
+                    <tr>
+                        <th>Código Vuelo</th>
+                        <th>Ciudad Origen</th>
+                        <th>Ciudad Destino</th>
+                        <th>Aerolínea</th>
+                        <th>Categoría</th>
+                        <th>Fecha de Salida</th>
+                        <th>Fecha de Llegada</th>
+                        <th>Precio Base</th>
+                        <th>Estado</th>
+                        <th>Asientos Disponibles</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vuelo in (List<Vuelo>)ViewBag.VuelosRecientes)
+                    {
+                        <tr onclick="abrirModalEdicion(@vuelo.IdVuelo)" style="cursor:pointer;">
+
+                            <td><strong>@vuelo.CodigoVuelo</strong></td>
+                            <td>@vuelo.CiudadOrigen</td>
+                            <td>@vuelo.CiudadDestino</td>
+                            <td>@vuelo.NombreAerolinea</td>
+                            <td>@vuelo.Categoria</td>
+                            <td>@vuelo.FechaSalida.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@vuelo.FechaLlegada.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="fw-bold text-success">@vuelo.PrecioBase.ToString("C")</td>
+                            <td>@vuelo.Estado</td>
+                            <td>@vuelo.AsientosDisponibles</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <p class="alert alert-warning mt-4 text-center fw-bold">⚠ No hay vuelos recientes para mostrar.</p>
+}
+
+<!-- Modal Detalles del Vuelo -->
+<div class="modal fade" id="modalEditarVuelo" tabindex="-1" aria-labelledby="modalEditarVueloLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formEditarVuelo">
+                <div class="modal-header d-flex flex-column align-items-start">
+                    <div class="w-100 d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="modal-title">📝 Detalles del Vuelo</h5>
+
+                        <div class="w-100 text-center">
+                            <span id="estadoVueloTexto" class="fs-5 fw-semibold">
+                                <span id="estadoCirculo" class="me-2 rounded-circle d-inline-block" style="width: 15px; height: 15px;"></span>
+                                <span id="estadoTexto">Estado</span>
+                            </span>
+                        </div>
+
+                        <button type="button" id="btnAccionVuelo" class="btn">
+                            Cancelar vuelo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" id="editIdVuelo" name="IdVuelo" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Código de Vuelo</label>
+                        <input class="form-control" id="editCodigoVuelo" disabled />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad Origen</label>
+                            <select id="editCiudadOrigen" class="form-select" disabled>
+                                <option value="">Seleccione una ciudad</option>
+                                @foreach (var ciudad in ViewBag.Ciudades as List<Boletos_Avion.Models.Ciudad>)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aeropuerto Origen</label>
+                            <select id="editAeropuertoOrigen" class="form-select" disabled>
+                                <option value="">Seleccione un aeropuerto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ciudad Destino</label>
+                            <select id="editCiudadDestino" class="form-select" disabled>
+                                <option value="">Seleccione una ciudad</option>
+                                @foreach (var ciudad in ViewBag.Ciudades as List<Boletos_Avion.Models.Ciudad>)
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Aeropuerto Destino</label>
+                            <select id="editAeropuertoDestino" class="form-select" disabled>
+                                <option value="">Seleccione un aeropuerto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Categoría de Vuelo</label>
+                        <select class="form-select" id="editCategoriaVuelo" disabled>
+                            <option value="">Seleccione una categoría</option>
+                            @foreach (var cat in ViewBag.CategoriasVuelo as List<Boletos_Avion.Models.CategoriaVuelo>)
+                            {
+                                <option value="@cat.IdCategoriaVuelo">@cat.Nombre</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de Salida</label>
+                            <input type="datetime-local" id="editFechaSalida" class="form-control" disabled />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Fecha de Llegada</label>
+                            <input type="datetime-local" id="editFechaLlegada" class="form-control" disabled />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Precio Base (USD)</label>
+                        <input type="number" step="0.01" id="editPrecioBase" class="form-control" disabled />
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="btnGuardarCambiosVuelo" class="btn btn-primary" style="display: none;" onclick="guardarCambiosVuelo()">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear vuelo -->
+<div class="modal fade" id="crearVueloModal" tabindex="-1" aria-labelledby="crearVueloModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content p-3 rounded-4 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crearVueloModalLabel">Crear Vuelo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCrearVuelo">
+
+                    <!-- Aerolínea -->
+                    <div class="mb-3">
+                        <label class="form-label">Aerolínea</label>
+                        <select class="form-select" name="IdAerolinea" id="idAerolinea" required>
+                            <option disabled selected value="">Seleccione una aerolínea</option>
+                            @foreach (var aerolinea in (List<Aerolinea>)ViewData["Aerolineas"])
+                            {
+                                <option value="@aerolinea.IdAerolinea">@aerolinea.Nombre</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Ciudades -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Ciudad Origen</label>
+                            <select class="form-select" id="ciudadOrigen" onchange="cargarAeropuertos(this.value, 'idAeropuertoOrigen')" required>
+                                <option disabled selected>Seleccione ciudad</option>
+                                @foreach (var ciudad in (List<Ciudad>)ViewData["Ciudades"])
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Ciudad Destino</label>
+                            <select class="form-select" id="ciudadDestino" onchange="cargarAeropuertos(this.value, 'idAeropuertoDestino')" required>
+                                <option disabled selected>Seleccione ciudad</option>
+                                @foreach (var ciudad in (List<Ciudad>)ViewData["Ciudades"])
+                                {
+                                    <option value="@ciudad.IdCiudad">@ciudad.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Aeropuertos -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Aeropuerto Origen</label>
+                            <select class="form-select" name="IdAeropuertoOrigen" id="idAeropuertoOrigen" disabled required>
+                                <option disabled selected>Seleccione aeropuerto</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Aeropuerto Destino</label>
+                            <select class="form-select" name="IdAeropuertoDestino" id="idAeropuertoDestino" disabled required>
+                                <option disabled selected>Seleccione aeropuerto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Fecha de salida</label>
+                            <input type="datetime-local" class="form-control" name="FechaSalida" id="fechaSalida" required />
+                        </div>
+                        <div class="col">
+                            <label>Fecha de llegada</label>
+                            <input type="datetime-local" class="form-control" name="FechaLlegada" id="fechaLlegada" required />
+                        </div>
+                    </div>
+
+                    <!-- Categoría y precio -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Categoría del vuelo</label>
+                            <select class="form-select" name="IdCategoriaVuelo" id="idCategoriaVuelo" required>
+                                <option disabled selected>Seleccione categoría</option>
+                                @foreach (var categoria in ViewBag.CategoriasVuelo)
+                                {
+                                    <option value="@categoria.IdCategoriaVuelo">@categoria.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label>Precio base</label>
+                            <input type="number" class="form-control" name="PrecioBase" id="precioBase" min="1" required />
+                        </div>
+                    </div>
+
+                    <!-- Asientos por categoría -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label>Primera Clase</label>
+                            <input type="number" class="form-control" name="CantidadPrimera" id="CantidadPrimera" min="0" value="0" required />
+                        </div>
+                        <div class="col">
+                            <label>Business</label>
+                            <input type="number" class="form-control" name="CantidadBusiness" id="CantidadBusiness" min="0" value="0" required />
+                        </div>
+                        <div class="col">
+                            <label>Turista</label>
+                            <input type="number" class="form-control" name="CantidadTurista" id="CantidadTurista" min="0" value="0" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <div id="msgAsientos" class="text-danger small">
+                            La suma total de asientos debe ser entre 80 y 100.
+                        </div>
+                    </div>
+
+                    <!-- Botón -->
+                    <div class="text-end">
+                        <button type="submit" id="btnCrearVuelo" class="btn btn-success" disabled>Crear Vuelo</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

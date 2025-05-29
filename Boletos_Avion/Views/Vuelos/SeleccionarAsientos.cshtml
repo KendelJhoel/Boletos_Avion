@@ -1,10 +1,24 @@
 ﻿@{
     ViewData["Title"] = "Seleccionar Asientos";
+    var esAgente = ViewContext.HttpContext.Session.GetInt32("UserRole") == 2;
+    var esRegreso = Context.Request.Query["esRegreso"].ToString().ToLower() == "true";
+    var idCliente = Context.Session.GetInt32("IdClienteRegreso");
+    var cliente = idCliente.HasValue
+        ? (ViewBag.Clientes as List<UserModel>)?.FirstOrDefault(c => c.IdUsuario == idCliente.Value)
+        : null;
 }
 
 <div id="main-container">
     <div id="top-container">
         <h2>Seleccionar Asientos</h2>
+        @if (esRegreso && cliente != null)
+        {
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-sync-alt"></i> <strong>Vuelo de regreso para:</strong>
+                @cliente.Nombre
+                <input type="hidden" id="idClienteRegreso" name="idClienteRegreso" value="@cliente.IdUsuario" />
+            </div>
+        }
     </div>
 
     <div id="asientos-container">
@@ -14,30 +28,82 @@
             </table>
         </div>
     </div>
+    @if (esAgente && !esRegreso)
+    {
+        <div class="form-group mt-3">
+            <label for="idCliente">Selecciona un cliente:</label>
+            <select id="idCliente" name="idCliente" class="form-control" required>
+                <option value="">-- Selecciona un cliente --</option>
+                @if (ViewBag.Clientes != null)
+                {
+                    foreach (var clientes in ViewBag.Clientes as List<UserModel>)
+                    {
+                        <option value="@clientes.IdUsuario">@clientes.Nombre</option>
+                    }
+                }
+            </select>
+        </div>
+    }
 
-    <div class="precio-vuelo-container">
-        <h3>Precio del vuelo: $<span id="precio-vuelo">@ViewBag.PrecioVuelo</span></h3>
+    <div class="resumen-contenedor d-flex flex-wrap justify-content-center gap-4 mt-4">
+        <!-- Bloque Izquierdo: Info del vuelo -->
+        <div class="bloque-izquierdo">
+            <div class="info-box text-start mb-3">
+                <h5>✈️ <strong>Precio del vuelo</strong></h5>
+                <p class="mb-1">Base: $<span id="precio-vuelo">@ViewBag.PrecioVuelo</span> <span id="multiplicador"></span></p>
+                <p>Total a pagar: $<span id="total">0.00</span></p>
+            </div>
+
+            <div class="info-box text-start mb-3">
+                <h5>🪑 <strong>Asientos Seleccionados</strong></h5>
+                <ul id="lista-asientos-seleccionados" class="mb-0 ps-3"></ul>
+            </div>
+
+            <div class="text-start mt-3">
+                <button class="btn btn-success btn-lg rounded-pill px-4 fw-bold shadow-sm" id="pagarBtn" disabled>
+                    Confirmar Selección e ir al Pago 💳
+                </button>
+            </div>
+        </div>
+
+        <!-- Bloque Derecho: Categorías -->
+        <div class="bloque-derecho">
+            <div id="categorias-container" style="display: block;">
+                <h5 class="mb-3">📋 <strong>Categorías de Asientos Disponibles</strong></h5>
+                <ul id="categorias-list" class="mb-0 ps-0" style="list-style-type: none;"></ul>
+            </div>
+        </div>
     </div>
 
-    <!-- 🔹 Contenedor para la lista de asientos seleccionados -->
-    <div class="asientos-seleccionados-container">
-        <h3>Asientos Seleccionados:</h3>
-        <ul id="lista-asientos-seleccionados"></ul>
-    </div>
-
-    <!-- 🔹 Mostrar el total actualizado -->
-    <div class="totalizador-container">
-        <h3>Total a pagar: $<span id="total">0.00</span></h3>
-    </div>
-
-    <button id="pagarBtn" disabled>Pagar</button>
-
-    <!-- 🔹 Bloque actualizado para mostrar categorías con nombre y precio -->
-    <div id="categorias-container" style="display: none; margin-top: 20px; text-align: center;">
-        <h4 style="font-size: 18px; color: #333;">Categorías de Asientos Disponibles:</h4>
-        <ul id="categorias-list" style="list-style-type: none; padding: 0; font-size: 16px;"></ul>
-    </div>
 </div>
+
+@* <script>
+    const esRegreso = "@esRegreso".toLowerCase() === "true" ? "true" : "false";
+    sessionStorage.setItem("esRegreso", esRegreso);
+    console.log("📦 sessionStorage esRegreso guardado:", esRegreso);
+</script> *@
+<script>
+    // Configuración inicial
+    const esAgente = @esAgente.ToString().ToLower();
+    const esRegreso = @esRegreso.ToString().ToLower();
+
+    // Guardar en sessionStorage
+    document.addEventListener("DOMContentLoaded", () => {
+        sessionStorage.setItem("esAgente", esAgente.toString());
+        sessionStorage.setItem("esRegreso", esRegreso.toString());
+
+    @if (idCliente.HasValue)
+    {
+        <text>sessionStorage.setItem("idClienteRegreso", "@idCliente.Value");</text>
+    }
+
+        console.log("Configuración inicial:", {
+            esAgente,
+            esRegreso,
+            idCliente: @(idCliente.HasValue ? idCliente.Value.ToString() : "null")
+        });
+    });
+</script>
 
 <script src="~/js/asientos.js"></script>
 <link rel="stylesheet" href="~/css/asientos.css" />

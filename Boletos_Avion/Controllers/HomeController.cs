@@ -15,7 +15,7 @@ namespace Boletos_Avion.Controllers
 
         public IActionResult Index()
         {
-            // Verificar que el usuario esté autenticado
+            // Verifica que el usuario este autenticado
             if (HttpContext.Session.GetString("UserEmail") != null)
             {
                 ViewBag.UserName = HttpContext.Session.GetString("UserName");
@@ -34,5 +34,17 @@ namespace Boletos_Avion.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        public IActionResult MisReservas()
+        {
+            if (HttpContext.Session.GetString("UserEmail") == null)
+            {
+                return RedirectToAction("Authentication", "Auth");
+            }
+
+            return View("~/Views/Account/MisReservas.cshtml");
+        }
+
+
     }
 }

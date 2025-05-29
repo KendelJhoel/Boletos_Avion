@@ -3,9 +3,10 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="@Url.Content("~/css/ChangeEmail.css")" asp-append-version="true" />
-}
+
+
+<link rel="stylesheet" href="~/css/cambiaremail.css" asp-append-version="true" />
+
 
 <div class="container mt-5">
     <h2 class="text-center">Cambiar Correo Electrónico</h2>
@@ -20,12 +21,17 @@
         </div>
     }
 
-    <!-- Vista en tiempo real del correo actual y nuevo -->
+    @{
+        var correoActual = ViewContext.HttpContext.Session.GetString("UserEmail")
+        ?? ViewContext.HttpContext.Session.GetString("MonitorEmail");
+    }
+
     <div class="email-display-box text-center my-4">
-        <span id="currentEmail" class="fw-bold text-muted">@ViewContext.HttpContext.Session.GetString("UserEmail")</span>
+        <span id="currentEmail" class="fw-bold text-muted">@correoActual</span>
         <i class="fa fa-arrow-right mx-3 text-primary"></i>
         <span id="newEmailDisplay" class="fw-bold text-primary">______</span>
     </div>
+
 
     <form asp-action="ChangeEmail" method="post">
         <!-- Input para nuevo correo -->

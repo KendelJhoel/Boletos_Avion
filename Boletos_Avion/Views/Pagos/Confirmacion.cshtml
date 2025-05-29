@@ -1,16 +1,129 @@
 ﻿@{
     ViewData["Title"] = "Reserva Completada";
+
+    string numeroReserva = ViewBag.NumeroReserva ?? "N/A";
+    string ciudadOrigen = ViewBag.CiudadOrigen;
+    string ciudadDestino = ViewBag.CiudadDestino;
+    string paisOrigen = ViewBag.PaisOrigen;
+    string paisDestino = ViewBag.PaisDestino;
+    string fechaIda = ViewBag.FechaIda;
+    string fechaLlegada = ViewBag.FechaLlegada;
+    string CodigoVuelo = ViewBag.CodigoVuelo;
+    string Nombre = ViewBag.Nombre;
+    string NombreAeropuertoOrigen = ViewBag.NombreAeropuertoOrigen;
+    string NombreAeropuertoDestino = ViewBag.NombreAeropuertoDestino;
+    int? idCliente = Context.Request.Query["idCliente"].FirstOrDefault() != null ?
+        int.Parse(Context.Request.Query["idCliente"].FirstOrDefault()) : null;
+
+    bool esRegreso = Context.Request.Query["esRegreso"].FirstOrDefault()?.ToLower() == "true";
+
 }
+
+<link rel="stylesheet" href="~/css/Confirmacion.css" asp-append-version="true" />
+
 
 <div class="container text-center mt-5">
     <h2 class="text-success">¡Reserva Completada con Éxito!</h2>
 
     <div class="alert alert-success mt-4">
         <p>Tu número de reserva es:</p>
-        <h3><strong>@ViewBag.NumeroReserva</strong></h3>
+        <h3><strong>@numeroReserva</strong></h3>
     </div>
 
     <p class="mt-3">Recibirás un correo con los detalles de tu reserva.</p>
 
     <a href="/" class="btn btn-primary mt-3">Volver al Inicio</a>
 </div>
+
+@if (!esRegreso)
+{
+    <div class="modal fade" id="modalVueloVuelta" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">¿Reservar vuelo de regreso?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Quieres ver vuelos de regreso desde <strong>@ciudadDestino</strong> hacia <strong>@ciudadOrigen</strong>?
+
+                </div>
+
+                <div class="modal-footer">
+                    <button id="btnNo" class="btn btn-no">No, gracias</button>
+                    <button id="btnSi" class="btn btn-primary">Sí, mostrar vuelos</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(() => {
+            const numeroReserva = "@ViewBag.NumeroReserva";
+            const asientos = "@ViewBag.Asientos";
+            const Nombre = "@ViewBag.Nombre";
+
+            const CodigoVuelo = "@ViewBag.CodigoVuelo";
+            const paisOrigen = "@ViewBag.PaisOrigen";
+            const origen = "@ViewBag.CiudadOrigen";
+            const NombreAeropuertoOrigen = "@ViewBag.NombreAeropuertoOrigen";
+
+            const paisDestino = "@ViewBag.PaisDestino";
+            const destino = "@ViewBag.CiudadDestino";
+            const NombreAeropuertoDestino = "@ViewBag.NombreAeropuertoDestino";
+
+            const FechaIda = "@ViewBag.FechaIda";
+            const FechaLlegada = "@ViewBag.FechaLlegada";
+
+
+
+            if (numeroReserva && asientos) {
+                const url = `/Pagos/GenerateBoleto?numeroReserva=${encodeURIComponent(numeroReserva)}&asientos=${encodeURIComponent(asientos)}&Nombre=${encodeURIComponent(Nombre)}&CodigoVuelo=${encodeURIComponent(CodigoVuelo)}&paisOrigen=${encodeURIComponent(paisOrigen)}&origen=${encodeURIComponent(origen)}&NombreAeropuertoOrigen=${encodeURIComponent(NombreAeropuertoOrigen)}&paisDestino=${encodeURIComponent(paisDestino)}&destino=${encodeURIComponent(destino)}&NombreAeropuertoDestino=${encodeURIComponent(NombreAeropuertoDestino)}&FechaIda=${encodeURIComponent(FechaIda)}&FechaLlegada=${encodeURIComponent(FechaLlegada)}`;
+                window.open(url, "_blank");
+
+                const contenedor = document.createElement("div");
+                contenedor.innerText = "🎫 Boletos descargados correctamente";
+                contenedor.style.position = "fixed";
+                contenedor.style.bottom = "20px";
+                contenedor.style.right = "20px";
+                contenedor.style.backgroundColor = "#198754";
+                contenedor.style.color = "white";
+                contenedor.style.padding = "12px 16px";
+                contenedor.style.borderRadius = "8px";
+                contenedor.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+                contenedor.style.zIndex = 9999;
+                contenedor.style.fontWeight = "bold";
+
+                document.body.appendChild(contenedor);
+
+                setTimeout(() => {
+                    contenedor.remove();
+                }, 4000);
+            } else {
+                console.warn("⚠️ No se generó el PDF porque faltan parámetros.");
+            }
+        }, 500);
+
+        const modalElement = document.getElementById("modalVueloVuelta");
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+
+            document.getElementById("btnNo")?.addEventListener("click", () => {
+                window.location.href = "/";
+            });
+
+            document.getElementById("btnSi")?.addEventListener("click", function () {
+                const origen = encodeURIComponent("@ViewBag.CiudadDestino");
+                const destino = encodeURIComponent("@ViewBag.CiudadOrigen");
+                const fechaIda = encodeURIComponent("@ViewBag.FechaIda");
+                const idCliente = "@ViewBag.IdCliente";
+
+                window.location.href = `/Vuelos/VuelosDeVuelta?origen=${origen}&destino=${destino}&fechaIda=${fechaIda}&idCliente=${idCliente}&esRegreso=true`;
+            });
+        }
+    });
+</script>

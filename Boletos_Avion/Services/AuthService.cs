@@ -3,10 +3,9 @@ using Microsoft.Data.SqlClient;
 
 public class AuthService : DbController
 {
-    public AuthService() : base() { } // ✅ Llama al constructor de DbController
+    public AuthService() : base() { } 
 
 
-    // Obtener un usuario por su ID (incluye contraseña)
     public UserModel ValidateUser(string email, string password)
     {
         UserModel user = null;
@@ -14,9 +13,9 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
-                connection.Open(); // 🔹 Asegurar que la conexión se abre
+                connection.Open(); 
 
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
@@ -56,7 +55,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -89,7 +88,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -116,7 +115,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -142,7 +141,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -168,7 +167,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -197,7 +196,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa la conexión de DbController
+            using (SqlConnection connection = GetConnection()) 
             {
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
@@ -222,7 +221,7 @@ public class AuthService : DbController
 
         try
         {
-            using (SqlConnection connection = GetConnection()) // ✅ Usa GetConnection()
+            using (SqlConnection connection = GetConnection()) 
             {
                 connection.Open();
 
@@ -243,6 +242,53 @@ public class AuthService : DbController
         }
 
         return password;
+    }
+
+    public string GenerateUniquePassword()
+    {
+        const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@$!%*?&";
+        string password;
+        bool exists;
+
+        do
+        {
+            Random random = new Random();
+            password = new string(Enumerable.Repeat(chars, 10)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+
+            exists = PasswordExistsInUsuarios(password) || PasswordExistsInMonitores(password);
+
+        } while (exists);
+
+        return password;
+    }
+
+    private bool PasswordExistsInUsuarios(string password)
+    {
+        string query = "SELECT COUNT(*) FROM USUARIOS WHERE contrasena = @Password";
+        using (SqlConnection connection = GetConnection())
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Password", password);
+                return (int)command.ExecuteScalar() > 0;
+            }
+        }
+    }
+
+    private bool PasswordExistsInMonitores(string password)
+    {
+        string query = "SELECT COUNT(*) FROM MONITOR WHERE contrasena = @Password";
+        using (SqlConnection connection = GetConnection())
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@Password", password);
+                return (int)command.ExecuteScalar() > 0;
+            }
+        }
     }
 
 }

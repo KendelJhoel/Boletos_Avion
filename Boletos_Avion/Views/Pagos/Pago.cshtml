@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = "Resumen de Pago";
 
-    // ✅ Obtener los asientos desde TempData si no están en el modelo
     if (Model.Pago.Asientos == null || !Model.Pago.Asientos.Any())
     {
         var asientosTemp = TempData["AsientosSeleccionados"] as string;
@@ -22,104 +21,140 @@
 
     decimal precioVuelo = ViewBag.PrecioVuelo != null ? Convert.ToDecimal(ViewBag.PrecioVuelo) : 0;
     decimal totalAsientos = Model.Pago.Asientos != null ? Model.Pago.Asientos.Sum(a => a.Precio) : 0;
-    decimal subtotal = precioVuelo + totalAsientos;
+    int countAsientos = Model.Pago.Asientos != null ? Model.Pago.Asientos.Count : 0;
+    decimal subtotal = (precioVuelo * countAsientos) + totalAsientos;
     decimal iva = subtotal * 0.13M;
     decimal total = subtotal + iva;
+    bool esAgente = ViewContext.HttpContext.Session.GetInt32("UserRole") == 2;
+    var cliente = ViewBag.Cliente as UserModel;
 }
 
-<h3>
-    Reserva No.
-    <br />
-    <strong>@Model.Pago.NumeroReserva</strong>
-    <br />
-    <span>@Model.Vuelo.CiudadOrigen</span>
-    <span style="font-size: 1.5em; vertical-align: middle;">➔</span>
-    <span>@Model.Vuelo.CiudadDestino</span>
-    <span style="font-size: 1.2em;">(@duracionHoras.ToString("0.0") hrs)</span>
-</h3>
+<link rel="stylesheet" href="~/css/Pagos.css" asp-append-version="true" />
 
-<!-- Información del vuelo -->
-<div id="info-vuelo">
-    <h3>Información del Vuelo</h3>
-    <p><strong>Código de Vuelo:</strong> @Model.Vuelo.CodigoVuelo</p>
-    <br />
+<section class="margen">
+    <div class="container resumen-pago">
+        <div class="row">
+            <div class="col-md-6">
 
-    <p><strong>País de Origen:</strong> @Model.Vuelo.PaisOrigen</p>
-    <p><strong>Ciudad de Origen:</strong> @Model.Vuelo.CiudadOrigen</p>
-    <p><strong>Aeropuerto de Origen:</strong> @Model.Vuelo.NombreAeropuertoOrigen</p>
 
-    <p><strong>País de Destino:</strong> @Model.Vuelo.PaisDestino</p>
-    <p><strong>Ciudad de Destino:</strong> @Model.Vuelo.CiudadDestino</p>
-    <p><strong>Aeropuerto de Destino:</strong> @Model.Vuelo.NombreAeropuertoDestino</p>
+                <div class="alert alert-info mt-3 d-inline-flex align-items-center" role="alert" style="max-width: 100%;">
+                    <i class="bi bi-info-circle-fill me-2" style="font-size: 1.3rem;"></i>
+                    <span>Si desea un vuelo de vuelta: Realice este pago y el sistema lo guiará</span>
+                </div>
 
-    <br />
-    <p><strong>Fecha de Salida:</strong> @fechaSalida.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
-    <p><strong>Hora:</strong> @fechaSalida.ToString("hh:mm tt")</p>
-    <br />
-    <p><strong>Fecha de Llegada:</strong> @fechaLlegada.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
-    <p><strong>Hora:</strong> @fechaLlegada.ToString("hh:mm tt")</p>
-</div>
+                <h3 class="resumen-header">
+                    Reserva No.<br />
+                    <strong>@Model.Pago.NumeroReserva</strong><br />
+                    <span>@Model.Vuelo.CiudadOrigen</span>
+                    <span style="font-size: 1.5em; vertical-align: middle;">➔</span>
+                    <span>@Model.Vuelo.CiudadDestino</span>
+                    <span style="font-size: 1.2em;">(@duracionHoras.ToString("0.0") hrs)</span>
+                </h3>
+                <!-- Sección de Datos del Usuario/Cliente -->
+                @if (cliente != null)
+                {
+                    <div id="info-cliente">
+                        <h3>@(esAgente ? "Datos del Cliente Seleccionado" : "Mis Datos")</h3>
+                        <p><strong>Nombre:</strong> @cliente.Nombre</p>
+                        <p><strong>Documento:</strong> @cliente.DocumentoIdentidad</p>
+                        <p><strong>Correo:</strong> @cliente.Correo</p>
+                        <p><strong>Teléfono:</strong> @cliente.Telefono</p>
+                        @if (!esAgente)
+                        {
+                            <p><strong>Dirección:</strong> @cliente.Direccion</p>
+                        }
+                    </div>
+                }
+                <div id="info-vuelo">
+                    <h3>Información del Vuelo</h3>
+                    <p><strong>Código de Vuelo:</strong> @Model.Vuelo.CodigoVuelo</p>
+                    <br />
 
-<h3>Asientos Seleccionados</h3>
-<table class="table" id="asientos-seleccionados">
-    <thead>
-        <tr>
-            <th>Asiento</th>
-            <th>Precio</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var asiento in Model.Pago.Asientos)
-        {
-            <tr data-id="@asiento.Id">
-                <!-- ✅ Se agrega data-id para que pago.js pueda leerlos -->
-                <td>@asiento.Numero</td>
-                <td>@asiento.Precio.ToString("C")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+                    <p><strong>País de Origen:</strong> @Model.Vuelo.PaisOrigen</p>
+                    <p><strong>Ciudad de Origen:</strong> @Model.Vuelo.CiudadOrigen</p>
+                    <p><strong>Aeropuerto de Origen:</strong> @Model.Vuelo.NombreAeropuertoOrigen</p>
 
-<h3>Resumen</h3>
+                    <p><strong>País de Destino:</strong> @Model.Vuelo.PaisDestino</p>
+                    <p><strong>Ciudad de Destino:</strong> @Model.Vuelo.CiudadDestino</p>
+                    <p><strong>Aeropuerto de Destino:</strong> @Model.Vuelo.NombreAeropuertoDestino</p>
 
-<!-- 🔹 Información de Precios -->
-<div class="precio-vuelo-container">
-    <h3>Precio del vuelo: $<span id="precio-vuelo">@precioVuelo.ToString("F2")</span></h3>
-</div>
+                    <br />
+                    <p><strong>Fecha de Salida:</strong> @fechaSalida.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
+                    <p><strong>Hora:</strong> @fechaSalida.ToString("hh:mm tt")</p>
+                    <br />
+                    <p><strong>Fecha de Llegada:</strong> @fechaLlegada.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</p>
+                    <p><strong>Hora:</strong> @fechaLlegada.ToString("hh:mm tt")</p>
+                </div>
 
-<div class="total-container">
-    <h3>Subtotal (Vuelo + Asientos): $<span id="subtotal">@subtotal.ToString("F2")</span></h3>
-    <h3>IVA (13%): $<span id="iva">@iva.ToString("F2")</span></h3>
-    <h2>Total a pagar: $<span id="total">@total.ToString("F2")</span></h2>
-</div>
+                <div class="precio-vuelo-container">
+                    <h3>Precio del vuelo: $<span id="precio-vuelo">@precioVuelo.ToString("F2")</span></h3>
+                </div>
 
-<!-- Botón para abrir el modal -->
-<button id="abrirModalPago" class="btn btn-primary">Proceder con Pago</button>
+                <div class="total-container">
+                    <h3>Subtotal (Vuelo + Asientos): $<span id="subtotal">@subtotal.ToString("F2")</span></h3>
+                    <h3>IVA (13%): $<span id="iva">@iva.ToString("F2")</span></h3>
+                    <h2>Total a pagar: $<span id="total">@total.ToString("F2")</span></h2>
+                </div>
+            </div>
 
+            <div class="col-md-6">
+                <h3>Asientos Seleccionados</h3>
+                <table class="table" id="asientos-seleccionados">
+                    <thead>
+                        <tr>
+                            <th>Asiento</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var asiento in Model.Pago.Asientos)
+                        {
+                            <tr data-id="@asiento.Id">
+                                <td>@asiento.Numero</td>
+                                <td>@asiento.Precio.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="text-center mt-4">
+                    <button id="abrirModalPago">💳 Pago con tarjeta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- Modal de Confirmación -->
 <div id="modalConfirmacion" class="modal fade" tabindex="-1" aria-hidden="true">
-
-
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Ingresar Datos de Tarjeta</h5>
+
+                <h5 class="modal-title">Confirmar Reserva</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <form id="formTarjeta">
                     <div class="mb-3">
                         <label for="numeroTarjeta" class="form-label">Número de Tarjeta</label>
-                        <input type="text" id="numeroTarjeta" class="form-control" maxlength="16" required>
+                        <input type="text" id="numeroTarjeta" class="form-control" maxlength="25" autocomplete="off" required>
                     </div>
+                    <div class="mb-3 text-center" id="tarjetas-icons">
+                        <img src="~/images/metodospago/visa.png" id="icono-visa" class="icono-tarjeta" />
+                        <img src="~/images/metodospago/mastercard.png" id="icono-mastercard" class="icono-tarjeta" />
+                        <img src="~/images/metodospago/americanexpress.png" id="icono-amex" class="icono-tarjeta" />
+                        <img src="~/images/metodospago/generica.png" id="icono-generica" class="icono-tarjeta" />
+                    </div>
+
                     <div class="mb-3">
                         <label for="fechaExp" class="form-label">Fecha de Expiración (MM/YY)</label>
-                        <input type="text" id="fechaExp" class="form-control" placeholder="MM/YY" required>
+                        <input type="text" id="fechaExp" class="form-control" placeholder="MM/YY" maxlength="5" required>
+
                     </div>
                     <div class="mb-3">
                         <label for="cvv" class="form-label">CVV</label>
-                        <input type="text" id="cvv" class="form-control" maxlength="3" required>
+                        <input type="password" id="cvv" class="form-control" maxlength="3" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                     </div>
                     <div class="mb-3">
                         <label for="nombreTitular" class="form-label">Nombre del Titular</label>
@@ -129,48 +164,244 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-
-
-               @*  <button id="validarTarjeta" class="btn btn-primary">Validar y Continuar</button> *@
-
-                <button id="confirmarPago" class="btn btn-success" @(Model.Pago.Asientos != null && Model.Pago.Asientos.Count > 0 ? "" : "disabled")>
-                    Validar y Confirmar Pago
+                
+                @{
+                    var ciudadO = Model.Vuelo.CiudadOrigen;
+                    var ciudadD = Model.Vuelo.CiudadDestino;
+                    var asientosString = Model.Pago.Asientos != null
+                    ? string.Join(",", Model.Pago.Asientos.Select(a => a.Numero))
+                    : "";
+                }
+                <button id="confirmarPago" class="btn btn-success">
+                    💳 Confirmar Pago
                 </button>
                 <p id="error-message" style="color: red; display: @(Model.Pago.Asientos != null && Model.Pago.Asientos.Count > 0 ? "none" : "block");">
                     Debe seleccionar al menos un asiento para confirmar el pago.
                 </p>
-
-            </div>
-        </div>
-
-    </div>
-
-@* 
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Reserva</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas confirmar esta reserva?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-
-
-                <button id="confirmarPago" class="btn btn-success" @(Model.Pago.Asientos != null && Model.Pago.Asientos.Count > 0 ? "" : "disabled")>
-                    Confirmar Pago
-                </button>
-                <p id="error-message" style="color: red; display: @(Model.Pago.Asientos != null && Model.Pago.Asientos.Count > 0 ? "none" : "block");">
-                    Debe seleccionar al menos un asiento para confirmar el pago.
-                </p>
-
             </div>
         </div>
     </div>
- *@
-
 </div>
+
+<script>
+    (function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const esRegreso = urlParams.get("esRegreso") === "true" ? "true" : "false";
+        sessionStorage.setItem("esRegreso", esRegreso);
+        console.log("📦 esRegreso en Pago.cshtml guardado:", esRegreso);
+    })();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const confirmarPagoBtn = document.getElementById("confirmarPago");
+        const errorMessage = document.getElementById("error-message");
+
+        if (confirmarPagoBtn) {
+            confirmarPagoBtn.addEventListener("click", async function () {
+                const numeroTarjeta = inputTarjeta.value.trim();
+                const fecha = inputFecha.value.trim();
+                const cvv = document.getElementById("cvv").value.trim();
+                const nombre = inputNombre.value.trim();
+
+                if (!numeroTarjeta || !fecha || !cvv || !nombre) {
+                    errorMessage.innerText = "Por favor, complete todos los campos del formulario.";
+                    errorMessage.style.display = "block";
+                    return;
+                }
+
+                const tipo = detectarTipo(numeroTarjeta);
+                const cleanCard = numeroTarjeta.replace(/\s/g, "");
+                const longEsperada = obtenerLongitudMaxima(tipo);
+
+                if (cleanCard.length !== longEsperada) {
+                    errorMessage.innerText = `El número de tarjeta debe tener ${longEsperada} dígitos válidos para ${tipo.toUpperCase()}.`;
+                    errorMessage.style.display = "block";
+                    return;
+                }
+
+                const regexFecha = /^(0[1-9]|1[0-2])\/\d{2}$/;
+                if (!regexFecha.test(fecha)) {
+                    errorMessage.innerText = "Formato de fecha inválido. Use MM/YY.";
+                    errorMessage.style.display = "block";
+                    return;
+                }
+
+                if (cvv.length !== 3 || isNaN(cvv)) {
+                    errorMessage.innerText = "El CVV debe tener 3 dígitos numéricos.";
+                    errorMessage.style.display = "block";
+                    return;
+                }
+
+                const total = document.getElementById("total").textContent;
+
+                const confirmacion = await Swal.fire({
+                    title: '¿Deseas confirmar el pago?',
+                    html: `Total a pagar: <b>$${total}</b>`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, pagar ahora',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (!confirmacion.isConfirmed) return;
+
+                errorMessage.style.display = "none";
+                confirmarPagoBtn.disabled = true;
+                confirmarPagoBtn.innerText = "Procesando...";
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const idVuelo = parseInt(urlParams.get("idVuelo")) || 0;
+                const idCliente = parseInt(urlParams.get("idCliente")) || null;
+
+                const asientos = Array.from(document.querySelectorAll("#asientos-seleccionados tbody tr"))
+                    .map(row => parseInt(row.getAttribute("data-id")))
+                    .filter(id => !isNaN(id));
+
+                if (asientos.length === 0) {
+                    errorMessage.innerText = "Debe seleccionar al menos un asiento.";
+                    errorMessage.style.display = "block";
+                    confirmarPagoBtn.disabled = false;
+                    confirmarPagoBtn.innerText = "💳 Confirmar Pago";
+                    return;
+                }
+
+                fetch("/Pagos/ConfirmarPago", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        idVuelo: idVuelo,
+                        asientos: asientos,
+                        idCliente: idCliente
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.redirigir) {
+                            const esRegresoFlag = sessionStorage.getItem("esRegreso");
+                            let redirigirUrl = data.redirigir;
+                            if (esRegresoFlag === "true") {
+                                redirigirUrl += "&esRegreso=true";
+                            }
+                            window.location.href = redirigirUrl;
+                        } else {
+                            errorMessage.innerText = data.message || "Error al confirmar la reserva.";
+                            errorMessage.style.display = "block";
+                            confirmarPagoBtn.disabled = false;
+                            confirmarPagoBtn.innerText = "💳 Confirmar Pago";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("❌ Error en la conexión:", error);
+                        errorMessage.innerText = "Error en la conexión con el servidor.";
+                        errorMessage.style.display = "block";
+                        confirmarPagoBtn.disabled = false;
+                        confirmarPagoBtn.innerText = "💳 Confirmar Pago";
+                    });
+            });
+        }
+
+        const inputTarjeta = document.getElementById("numeroTarjeta");
+        const iconos = {
+            visa: document.getElementById("icono-visa"),
+            mastercard: document.getElementById("icono-mastercard"),
+            amex: document.getElementById("icono-amex"),
+            generica: document.getElementById("icono-generica")
+        };
+
+        function limpiarIconos() {
+            for (let key in iconos) {
+                iconos[key].classList.remove("activa");
+            }
+        }
+
+        function detectarTipo(numero) {
+            numero = numero.replace(/\D/g, "");
+            if (/^4/.test(numero)) return "visa";
+            if (/^5[1-5]/.test(numero)) return "mastercard";
+            if (/^3[47]/.test(numero)) return "amex";
+            return "generica";
+        }
+
+        function obtenerLongitudMaxima(tipo) {
+            switch (tipo) {
+                case "visa":
+                case "mastercard": return 16;
+                case "amex": return 15;
+                default: return 16;
+            }
+        }
+
+        function formatearNumero(numero, tipo) {
+            const limpio = numero.replace(/\D/g, "").substring(0, obtenerLongitudMaxima(tipo));
+            let partes = [];
+
+            if (tipo === "amex") {
+                partes = [limpio.slice(0, 4), limpio.slice(4, 10), limpio.slice(10, 15)];
+            } else {
+                for (let i = 0; i < limpio.length; i += 4) {
+                    partes.push(limpio.slice(i, i + 4));
+                }
+            }
+
+            return partes.filter(p => p).join(" ");
+        }
+
+        if (inputTarjeta) {
+            inputTarjeta.addEventListener("input", function () {
+                const cursorStart = this.selectionStart;
+                const valorOriginal = this.value;
+                const tipo = detectarTipo(valorOriginal);
+                limpiarIconos();
+                iconos[tipo].classList.add("activa");
+
+                const nuevoValor = formatearNumero(valorOriginal, tipo);
+                this.value = nuevoValor;
+
+                const diferencia = nuevoValor.length - valorOriginal.length;
+                this.setSelectionRange(cursorStart + diferencia, cursorStart + diferencia);
+            });
+        }
+
+        const inputFecha = document.getElementById("fechaExp");
+        if (inputFecha) {
+            inputFecha.addEventListener("input", function () {
+                let valor = this.value.replace(/\D/g, "");
+                if (valor.length > 4) valor = valor.substring(0, 4);
+                if (valor.length > 2) valor = valor.substring(0, 2) + "/" + valor.substring(2);
+                this.value = valor;
+            });
+
+            inputFecha.addEventListener("blur", function () {
+                const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+                if (!regex.test(this.value)) {
+                    alert("La fecha debe tener el formato MM/YY y un mes válido (01 a 12).");
+                    setTimeout(() => this.focus(), 10);
+                }
+            });
+        }
+
+        const inputNombre = document.getElementById("nombreTitular");
+        if (inputNombre) {
+            inputNombre.addEventListener("input", function () {
+                let valor = this.value.replace(/[^A-ZÁÉÍÓÚÑÜ\s]/gi, "");
+                this.value = valor.toUpperCase();
+            });
+        }
+
+        const abrirModalBtn = document.getElementById("abrirModalPago");
+        const modal = document.getElementById("modalConfirmacion");
+
+        if (abrirModalBtn && modal) {
+            abrirModalBtn.addEventListener("click", function () {
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+            });
+        }
+    });
+</script>
 
 <script src="~/js/pago.js"></script>
