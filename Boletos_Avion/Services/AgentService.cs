@@ -214,5 +214,47 @@ public class AgentService : DbController
         }
     }
 
+
+
+    // Buscar a cliente por DUI
+    public UserModel GetClientByDUI(string dui)
+    {
+        UserModel client = null;
+
+        string query = @"
+        SELECT idUsuario, nombre, correo, telefono, direccion, documento_identidad
+        FROM USUARIOS
+        WHERE documento_identidad = @DUI AND idRol = 3";
+
+        using (SqlConnection connection = GetConnection())
+        {
+            connection.Open();
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@DUI", dui);
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        client = new UserModel
+                        {
+                            IdUsuario = reader.GetInt32(0),
+                            Nombre = reader.GetString(1),
+                            Correo = reader.GetString(2),
+                            Telefono = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                            Direccion = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                            DocumentoIdentidad = reader.GetString(5)
+                        };
+                    }
+                }
+            }
+        }
+
+        return client;
+    }
+
+
+
 }
 

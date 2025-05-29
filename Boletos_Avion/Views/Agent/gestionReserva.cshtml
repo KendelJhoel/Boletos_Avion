@@ -1,0 +1,52 @@
+﻿@model Boletos_Avion.Models.UserModel
+
+@{
+    var cliente = ViewBag.Cliente as Boletos_Avion.Models.UserModel;
+}
+
+@using (Html.BeginForm("gestionReserva", "Agent", FormMethod.Post))
+{
+    <div class="card p-4 shadow-sm mb-4" style="max-width: 500px; margin: 0 auto;">
+        <h4 class="mb-3 text-center text-dark">🔍 Buscar Cliente por DUI</h4>
+
+        <div class="form-group mb-3">
+            <label for="documentoIdentidad" class="form-label">DUI del cliente:</label>
+            <input type="text" name="documentoIdentidad" class="form-control" placeholder="Ingrese DUI sin guiones" required />
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-dark">
+                <i class="bi bi-search"></i> Buscar
+            </button>
+        </div>
+    </div>
+}
+
+@if (cliente != null)
+{
+    <div class="card p-4 border shadow-sm mt-4" style="max-width: 600px; margin: 0 auto;">
+        <h4 class="text-success mb-3">✅ Cliente encontrado:</h4>
+        <p><strong>Nombre:</strong> @cliente.Nombre</p>
+        <p><strong>Correo:</strong> @cliente.Correo</p>
+        <p><strong>Teléfono:</strong> @cliente.Telefono</p>
+        <p><strong>Dirección:</strong> @cliente.Direccion</p>
+        <p><strong>DUI:</strong> @cliente.DocumentoIdentidad</p>
+    </div>
+
+    <!-- Aquí insertás el formulario de filtros -->
+    <div class="mt-5">
+        @Html.Partial("~/Views/Home/_FiltroVuelos.cshtml")
+    </div>
+}
+else if (ViewBag.Mensaje != null)
+{
+    <div class="alert alert-warning mt-4 text-center" style="max-width: 500px; margin: 0 auto;">
+        ❌ @ViewBag.Mensaje
+    </div>
+
+    <div class="text-center mt-3">
+        <a class="btn btn-success" asp-controller="Agent" asp-action="RegisterClient">
+            <i class="bi bi-person-plus"></i> Agregar Cliente
+        </a>
+    </div>
+}

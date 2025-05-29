@@ -28,6 +28,8 @@ namespace Boletos_Avion.Controllers
             return View();
         }
 
+        
+
         public IActionResult RegisterClient()
         {
 
@@ -232,6 +234,38 @@ namespace Boletos_Avion.Controllers
                 return View(client);
             }
         }
+
+
+
+
+
+        public IActionResult gestionReserva()
+        {
+            if (HttpContext.Session.GetInt32("UserRole") != 2)
+            {
+                return RedirectToAction("Index", "Home"); // Si no es agente, lo sacamos
+            }
+            return View();
+        }
+
+        // POST: Cliente/Buscar
+        [HttpPost]
+        public ActionResult gestionReserva(string documentoIdentidad)
+        {
+            var cliente = _agentService.GetClientByDUI(documentoIdentidad);
+
+            if (cliente != null)
+            {
+                ViewBag.Cliente = cliente;
+            }
+            else
+            {
+                ViewBag.Mensaje = "Cliente no encontrado.";
+            }
+
+            return View();
+        }
+
 
     }
 }
